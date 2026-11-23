@@ -55,7 +55,7 @@ Write-Host "   * Health Check:      http://localhost:8080/actuator/health" -Fore
 Write-Host "=======================================================================" -ForegroundColor Cyan
 Write-Host ""
 
-Start-Sleep -Seconds 8
+Start-Sleep -Seconds 12
 Start-Process "http://localhost:3000"
 
 Write-Host "Press any key to exit this window (Backend & Frontend will stay running)..."
