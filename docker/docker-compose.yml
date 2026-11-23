@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tiktok_intel_postgres
+    environment:
+      POSTGRES_DB: tiktok_intelligence
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../docs/database/schema.sql:/docker-entrypoint-initdb.d/01-init.sql
+    networks:
+      - tiktok_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: tiktok_intel_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - tiktok_network
+
+  # LocalStack: Giả lập AWS S3 và AWS SQS trên máy cá nhân không tốn 1 đồng chi phí AWS
+  localstack:
+    image: localstack/localstack:latest
+    container_name: tiktok_intel_localstack
+    ports:
+      - "4566:4566"            # LocalStack Gateway
+    environment:
+      - SERVICES=s3,sqs
+      - AWS_DEFAULT_REGION=ap-southeast-1
+    volumes:
+      - localstack_data:/var/lib/localstack
+    networks:
+      - tiktok_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  localstack_data:
+
+networks:
+  tiktok_network:
+    driver: bridge
