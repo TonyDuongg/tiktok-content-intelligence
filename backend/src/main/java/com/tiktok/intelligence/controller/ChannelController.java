@@ -8,6 +8,7 @@ import com.tiktok.intelligence.repository.TikTokChannelRepository;
 import com.tiktok.intelligence.repository.TikTokVideoRepository;
 import com.tiktok.intelligence.service.scraper.DataIngestionService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/channels")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "BearerAuth")
 @Tag(name = "Channels & Videos", description = "Thu thập và quản lý kênh TikTok, video và chỉ số tương tác")
 public class ChannelController {
 

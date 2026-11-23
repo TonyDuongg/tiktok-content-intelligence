@@ -24,6 +24,18 @@ spring:
         order_inserts: true
         order_updates: true
 
+# Actuator Endpoints Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+
 # Swagger / OpenAPI 3 Configuration
 springdoc:
   api-docs:

@@ -18,6 +18,12 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.tool.schema: DEBUG
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
 application:
   security:
     jwt:
