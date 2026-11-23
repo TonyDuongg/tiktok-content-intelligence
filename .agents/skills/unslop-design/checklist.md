@@ -1,0 +1,479 @@
+# Fix checklist (one at a time)
+
+Each fix: what looks wrong → what to do → how to check it. Apply them one
+at a time and look at the screen in between: several at once hide which one
+helped and which one broke something. Numbers are stable so reviewers can
+cite them ("#14") in their boards.
+
+## System (before touching screens)
+1. **Non-linear spacing scale.** Base 4, values spreading further apart as
+   they grow (4/8/12/16/24/32/48/64; 20 only if the project already has it).
+   Neighbors never closer than ~25%: there's no decision to make between 120
+   and 125. A stray 13, 15 or 18 is noise.
+2. **Hand-picked type scale**, not modular or relative: 6-8 sizes (e.g.
+   12/14/16/18/20/24/30/36/48) and **two weights** (regular 400-500,
+   emphasis 600-700). Nothing below 400 in UI: to de-emphasize, use color or
+   size, not a thin weight. On the web the scale is in `rem`, so type
+   follows the reader's text size (Dynamic Type, Android font scale, the
+   browser's text-only zoom); a scale in `px` ignores it.
+   `scripts/web-audit.mjs` doubles the root size and reports text that
+   doesn't grow.
+3. **Palette with shades defined up front.** Grays: 8-10 shades from the
+   darkest text (never pure black) to an almost-white background. Accent and
+   roles: 5-10 shades each (100-900; 500 works as a button background, 900
+   for text, 100 for tinted backgrounds). No on-the-fly "lighten/darken":
+   that's how you get 35 nearly identical blues. Away from 50% lightness,
+   raise saturation so shades don't wash out.
+4. **Grays with a temperature**, the same across the app (a bit of blue =
+   cool, a bit of yellow = warm). Mixing cool and warm grays reads as
+   carelessness.
+5. **Named elevation**: 3-5 shadows max, each with a meaning on the z-axis
+   (button < menu < sheet/modal). You choose the height, not the shadow.
+   Radii: three max (row, panel, card) and capsule only for buttons and
+   chips; don't mix square and rounded corners.
+6. **A chosen personality, not an inherited one.** Font, radius, color and
+   copy tone say the same thing (serious/friendly/technical). Default to the
+   system font for text; a custom body font only if it has ≥ 5 weights and
+   a good x-height. One display face for the hero numeral or title only is
+   a signature, not a body font (#47). A component kit left at its
+   defaults (shadcn's zinc neutrals and 0.5rem radius, Material's baseline
+   purple) is an inherited personality: set radius, gray temperature and
+   accent from the product (#3-#5); `slop-scan.py` flags those defaults. In a concept-led app the personality is
+   the concept's consequence (`process.md` § 2b), still one voice.
+
+## Spacing
+7. **Start with too much white space and remove.** What looks like "a bit
+   much" on a lone element is usually just right on the full screen. Dense
+   is a decision (data panels), not the starting point.
+8. **Groups, not rules.** More space **around** a group than **within** it
+   (8-12 inside, 24-32 between groups). Label hugging its field; section
+   title with more space above than below. If you need a divider to tell
+   blocks apart, you're missing space.
+9. **Uniform card padding** (16-20) across the app; concentric radii (inner
+   = outer − padding) where it shows: the button inside its card. Don't
+   change a token nobody will notice.
+10. **You don't have to fill the screen.** Each block gets the width it
+    needs (max-width, not percentages); what works narrow gets split into
+    columns instead of stretched. Design at ~400 px first.
+
+## Hierarchy
+11. **Data first.** The hero number on top and large (tabular digits); small
+    gray label below. One number, not three of the same size competing.
+    Build hierarchy with **weight and color** before size: primary text
+    dark, secondary gray, tertiary light gray.
+12. **Labels are a last resort.** "12 left in stock" beats "Stock: 12"; "3
+    bedrooms", not "Bedrooms: 3". If the format already says it (price,
+    email, date), no label. If one is needed it's secondary (smaller,
+    lighter); only on spec sheets, where people scan for the label, does the
+    label lead.
+13. **Small section titles.** A section title is a label, not an `h1`: the
+    content leads. Semantics (h1, `.headline`) don't decide the size.
+14. **Balance weight and contrast.** A solid icon next to text weighs more:
+    lower its contrast. A 1 px border you can't see: make it thicker, not
+    darker.
+15. **Parts of a number, with rules.** If you shrink a part (decimals, last
+    digit, unit): only when it applies (e.g. 3 decimals and ≥ 17 pt), never
+    the separator, relative size so it scales with the rest, **aligned on
+    the baseline** (not centered), and the screen reader reads the whole
+    number. "123 min earned": large number, small unit, same baseline.
+16. **Only numbers that exist.** No ETA without data, no "vs. last month"
+    without two periods, no "Today" if it's "Latest". A delta only if it
+    shows in the last printed digit (otherwise you get "−0"). A list shows
+    the value it's sorted by. Same numbers across all mockups.
+17. **Each number once per screen.** A "period summary" repeating income and
+    expenses already shown above goes away, or becomes what's missing (the
+    trend, the next payment).
+18. **What's next, concretely.** "Next payment: Dec 4 · $120" beats 14 dots
+    without axes. If there's a series, highlight the latest value (today)
+    and mute the rest.
+
+## Color
+19. **One accent.** The brand color fills ONE specific gesture or the hero
+    number, not card backgrounds, icons and titles all at once. Merge
+    redundant roles ("medium" without color, "expensive" = "up"); red only
+    for errors and delete. Done = status green, not the accent.
+20. **Quiet badges.** An informational badge is **dark text of the role on a
+    light shade of the same role** (flipped contrast), not saturated accent
+    with white text. Strong fill is reserved for "best"/"now".
+21. **Text on a brand fill = dark ink.** White on green, lime, yellow or
+    light blue usually lands at 2-3:1.
+22. **No gray or semi-transparent white on colored backgrounds.** It looks
+    washed out and disabled. Secondary text on a colored panel = a shade of
+    the same hue, adjusting saturation and lightness; if it can't reach the
+    contrast, rotate the hue ≤ 20-30° toward a brighter one (yellow, cyan,
+    magenta).
+23. **Neutral global tint.** Toolbar buttons, links and checkmarks in the
+    text color; the accent only on stateful controls (switch, slider,
+    progress). Not every link needs a color: where everything is a link, use
+    weight or a darker tone.
+24. **Color never works alone.** Up/down/better/worse also via shape or word
+    (arrow, "−6%", "Normal"): color blindness, tinted mode, monochrome
+    widgets. In multi-series charts, separate by **light/dark** of one hue,
+    not by different hues.
+
+## Typography
+25. **Sentence case everywhere** ("Expense added", "Add expense"), buttons
+    with verb + object, no exclamation marks or AI jargon ("Unlock your
+    potential!"). Numbers with their unit and the user's currency, never
+    hardcoded.
+26. **Page title = what it is, not a greeting.** "Morning run", "November
+    2026", not "Hey Alex! 👋". Date or context small (above or below), or
+    as a second tone in the same line ("October" in ink, "2026" muted). One
+    concept, one name across the app; name the feature, not the ownership.
+    Renaming a product is the owner's call.
+27. **Line height inverse to size.** Small text or long lines: 1.5-2; large
+    headlines: ~1-1.2. Paragraphs at 45-75 characters per line even if the
+    block is wider.
+28. **Align for readability.** Text left-aligned; centered only for
+    headlines and blocks of ≤ 2-3 lines (if one runs long, rewrite it
+    shorter). Numbers in tables right-aligned, with tabular digits.
+29. **Letter-spacing with intent.** Large headlines set in a text font: a
+    bit tighter. ALL CAPS, where you kept it (a date stamp like "WED, OCT 28 ·
+    7:42", a signature overline): wider. Leave
+    the rest as the type designer set it.
+69. **Code faces for code and data.** Monospace on headings or on the whole
+    page is a costume for "technical". Keep it for code, IDs, keys and
+    values you compare character by character; numbers that line up want
+    the text face's tabular figures (#61). `slop-scan.py` flags monospace
+    on `h1`-`h3`, titles and `body`.
+
+## Decoration and depth
+30. **Remove frames and ornaments.** Dashed borders, meaningless stacked
+    shadows, background gradients, emoji as icons, icons inside colored
+    circles on every row, decorative glow/blur. One light effect at most,
+    and only where there's data.
+31. **Fewer borders.** To separate, in order: more space → two slightly
+    different backgrounds → a soft shadow. Borders last. If backgrounds
+    already differ, drop the border.
+32. **A shadow means height, not style.** Light comes from above: raised
+    elements get a slightly lighter top edge and a short shadow below;
+    inset ones (fields, wells) the reverse. A shadow = two layers (a wide,
+    soft one and a short, dark one that fades the higher the element sits).
+    Dragging raises it; pressing lowers it. In flat design, lighter reads as
+    closer. No photorealism.
+33. **One icon style.** One set (SF Symbols / Material) with a uniform
+    stroke (e.g. 1.5 px), one weight, one size per context; **no emoji** as
+    icons; none that repeat the text beside them. An icon drawn at 16-24 px
+    isn't scaled to 64: use it at its size (or inside a shape, only in empty
+    states and highlights, not on every row). A large logo isn't shrunk to a
+    favicon: redraw it simplified. Data from another source (community,
+    estimated) is marked with shape (dashed outline + word), not a new color.
+34. **Decoration allowed, with conditions.** If a screen still feels flat
+    after fixing hierarchy and spacing: a section background color, a
+    two-hue gradient ≤ 30° apart or a low-contrast pattern, once per screen
+    and never behind small text. Never on the text itself: gradient text is
+    not this allowance, it's #55. Better to "supercharge what's there"
+    (checkmarks instead of bullets, selectable cards instead of a stack of
+    radio buttons) than to add pieces.
+66. **A hard offset shadow is a style, not depth.** `4px 4px 0 #000`, no
+    blur, reads as neobrutalism. If that is the brand, it is the signature
+    and it is the same everywhere; otherwise use the elevation tokens (#5,
+    #32). `slop-scan.py` flags it.
+68. **One separator per surface.** A 1px border and a soft shadow on the
+    same card (the "ghost card", every starter kit's card) do one job twice.
+    Flat surfaces get the border or a second background; raised ones get
+    the shadow (#31, #32). `slop-scan.py` flags both on one rounded
+    surface, in CSS and in Tailwind classes.
+
+## Images and charts
+35. **Good images or none.** Generic clip art, template illustrations or
+    filler phone photos = slop. A quality photo or render from the domain,
+    or nothing. An illustration is allowed when it's an object of the
+    concept (`process.md` § 2b) drawn with its rules, and it earns its
+    height: it carries data (a fill level, a state, progress) or stays
+    under about a quarter of the screen and gives way first at the largest
+    text size. If the layout still reads as a template without it, it was
+    decoration.
+36. **Text over images with consistent contrast**: dark/light overlay,
+    lower the image contrast, colorize it with one hue, or a text glow with
+    no offset. Never text straight on a photo with light and dark areas.
+37. **User content (and third-party logos) in a fixed frame**: fixed aspect
+    ratio with centered crop; against background bleed, a soft inner shadow
+    or semi-transparent border, not a solid border.
+38. **Screenshots inside the UI (store listing, landing page)**: don't shrink
+    them to 30%; crop partially, capture at a smaller size, or draw a
+    simplified UI.
+39. **Charts without noise.** Remove gridlines and axes nobody reads (keep
+    the horizontal lines at the ticks you keep, drop the vertical ones); write
+    values above bars when they fit; current period saturated, the rest in a
+    tint of the same hue; an axis only if its numbers get used. On a
+    dashboard people do read the axis: keep 3-4 ticks in the data voice
+    (#56), series in their category colors (#51) and no glow on the bar you
+    want to highlight. On a phone, labels stay at 11px or more as drawn: an
+    SVG whose viewBox shrinks to fit shrinks its text too, so set the
+    viewBox to the drawn width or size the labels in CSS px.
+
+## Layout
+40. **One card per idea, the same everywhere.** The "answer card" repeats on
+    every screen answering its question; a single entity row for every
+    list. No horizontal carousels hiding content
+    (`ScrollView(.horizontal)` of cards): stack them. No card inside a card.
+    "The same everywhere" is for entity rows and answer cards, not for
+    every section: if each section is a rounded card of one fill, the
+    screen has a single building block (#58, #65).
+41. **Action pyramid.** One primary per screen/sheet: an **ink** capsule
+    (by default the accent stops being a button color; it can fill the
+    primary only when that is its single use on the screen and the label
+    passes contrast) that **names its destination**
+    ("Continue · Full Body Strength", "Go to Shell · 0.7 mi") and, if it
+    helps, its state ("● GPS ready"); secondary = gray or outline; tertiary
+    = link. Destructive in red **only in the confirmation step**; elsewhere
+    secondary or tertiary. "Cancel" is always secondary. Exception: when the
+    law requires two equal options (consent). Height ≥ 44 pt / 48 dp.
+42. **Components don't scale proportionally.** A large button gets
+    relatively more padding and a small one less; a headline isn't "2.5×
+    body" on every screen. Each size is tuned, not zoomed.
+
+70. **A modal is the last resort.** Before one: expand in place, a sheet
+    on phones, or a page. Never a confirm dialog for something reversible:
+    do it and offer Undo. A modal has one task, a visible close and closes
+    on Escape (Also: sheets sized to content).
+72. **Four choices or fewer per group.** Options, tabs, tiles and filters
+    come in groups of four or fewer; the rest goes behind "More", a search
+    or the next step. One decision per step in a flow. Working memory is
+    the budget (`critique.md`, cognitive load).
+
+## Chrome and signature
+43. **Rails: one left edge, one right edge.** Every block starts on the same
+    left line and ends on the same right one (e.g. 16 pt). Horizontal rows
+    start on the left rail and bleed off the right edge to say "there's
+    more". Draw the rails over a screenshot: whatever pokes out is a bug.
+44. **One gap between sections, no filler copy.** The space between
+    sections is a single token (e.g. 34 pt) everywhere. Lines like "✨ Share
+    your best moments" that only fill a hole are deleted: the gap separates.
+45. **Section headers are quiet labels.** Small, muted, sentence case, no
+    emoji: "The good ones", not "🔥 THE GOOD ONES" (#13, #25, #33). Small
+    tracked capitals over every section are the commonest AI tell now; keep
+    them only as a deliberate signature, once per screen, never as the
+    default (#29, #60). Pick one style per product.
+46. **Floating chrome in the platform material, content solid.** Top bar
+    and tab bar float as pills in the system material (Liquid Glass, blur)
+    with line icons; the main create action is its own solid circle, not a
+    tab. Glass never goes on content cards or behind long text.
+47. **A signature is a family, not a trick.** If the domain has a metaphor
+    (a scrapbook for a photo app, a price board for fuel), take a small set
+    of details from it — cut-out photo shapes, hand-drawn rank numbers, a
+    taped caption, a sticker instead of the 📷 emoji — each with one role,
+    and nothing else decorative. Still principle 7: from the domain,
+    degrading where it doesn't apply. A concept (`process.md` § 2b) is this
+    family at a larger scope; the surface mode caps it, and its "stops at"
+    line lists what stays plain.
+48. **Real content in every mock.** Real photos, names, places and times
+    ("williamsburg · 2m") in proposals and screenshots. Gray boxes and lorem
+    ipsum hide whether the layout survives a long name or a dark photo.
+
+## Web and dashboards
+49. **One icon slot.** Nav icons sit in a fixed-width column (e.g. 20 px)
+    so every label starts on the same line, with or without an icon. Draw a
+    vertical guide through the labels: an emoji 13 px wide next to one 8 px
+    wide shows up immediately (#43).
+50. **Counts are text, not pills.** "Inbox 12" is a right-aligned tabular
+    number in the muted tone; a filled pill only for what needs action now
+    (unread mentions, a failure). "New ✨" badges, "👤" after every count
+    and plan badges on the logo go.
+51. **One category, one color, everywhere.** If plans or series need color,
+    each gets one hue used as a small dot in the nav, the line in the chart
+    and the legend — the same token. Color that only decorates a row goes
+    (#19, #24). Which wins in a chart: series that are app-wide categories
+    (plans, accounts, teams) keep their category color; series that are
+    parts of one measure (revenue, expenses, profit) are one hue in light
+    and dark plus a dash or a direct label (#24).
+52. **A delta names its baseline.** "+12% vs September", "3 fewer than last
+    week" — never "+12%!!" or an emoji. Up/down in the role color and a word
+    or arrow (#16, #24). The color follows the meaning, not the direction:
+    churn, cost, latency or errors going up is worse, in the warning role,
+    with the word ("up 0.4%, worse").
+53. **Interactive states are drawn.** Hover, `:focus-visible` (a visible
+    ring, never `outline: none` alone), active, disabled and selected. The
+    selected nav row is a quiet filled row, not a gradient pill with a glow.
+    Keyboard users see where they are.
+54. **Shortcuts as keys, placeholders as verbs.** `⌘` `K` as two quiet key
+    caps (`<kbd>`), the field says "Search", not "Search anything…".
+55. **No gradient text, no page glow.** Headline in the ink color, page on
+    a neutral canvas, colored `box-shadow` glows and translucent cards over
+    a purple gradient gone. The default AI palette (purple → blue,
+    fuchsia accents) is a decision only if someone made it (#19, #30, #32).
+56. **A data voice, if it's a tool.** Deltas, axes, counts and timestamps
+    can share one secondary face (a mono or tabular face) so data reads as
+    data. One family more at most, only for numbers and metadata (#2).
+57. **Works at 390, 768 and 1280 px.** No horizontal scroll at any width;
+    the sidebar collapses behind a toggle (that toggle earns the top-left
+    slot, not a bell); cards reflow with `minmax()`; tables scroll inside
+    their own container. Nav links hidden below a breakpoint need a menu
+    button that brings them back; `slop-scan.py` flags a nav with links
+    hidden on phones and no `aria-expanded` toggle. Check the rest with
+    `scripts/web-audit.mjs`.
+
+## Beyond clean: distinctive
+Everything above gets a screen to *clean*. These are the next step,
+once it holds up in grayscale; skip them on a screen that isn't clean yet.
+58. **Objects before boxes.** Boxes have a purpose — grouping things you
+    act on together — but they shouldn't be the only building block. Before
+    adding a card, ask whether an object from the domain can carry the same
+    information: the route arc between two airports instead of a "From/To"
+    box, the aircraft photo as the header, the map itself as the list. Draw
+    the screen once with no containers at all and add back only the ones
+    that separate something (#31, #47).
+59. **When the content is a canvas, chrome floats.** A screen whose main
+    view is a map, a camera, a timeline or a document doesn't need a
+    permanent tab bar eating its bottom edge: a floating menu (a short
+    vertical list of icon + label that opens over the canvas), a search at
+    the top and a sheet for the selected item can carry the navigation. Keep
+    the tab bar where the app is several equal sections (#46). Test that
+    every destination is still reachable in two taps and by VoiceOver /
+    TalkBack. `slop-scan.py` flags a map or camera and a permanent tab bar
+    in the same screen.
+65. **A skeleton from the job, not from the template.** The default AI
+    screen is a greeting → hero stat card → 2×2 tile grid → list → five-tab
+    bar. Each block can be right (#11, #40); the *sequence* is the tell.
+    Before laying out, write the screen's one job and what the user does in
+    ten seconds: a run screen is a pace and a Start button, not four stat
+    tiles; a savings screen can be a jar (#58). Then make at least two of
+    these come from the domain: the blocks themselves, the palette (hue and
+    value, not only the accent), a display face for the hero (#6), the
+    shape language, tab labels in the domain's words ("Jars", "Tonight",
+    not "Home" and "More"). Keep the platform chrome (#46, principle 7):
+    different apps differ in structure, object and voice, not in skin.
+    Check: the ten-app lineup (`process.md` § 2); `slop-scan.py` flags a
+    card repeated three times side by side with a number in each. Operate and Read
+    screens: one signature is enough.
+
+## Craft floor
+Small things a careful team gets right and a generated UI gets wrong.
+`scripts/slop-scan.py` and `scripts/web-audit.mjs` find most of them.
+60. **Structure carries information or goes.** An eyebrow over the title,
+    "01 / 02 / 03" on sections that aren't a sequence, one accented word
+    in a headline, a colored stripe on the left of a card, the "big number,
+    small label, three stats" hero: each is fine when it encodes something
+    (a real step, a status) and slop when it's there because templates have
+    it. Remove it and see if anything was lost (#13, #34, #45).
+61. **Real typography characters.** "…" not "...", curly quotes and
+    apostrophes in copy, a non-breaking space between a number and its unit
+    ("10&nbsp;MB", "3&nbsp;km"), `text-wrap: balance` on headlines,
+    `tabular-nums` on numbers that change or line up. In SwiftUI and
+    Compose the same goes for strings (#15, #27).
+62. **The system surfaces wear the theme.** `color-scheme` set (so native
+    controls and scrollbars follow dark mode), `::selection`, `caret-color`
+    and `accent-color` from the palette, the focus ring in a role color. On
+    iOS/Android: the tint of switches, text cursors and pickers. Leaving
+    them default is the giveaway that nobody looked (#53).
+63. **Motion is named, short and optional.** Animate `transform` and
+    `opacity`, listing the properties — never `transition: all`, which
+    animates layout and color you didn't mean. ≤ 200 ms for state changes,
+    and a still alternative under `prefers-reduced-motion` (Reduce Motion
+    on iOS/Android).
+67. **Ease out, don't bounce.** State changes decelerate (ease-out, or a
+    curve whose y stays between 0 and 1). Overshoot, `bounce`, `elastic`
+    and wobble read as a toy and delay the answer. The platform's own
+    springs are fine; a custom bounce isn't (#63). `slop-scan.py` flags
+    overshooting `cubic-bezier`, `animate-bounce` and bounce keyframes.
+64. **Nothing invented, nothing inflated.** No made-up metrics ("10,000+
+    teams"), testimonials, client logos or ratings; no hand-drawn phone or
+    browser frame when a real screenshot can be taken; no hype verbs
+    ("Supercharge", "Seamless", "Unleash") — say what it does, with a real
+    number if there is one (#16, #48, principle 6).
+71. **Built for every language and every size of data.** Leave 30-40%
+    room for longer translations and test the longest one; use logical
+    properties (`margin-inline-start`, `leading`/`trailing`) so a
+    right-to-left language mirrors; plurals, dates, numbers and currency
+    come from the platform's formatters (`Intl`, ICU, `stringsdict`,
+    `plurals.xml`), never "item(s)" or a hand-built "MM/DD"; long names
+    wrap or truncate in the middle, never overflow; an error names what
+    failed and offers Retry; a list is drawn with 0, 1 and 2,000 rows.
+    `slop-scan.py` flags "item(s)".
+
+## Also (what came up in real reviews)
+- **Sheets/modals sized to content**, not fixed heights that clip text at
+  larger type sizes; opaque background over maps or glass; a visible close
+  (✕/"Done"), never gesture-only.
+- **Order depends on state** (e.g. savings first when there's no live
+  alert); know the state before drawing so nothing jumps.
+- **Empty states as a first impression**, not centered gray text: what this
+  is + one clear action (+ an image if there's a good one), and **without
+  the tabs and filters** that do nothing until there's content. Two
+  different empties: "no data" (silhouette, no number) and "data but
+  zero/negative" (compact line).
+- **Surface contrast**, not just text: a dark hero has to separate from its
+  neighbors (map, system cards).
+- **Size caps on chrome**: fixed chips and circles limit their text size so
+  the card doesn't overflow the screen.
+- **Delete before redesigning** dead screens; merge duplicates that have
+  already drifted.
+- **Exempt**: brand moments (splash, login, milestones) and onboarding get
+  their own review, not this checklist blindly. Paywalls get this one, on
+  top of the checklist:
+- **Paywall**: a visible close (44 pt, top corner), Restore purchases,
+  Terms and Privacy; the price after the trial in the same view as the
+  button ("Then $59.99 a year"); one primary action; any "save N%" computed
+  from the real prices and naming its baseline ("vs weekly"); no countdown
+  that resets, no "only N left", no user counts or "most popular" without
+  a source (principle 6). The plans are rows with one selected state shown
+  by shape and word, not a pile of badges. `slop-scan.py` flags pressure
+  copy (#64).
+- **States**: empty, loading, error, no permission, free vs. paid — each one
+  drawn.
+- **Accessibility**: largest text size without clipping, VoiceOver/TalkBack
+  reads one sentence ("$3.29 a gallon, 6% below average, 0.7 miles away"),
+  touch targets ≥ 44.
+- **Dark mode** reviewed separately: 10-15% tints and grays change contrast;
+  elevation comes from lighter surfaces, not shadows.
+- **No invented data**: a number in a headline is one the user has already
+  seen; if there isn't one, use the generic headline.
+
+## Automatic checks
+
+What `scripts/slop-scan.py` finds on its own, by fix number (48 rules;
+`--list-rules` prints the same list). Everything else in this checklist is
+judged on the render. `web-audit.mjs` adds the rendered checks: contrast,
+overflow, focus, targets, text size and the census of values.
+
+| Fix | Rule | Reads | What it flags |
+|---|---|---|---|
+| #1 | `arbitrary-value` | web | Tailwind arbitrary value instead of a scale step |
+| #1 | `native-literal` | native | Spacing / size literal in a view (should be a token) |
+| #1 | `off-scale` | web | Spacing / type / radius value off the scale |
+| #1 | `undefined-token` | web | Token used but defined nowhere in the scanned files |
+| #3 | `raw-color` | all | Raw color in a component (should be a role token) |
+| #5 #32 | `elevation-literal` | native | Shadow / elevation literal on a component (one named elevation token) |
+| #6 | `stock-kit` | all | Starter kit left at its defaults (set radius, grays and accent from the product) |
+| #13 | `multiple-h1` | web | More than one h1 on the page (section titles are labels, not h1) |
+| #19 | `ai-palette` | web | Default AI palette (purple/violet/indigo/fuchsia) — is it a decision? |
+| #22 | `translucent-text` | all | Semi-transparent white text (on color it washes out: use a role color, measured) |
+| #25 | `exclaim` | all | Exclamation mark in UI text (say it plainly) |
+| #25 | `title-case` | all | Title Case in UI text (sentence case: "Your subscriptions") |
+| #26 | `greeting` | all | Greeting as a title (name what the screen is) |
+| #28 | `justified-text` | web | Justified text (uneven gaps on screens; align left) |
+| #29 | `extreme-tracking` | web | Letter-spacing tighter than -0.04em (letters collide; a bit tighter, not crushed) |
+| #30 #34 | `gradient` | all | Gradient fill (fine once, as the signature; not as decoration) |
+| #32 | `glow` | all | Colored glow / neon shadow (a shadow means height) |
+| #33 #45 | `emoji` | all | Emoji in UI text (use the icon set, or nothing) |
+| #33 | `icon-circle` | web | Icons in colored circles on every row (one icon style; shapes only in empty states) |
+| #35 #48 | `placeholder-image` | all | Placeholder image service (real images, or none) |
+| #40 #65 | `card-sameness` | all | Same card repeated with a number inside (a row of stat tiles?) |
+| #45 #60 | `tracked-caps` | all | Small tracked all-caps label (eyebrow/kicker) — does it carry information? |
+| #46 | `blur-content` | all | Backdrop blur (chrome only, never behind content) |
+| #48 | `lorem` | all | Lorem ipsum (real content in every mock) |
+| #50 | `count-pill` | web | A count in a filled pill (counts are muted tabular text: "Inbox 12") |
+| #52 | `shouting` | all | Exclamation marks in UI copy |
+| #52 | `bare-delta` | all | A delta with no baseline ("+12%" vs what? "+12% vs September") |
+| #53 | `no-focus` | web | Focus outline removed — is there a :focus-visible style? |
+| #55 | `gradient-text` | web | Gradient text |
+| #57 | `fixed-width` | web | Fixed width of 400px or more (scrolls sideways on a phone: max-width and fluid) |
+| #57 | `hidden-nav` | web | Nav links hidden on phones with no menu button |
+| #59 | `canvas-tabbar` | all | Map or camera with a permanent tab bar under it (let the chrome float) |
+| #60 | `side-stripe` | web | Colored side stripe on a rounded card (does the stripe encode a status?) |
+| #60 | `section-numbers` | web | Sections numbered 01 / 02 / 03 (does the order carry information?) |
+| #61 | `three-dots` | all | Three dots in UI text (use the … character) |
+| #61 | `straight-quotes` | all | Straight quote or apostrophe in UI copy (use ’ “ ”) |
+| #62 | `no-color-scheme` | web | A dark theme with no color-scheme (form controls and scrollbars stay light) |
+| #63 | `transition-all` | web | transition: all (animate transform and opacity, named) |
+| #63 | `no-reduced-motion` | web | Animations with no prefers-reduced-motion alternative |
+| #64 | `hype-copy` | all | Hype copy (say what it does, with a number if there is one) |
+| #64 | `empty-action` | all | A control whose action is empty (it implies a feature that doesn't exist: principle 6) |
+| #64 | `pressure` | all | Pressure copy (countdown, scarcity, "most popular", "save N%"): true, computed and sourced? |
+| #64 | `unverified-claim` | all | Social proof or metric to source ("Trusted by 10,000+ teams", "10x faster") — is it real? |
+| #66 | `hard-shadow` | web | Hard offset shadow (no blur): a costume unless the brand is neobrutalist |
+| #67 | `bounce-easing` | web | Bouncy or elastic easing (ease out, don't overshoot) |
+| #68 | `ghost-card` | web | 1px border and a soft shadow on the same card (pick one separator) |
+| #69 | `mono-disguise` | web | Monospace on headings or the whole page (code faces are for code and data) |
+| #71 | `plural-hack` | all | "item(s)" in UI text (let the platform's plural rules pick the form) |

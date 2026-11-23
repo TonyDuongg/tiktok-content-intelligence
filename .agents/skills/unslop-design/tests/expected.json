@@ -1,0 +1,1185 @@
+{
+  "scan": {
+    "audit-faded-icons": {
+      "raw-color": 5
+    },
+    "audit-root-200": {},
+    "audit-typographic-marks": {
+      "emoji": 1,
+      "raw-color": 1
+    },
+    "canvas-react-leaflet": {
+      "canvas-tabbar": 1
+    },
+    "canvas-swiftui-map-tabview": {
+      "canvas-tabbar": 1
+    },
+    "canvas-two-screens-one-file": {},
+    "canvas-web-new-map": {},
+    "caps-tracked": {
+      "native-literal": 2,
+      "tracked-caps": 2
+    },
+    "cards-grid-button-outside": {
+      "card-sameness": 1
+    },
+    "cards-jsx-style-objects": {
+      "card-sameness": 2
+    },
+    "cards-mapped": {},
+    "cards-mixed-parents": {
+      "card-sameness": 1
+    },
+    "cards-pricing-tiers": {},
+    "cards-stacked-divs": {},
+    "cards-swiftui-declared-first": {
+      "card-sameness": 1
+    },
+    "cards-swiftui-grid": {
+      "card-sameness": 1
+    },
+    "cards-swiftui-vstack-list": {},
+    "cards-tailwind-stat-row": {
+      "card-sameness": 1
+    },
+    "claims-split-lines": {
+      "unverified-claim": 2
+    },
+    "copy-false-positives": {
+      "exclaim": 1,
+      "greeting": 2,
+      "native-literal": 1
+    },
+    "nav-faq-details": {
+      "hidden-nav": 1
+    },
+    "nav-menu-inside": {},
+    "nav-menu-outside-target": {},
+    "screen-mise-after": {},
+    "screen-mise-before": {
+      "card-sameness": 1,
+      "emoji": 17,
+      "exclaim": 3,
+      "glow": 3,
+      "gradient": 7,
+      "greeting": 1,
+      "hype-copy": 1,
+      "off-scale": 22,
+      "raw-color": 25,
+      "title-case": 3,
+      "tracked-caps": 1,
+      "transition-all": 1
+    },
+    "screen-relay-after": {},
+    "screen-relay-before": {
+      "ai-palette": 9,
+      "blur-content": 1,
+      "card-sameness": 1,
+      "emoji": 7,
+      "glow": 3,
+      "gradient": 8,
+      "gradient-text": 1,
+      "hidden-nav": 1,
+      "hype-copy": 4,
+      "pressure": 1,
+      "raw-color": 1,
+      "title-case": 5,
+      "tracked-caps": 1,
+      "transition-all": 6,
+      "translucent-text": 12,
+      "unverified-claim": 4
+    },
+    "screen-stride-after": {
+      "blur-content": 1
+    },
+    "screen-stride-before": {
+      "blur-content": 2,
+      "card-sameness": 1,
+      "emoji": 11,
+      "exclaim": 1,
+      "glow": 2,
+      "gradient": 4,
+      "gradient-text": 1,
+      "greeting": 1,
+      "hype-copy": 2,
+      "off-scale": 13,
+      "raw-color": 16,
+      "straight-quotes": 2,
+      "title-case": 2,
+      "tracked-caps": 1,
+      "transition-all": 1,
+      "translucent-text": 6
+    },
+    "screen-subscriptions-after": {},
+    "screen-subscriptions-before": {
+      "card-sameness": 2,
+      "emoji": 10,
+      "empty-action": 1,
+      "exclaim": 7,
+      "glow": 2,
+      "gradient": 4,
+      "greeting": 2,
+      "hype-copy": 2,
+      "native-literal": 25,
+      "off-scale": 13,
+      "raw-color": 14,
+      "title-case": 7,
+      "tracked-caps": 1
+    },
+    "screen-trail-after": {
+      "raw-color": 16
+    },
+    "screen-trail-before": {
+      "canvas-tabbar": 2,
+      "card-sameness": 1,
+      "emoji": 6,
+      "empty-action": 2,
+      "exclaim": 4,
+      "glow": 1,
+      "gradient": 2,
+      "greeting": 2,
+      "hype-copy": 4,
+      "native-literal": 13,
+      "off-scale": 10,
+      "raw-color": 14,
+      "stock-kit": 1,
+      "straight-quotes": 2,
+      "title-case": 2,
+      "tracked-caps": 1,
+      "translucent-text": 4
+    },
+    "stock-kit-compose-template": {
+      "stock-kit": 1
+    },
+    "stock-kit-shadcn-kept-grays": {},
+    "stock-kit-shadcn-v3-zinc": {
+      "stock-kit": 1
+    },
+    "stock-kit-shadcn-v4-customized": {},
+    "stock-kit-shadcn-v4-default": {
+      "stock-kit": 1
+    },
+    "tokens-dangling-rename": {
+      "undefined-token": 9
+    },
+    "tokens-jsx-def-and-min": {},
+    "tokens-var-fallback": {
+      "raw-color": 1
+    },
+    "copy-hype-crushing": {
+      "exclaim": 1,
+      "hype-copy": 1
+    },
+    "project-decisions": {
+      "off-scale": 2,
+      "tracked-caps": 1
+    },
+    "audit-reading": {
+      "card-sameness": 1,
+      "emoji": 7,
+      "exclaim": 1,
+      "glow": 1,
+      "gradient": 4,
+      "gradient-text": 1,
+      "hype-copy": 1,
+      "justified-text": 1,
+      "off-scale": 2,
+      "raw-color": 13,
+      "straight-quotes": 4,
+      "three-dots": 1,
+      "title-case": 1,
+      "tracked-caps": 1,
+      "unverified-claim": 2
+    },
+    "claims-comparatives": {
+      "unverified-claim": 2
+    },
+    "native-elevation-translucent-empty": {
+      "elevation-literal": 2,
+      "empty-action": 2,
+      "translucent-text": 2
+    },
+    "native-token-files": {},
+    "screen-article-after": {},
+    "screen-article-before": {
+      "card-sameness": 1,
+      "emoji": 7,
+      "exclaim": 1,
+      "glow": 1,
+      "gradient": 4,
+      "gradient-text": 1,
+      "hype-copy": 1,
+      "justified-text": 1,
+      "off-scale": 2,
+      "raw-color": 13,
+      "straight-quotes": 4,
+      "three-dots": 1,
+      "title-case": 1,
+      "tracked-caps": 1,
+      "unverified-claim": 2
+    },
+    "screen-pulse-after": {},
+    "screen-pulse-before": {
+      "elevation-literal": 1,
+      "emoji": 7,
+      "empty-action": 1,
+      "exclaim": 2,
+      "gradient": 1,
+      "greeting": 1,
+      "hype-copy": 1,
+      "native-literal": 15,
+      "raw-color": 1,
+      "stock-kit": 1,
+      "title-case": 3,
+      "tracked-caps": 1,
+      "translucent-text": 1
+    },
+    "tokens-dark-in-media": {
+      "no-color-scheme": 1,
+      "raw-color": 1
+    },
+    "audit-css-image-hero": {
+      "gradient": 1,
+      "raw-color": 2
+    },
+    "audit-gradient-text": {
+      "gradient": 2,
+      "raw-color": 3
+    },
+    "audit-grid-edges": {},
+    "audit-svg-text": {},
+    "audit-ua-button": {},
+    "claims-adjective": {
+      "unverified-claim": 1
+    },
+    "copy-pressure": {
+      "pressure": 5
+    },
+    "screen-dash-after": {},
+    "screen-dash-before": {
+      "bare-delta": 4,
+      "card-sameness": 1,
+      "emoji": 2,
+      "exclaim": 1,
+      "gradient": 1,
+      "off-scale": 8,
+      "raw-color": 12,
+      "straight-quotes": 1,
+      "title-case": 2
+    },
+    "screen-order-after": {},
+    "screen-order-before": {
+      "card-sameness": 1,
+      "emoji": 5,
+      "exclaim": 2,
+      "glow": 1,
+      "gradient": 2,
+      "greeting": 1,
+      "off-scale": 7,
+      "raw-color": 7,
+      "title-case": 3
+    },
+    "screen-paywall-before": {
+      "emoji": 4,
+      "empty-action": 1,
+      "exclaim": 2,
+      "glow": 1,
+      "gradient": 1,
+      "hype-copy": 1,
+      "native-literal": 15,
+      "pressure": 3,
+      "title-case": 1,
+      "translucent-text": 2,
+      "unverified-claim": 1
+    },
+    "audit-svg-chart": {
+      "raw-color": 5
+    },
+    "title-case-nouns": {
+      "title-case": 2
+    },
+    "audit-gradient-own-bg": {
+      "gradient": 1,
+      "raw-color": 3
+    },
+    "copy-plural-hack": {
+      "plural-hack": 4
+    },
+    "craft-bounce-easing": {
+      "bounce-easing": 4,
+      "no-reduced-motion": 1
+    },
+    "craft-ghost-card": {
+      "ghost-card": 2,
+      "raw-color": 2
+    },
+    "craft-hard-shadow": {
+      "hard-shadow": 3,
+      "raw-color": 3
+    },
+    "craft-mono-disguise": {
+      "mono-disguise": 3
+    },
+    "craft-side-stripe": {
+      "side-stripe": 3
+    },
+    "framework-next-shadcn": {
+      "ghost-card": 1
+    },
+    "framework-svelte": {
+      "bounce-easing": 1,
+      "hard-shadow": 1,
+      "raw-color": 1
+    },
+    "framework-vue-sfc": {
+      "mono-disguise": 1,
+      "plural-hack": 1,
+      "side-stripe": 1
+    },
+    "r-bare-delta": {
+      "bare-delta": 3
+    },
+    "r-color-scheme-missing": {
+      "no-color-scheme": 1
+    },
+    "r-color-scheme-ok": {},
+    "r-count-pill": {
+      "count-pill": 2
+    },
+    "r-fixed-width": {
+      "arbitrary-value": 2,
+      "fixed-width": 3
+    },
+    "r-icon-circle": {
+      "icon-circle": 1
+    },
+    "r-justify-tracking": {
+      "extreme-tracking": 2,
+      "justified-text": 2
+    },
+    "r-multiple-h1": {
+      "multiple-h1": 1
+    },
+    "r-placeholder-content": {
+      "lorem": 1,
+      "placeholder-image": 2
+    },
+    "r-reduced-motion-missing": {
+      "no-reduced-motion": 1
+    },
+    "r-reduced-motion-ok": {},
+    "r-section-numbers": {
+      "section-numbers": 1
+    },
+    "r-straight-quotes": {
+      "straight-quotes": 4
+    },
+    "glow-inline-style": {
+      "glow": 1,
+      "gradient": 1,
+      "raw-color": 2
+    }
+  },
+  "audit": {
+    "audit-faded-icons": {
+      "page": "faded.html",
+      "expect": {
+        "contrast": 0,
+        "graphics": 3,
+        "emoji": 0,
+        "glow": 0,
+        "text_scales": false,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 0,
+        "unknown": 0,
+        "off_scale": 0,
+        "edges": 0
+      }
+    },
+    "audit-typographic-marks": {
+      "page": "check.html",
+      "expect": {
+        "contrast": 3,
+        "graphics": 0,
+        "emoji": 1,
+        "glow": 0,
+        "text_scales": true,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 0,
+        "unknown": 0,
+        "off_scale": 0,
+        "edges": 1
+      }
+    },
+    "audit-root-200": {
+      "page": "root200.html",
+      "expect": {
+        "contrast": 0,
+        "graphics": 0,
+        "emoji": 0,
+        "glow": 0,
+        "text_scales": true,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 0,
+        "unknown": 0,
+        "off_scale": 1,
+        "edges": 1
+      }
+    },
+    "screen-mise-before": {
+      "page": "library.html",
+      "expect": {
+        "contrast": 14,
+        "graphics": 0,
+        "emoji": 15,
+        "glow": 1,
+        "text_scales": false,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 4,
+        "unknown": 0,
+        "off_scale": 7,
+        "edges": 4
+      }
+    },
+    "screen-mise-after": {
+      "page": "recipe.html",
+      "expect": {
+        "contrast": 0,
+        "graphics": 0,
+        "emoji": 0,
+        "glow": 0,
+        "text_scales": true,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 0,
+        "unknown": 0,
+        "off_scale": 0,
+        "edges": 1
+      }
+    },
+    "screen-relay-after": {
+      "page": "index.html",
+      "expect": {
+        "contrast": 0,
+        "graphics": 0,
+        "emoji": 0,
+        "glow": 0,
+        "text_scales": true,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 0,
+        "unknown": 0,
+        "off_scale": 0,
+        "edges": 3
+      }
+    },
+    "screen-stride-after": {
+      "page": "after.html",
+      "expect": {
+        "contrast": 0,
+        "graphics": 0,
+        "emoji": 0,
+        "glow": 0,
+        "text_scales": false,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 0,
+        "unknown": 0,
+        "off_scale": 0,
+        "edges": 2
+      }
+    },
+    "screen-trail-after": {
+      "page": "mock-light-approach.html",
+      "expect": {
+        "contrast": 0,
+        "graphics": 1,
+        "emoji": 0,
+        "glow": 0,
+        "text_scales": false,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 0,
+        "unknown": 0,
+        "off_scale": 0,
+        "edges": 1
+      }
+    },
+    "audit-reading": {
+      "page": "layering.html",
+      "expect": {
+        "contrast": 14,
+        "graphics": 0,
+        "emoji": 10,
+        "glow": 1,
+        "text_scales": false,
+        "long_lines": 4,
+        "aligned_text": 4,
+        "empty_blocks": 1,
+        "tiny_text": 0,
+        "estimated": 3,
+        "unknown": 0,
+        "off_scale": 4,
+        "edges": 1
+      },
+      "widths": "1280"
+    },
+    "screen-article-after": {
+      "page": "layering-after.html",
+      "expect": {
+        "contrast": 0,
+        "graphics": 0,
+        "emoji": 0,
+        "glow": 0,
+        "text_scales": true,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 0,
+        "unknown": 0,
+        "off_scale": 0,
+        "edges": 1
+      },
+      "widths": "1280"
+    },
+    "audit-css-image-hero": {
+      "page": "page.html",
+      "expect": {
+        "contrast": 0,
+        "graphics": 0,
+        "emoji": 0,
+        "glow": 0,
+        "text_scales": true,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 1,
+        "tiny_text": 0,
+        "estimated": 0,
+        "unknown": 0,
+        "off_scale": 0,
+        "edges": 1
+      }
+    },
+    "audit-gradient-text": {
+      "page": "page.html",
+      "expect": {
+        "contrast": 1,
+        "graphics": 0,
+        "emoji": 0,
+        "glow": 0,
+        "text_scales": true,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 1,
+        "unknown": 0,
+        "off_scale": 0,
+        "edges": 1
+      }
+    },
+    "audit-ua-button": {
+      "page": "page.html",
+      "expect": {
+        "contrast": 0,
+        "graphics": 0,
+        "emoji": 0,
+        "glow": 0,
+        "text_scales": false,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 0,
+        "unknown": 0,
+        "off_scale": 0,
+        "edges": 0
+      }
+    },
+    "audit-svg-text": {
+      "page": "page.html",
+      "expect": {
+        "contrast": 0,
+        "graphics": 0,
+        "emoji": 0,
+        "glow": 0,
+        "text_scales": true,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 0,
+        "unknown": 0,
+        "off_scale": 0,
+        "edges": 1
+      }
+    },
+    "audit-grid-edges": {
+      "page": "page.html",
+      "expect": {
+        "contrast": 0,
+        "graphics": 0,
+        "emoji": 0,
+        "glow": 0,
+        "text_scales": false,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 0,
+        "unknown": 0,
+        "off_scale": 0,
+        "edges": 1
+      },
+      "widths": "1280"
+    },
+    "screen-dash-after": {
+      "page": "analytics.after.html",
+      "expect": {
+        "contrast": 0,
+        "graphics": 0,
+        "emoji": 0,
+        "glow": 0,
+        "text_scales": true,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 0,
+        "unknown": 0,
+        "off_scale": 0,
+        "edges": 1
+      },
+      "widths": "1280"
+    },
+    "screen-order-before": {
+      "page": "before.html",
+      "expect": {
+        "contrast": 13,
+        "graphics": 0,
+        "emoji": 8,
+        "glow": 1,
+        "text_scales": false,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 4,
+        "unknown": 0,
+        "off_scale": 2,
+        "edges": 3
+      }
+    },
+    "audit-svg-chart": {
+      "page": "index.html",
+      "expect": {
+        "contrast": 1,
+        "graphics": 0,
+        "emoji": 0,
+        "glow": 0,
+        "text_scales": false,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 3,
+        "estimated": 0,
+        "unknown": 0,
+        "off_scale": 1,
+        "edges": 1
+      }
+    },
+    "audit-gradient-own-bg": {
+      "page": "index.html",
+      "expect": {
+        "contrast": 2,
+        "graphics": 0,
+        "emoji": 0,
+        "glow": 0,
+        "text_scales": false,
+        "long_lines": 0,
+        "aligned_text": 0,
+        "empty_blocks": 0,
+        "tiny_text": 0,
+        "estimated": 1,
+        "unknown": 0,
+        "off_scale": 0,
+        "edges": 1
+      }
+    }
+  },
+  "cli": [
+    {
+      "name": "allow-project-decisions",
+      "script": "slop-scan.py",
+      "args": [
+        "{cases}/project-decisions",
+        "--scale",
+        "0,1,2,6,12,18,24,36,48",
+        "--allow",
+        "tracked-caps",
+        "--strict"
+      ],
+      "exit": 0,
+      "contains": [
+        "allowed by the project (--allow): tracked-caps ×1",
+        "nothing found"
+      ]
+    },
+    {
+      "name": "default-scale-flags-base-6",
+      "script": "slop-scan.py",
+      "args": [
+        "{cases}/project-decisions",
+        "--strict"
+      ],
+      "exit": 1,
+      "contains": [
+        "off the scale",
+        "tracked all-caps"
+      ]
+    },
+    {
+      "name": "allow-refuses-contrast",
+      "script": "unslop-score.py",
+      "args": [
+        "{cases}/project-decisions",
+        "--allow",
+        "contrast"
+      ],
+      "exit": 1,
+      "contains": [
+        "can't include contrast"
+      ]
+    },
+    {
+      "name": "allow-refuses-claims",
+      "script": "slop-scan.py",
+      "args": [
+        "{cases}/project-decisions",
+        "--allow",
+        "off-scale,unverified-claim"
+      ],
+      "exit": 1,
+      "contains": [
+        "can't include unverified-claim"
+      ]
+    },
+    {
+      "name": "score-lists-allowed",
+      "script": "unslop-score.py",
+      "args": [
+        "{cases}/project-decisions",
+        "--scale",
+        "0,1,2,6,12,18,24,36,48",
+        "--allow",
+        "tracked-caps"
+      ],
+      "exit": 0,
+      "contains": [
+        "unslop score: 100/100",
+        "allowed by the project (--allow, not scored): tracked-caps ×1"
+      ]
+    },
+    {
+      "name": "allow-refuses-focus",
+      "script": "unslop-score.py",
+      "args": [
+        "{cases}/project-decisions",
+        "--allow",
+        "tracked-caps,focus"
+      ],
+      "exit": 1,
+      "contains": [
+        "can't include focus"
+      ]
+    },
+    {
+      "name": "allow-refuses-targets",
+      "script": "slop-scan.py",
+      "args": [
+        "{cases}/project-decisions",
+        "--allow",
+        "targets"
+      ],
+      "exit": 1,
+      "contains": [
+        "can't include targets"
+      ]
+    },
+    {
+      "name": "list-rules",
+      "script": "slop-scan.py",
+      "args": [
+        "--list-rules"
+      ],
+      "exit": 0,
+      "contains": [
+        "ghost-card",
+        "#68",
+        "plural-hack",
+        "side-stripe",
+        "unverified-claim"
+      ]
+    },
+    {
+      "name": "github-annotations",
+      "script": "slop-scan.py",
+      "args": [
+        "{cases}/framework-svelte",
+        "--github"
+      ],
+      "exit": 0,
+      "contains": [
+        "::warning file=",
+        "title=unslop #66 hard-shadow::",
+        "line=8,title=unslop #67 bounce-easing"
+      ]
+    },
+    {
+      "name": "json-hits",
+      "script": "slop-scan.py",
+      "args": [
+        "{cases}/craft-ghost-card",
+        "--json"
+      ],
+      "exit": 0,
+      "contains": [
+        "\"rule\": \"ghost-card\"",
+        "\"line\": 1"
+      ],
+      "excludes": [
+        "unslop scan:"
+      ]
+    },
+    {
+      "name": "score-markdown",
+      "script": "unslop-score.py",
+      "args": [
+        "{cases}/framework-svelte",
+        "--markdown"
+      ],
+      "exit": 0,
+      "contains": [
+        "### unslop score:",
+        "| Points | Fix | Hits |",
+        "[#66] Hard offset shadows"
+      ]
+    },
+    {
+      "name": "hook-write-reports",
+      "script": "hooks/unslop-hook.mjs",
+      "args": [],
+      "exit": 0,
+      "stdin": {
+        "tool_name": "Write",
+        "cwd": "{root}",
+        "tool_input": {
+          "file_path": "{cases}/framework-svelte/Toast.svelte"
+        }
+      },
+      "contains": [
+        "\"hookEventName\":\"PostToolUse\"",
+        "#66 hard-shadow",
+        "#67 bounce-easing"
+      ]
+    },
+    {
+      "name": "hook-clean-edit-silent",
+      "script": "hooks/unslop-hook.mjs",
+      "args": [],
+      "exit": 0,
+      "stdin": {
+        "tool_name": "Edit",
+        "cwd": "{root}",
+        "tool_input": {
+          "file_path": "{cases}/framework-svelte/Toast.svelte",
+          "new_string": "    padding: 12px 16px;"
+        }
+      },
+      "excludes": [
+        "hookSpecificOutput"
+      ]
+    },
+    {
+      "name": "hook-skips-non-ui",
+      "script": "hooks/unslop-hook.mjs",
+      "args": [],
+      "exit": 0,
+      "stdin": {
+        "tool_name": "Write",
+        "cwd": "{root}",
+        "tool_input": {
+          "file_path": "{root}/scripts/test.py"
+        }
+      },
+      "excludes": [
+        "hookSpecificOutput"
+      ]
+    },
+    {
+      "name": "context-file-sets-scale-and-allow",
+      "script": "slop-scan.py",
+      "args": [
+        "{cases}/project-decisions",
+        "--context",
+        "{cases}/../context/context.md",
+        "--strict"
+      ],
+      "exit": 0,
+      "contains": [
+        "(context: ",
+        "allowed by the project (--allow): tracked-caps ×1",
+        "nothing found"
+      ]
+    },
+    {
+      "name": "flags-beat-context",
+      "script": "slop-scan.py",
+      "args": [
+        "{cases}/project-decisions",
+        "--context",
+        "{cases}/../context/context.md",
+        "--scale",
+        "0,4,8",
+        "--strict"
+      ],
+      "exit": 1,
+      "contains": [
+        "off the scale"
+      ]
+    },
+    {
+      "name": "hook-partial-line-edit",
+      "script": "hooks/unslop-hook.mjs",
+      "args": [],
+      "exit": 0,
+      "stdin": {
+        "tool_name": "Edit",
+        "cwd": "{root}",
+        "tool_input": {
+          "file_path": "{cases}/craft-ghost-card/Card.tsx",
+          "old_string": "rounded-xl border bg-card text-card",
+          "new_string": "rounded-xl border bg-card text-card-foreground shadow"
+        }
+      },
+      "contains": [
+        "#68 ghost-card",
+        "Card.tsx:1:"
+      ]
+    },
+    {
+      "name": "baseline-text",
+      "script": "unslop-score.py",
+      "args": [
+        "{cases}/screen-dash-after",
+        "--baseline",
+        "{cases}/../baselines/dash-before.json",
+        "--baseline-label",
+        "main",
+        "--no-context"
+      ],
+      "exit": 0,
+      "contains": [
+        "vs main: ",
+        "better: [#"
+      ]
+    },
+    {
+      "name": "baseline-markdown",
+      "script": "unslop-score.py",
+      "args": [
+        "{cases}/screen-dash-after",
+        "--baseline",
+        "{cases}/../baselines/dash-before.json",
+        "--baseline-label",
+        "main",
+        "--markdown",
+        "--no-context"
+      ],
+      "exit": 0,
+      "contains": [
+        "vs main)",
+        "**Better**"
+      ]
+    },
+    {
+      "name": "baseline-missing-file",
+      "script": "unslop-score.py",
+      "args": [
+        "{cases}/screen-dash-after",
+        "--baseline",
+        "{cases}/../baselines/nope.json"
+      ],
+      "exit": 1,
+      "contains": [
+        "can't read the baseline"
+      ]
+    },
+    {
+      "name": "hook-gemini-aftertool",
+      "script": "hooks/unslop-hook.mjs",
+      "args": [],
+      "exit": 0,
+      "stdin": {
+        "hook_event_name": "AfterTool",
+        "tool_name": "write_file",
+        "cwd": "{root}",
+        "tool_input": {
+          "file_path": "{cases}/framework-svelte/Toast.svelte",
+          "content": "…"
+        }
+      },
+      "contains": [
+        "\"hookEventName\":\"AfterTool\"",
+        "#66 hard-shadow"
+      ]
+    },
+    {
+      "name": "hook-gemini-replace-clean",
+      "script": "hooks/unslop-hook.mjs",
+      "args": [],
+      "exit": 0,
+      "stdin": {
+        "hook_event_name": "AfterTool",
+        "tool_name": "replace",
+        "cwd": "{root}",
+        "tool_input": {
+          "file_path": "{cases}/framework-svelte/Toast.svelte",
+          "old_string": "12px 16px",
+          "new_string": "padding: 12px 16px;"
+        }
+      },
+      "excludes": [
+        "hookSpecificOutput"
+      ]
+    },
+    {
+      "name": "hook-codex-apply-patch",
+      "script": "hooks/unslop-hook.mjs",
+      "args": [],
+      "exit": 0,
+      "stdin": {
+        "hook_event_name": "PostToolUse",
+        "tool_name": "apply_patch",
+        "cwd": "{root}",
+        "tool_input": {
+          "input": "*** Begin Patch\n*** Update File: tests/cases/craft-ghost-card/Card.tsx\n@@\n-export const Card = ({ children }) => <div>{children}</div>;\n+export const Card = ({ children }) => <div className=\"rounded-xl border bg-card text-card-foreground shadow\">{children}</div>;\n*** End Patch"
+        }
+      },
+      "contains": [
+        "#68 ghost-card",
+        "Card.tsx:1:"
+      ],
+      "excludes": [
+        "Card.tsx:3:"
+      ]
+    },
+    {
+      "name": "hook-copilot-toolargs",
+      "script": "hooks/unslop-hook.mjs",
+      "args": [],
+      "exit": 0,
+      "stdin": {
+        "hookEventName": "PostToolUse",
+        "toolName": "create_file",
+        "cwd": "{root}",
+        "toolArgs": "{\"filePath\": \"tests/cases/craft-bounce-easing/motion.css\", \"content\": \"…\"}"
+      },
+      "contains": [
+        "#67 bounce-easing",
+        "motion.css:"
+      ]
+    },
+    {
+      "name": "hook-short-edit",
+      "script": "hooks/unslop-hook.mjs",
+      "args": [],
+      "exit": 0,
+      "stdin": {
+        "tool_name": "Edit",
+        "cwd": "{root}",
+        "tool_input": {
+          "file_path": "{cases}/../hook-files/margin.css",
+          "old_string": "4",
+          "new_string": "3"
+        }
+      },
+      "contains": [
+        "#1 off-scale",
+        "margin.css:1:"
+      ]
+    },
+    {
+      "name": "contrast-fails",
+      "script": "contrast.py",
+      "args": [
+        "#ffffff",
+        "#3ddc84"
+      ],
+      "exit": 1,
+      "contains": [
+        "1.78:1",
+        "fails text (4.5)"
+      ]
+    },
+    {
+      "name": "contrast-passes-worst",
+      "script": "contrast.py",
+      "args": [
+        "#151513",
+        "#f5f5f2",
+        "#ffffff"
+      ],
+      "exit": 0,
+      "contains": [
+        "passes text",
+        "worst: 16.74:1"
+      ]
+    },
+    {
+      "name": "contrast-translucent",
+      "script": "contrast.py",
+      "args": [
+        "rgba(255,255,255,0.6)",
+        "#2440c8"
+      ],
+      "exit": 1,
+      "contains": [
+        "3.88:1"
+      ]
+    },
+    {
+      "name": "contrast-compose-hex",
+      "script": "contrast.py",
+      "args": [
+        "0xFF6650A4",
+        "#fff"
+      ],
+      "exit": 0,
+      "contains": [
+        "6.46:1"
+      ]
+    }
+  ]
+}

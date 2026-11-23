@@ -1,0 +1,15 @@
+{
+  "name": "unslop",
+  "description": "Design skills that make apps and sites stop looking AI-generated.",
+  "owner": {
+    "name": "Marcos Novo",
+    "url": "https://github.com/marcosnovo"
+  },
+  "plugins": [
+    {
+      "name": "unslop-design",
+      "source": "./",
+      "description": "Make your app or site stop looking AI-generated: 72 design fixes, UI scanners, a post-edit hook and a 0-100 score."
+    }
+  ]
+}
