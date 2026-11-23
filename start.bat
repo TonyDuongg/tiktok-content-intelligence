@@ -1,7 +1,19 @@
 @echo off
+REM =======================================================================
+REM [QUAN TRONG] DAN GEMINI API KEY CUA BAN VAO DUOI DAY (BO DAU REM DI):
+REM set "GEMINI_API_KEY=AIzaSy_dien_key_cua_ban_vao_day"
+REM =======================================================================
+
 set "ROOT_DIR=%~dp0"
 set "BACKEND_DIR=%ROOT_DIR%backend"
 set "FRONTEND_DIR=%ROOT_DIR%frontend"
+
+REM Load .env if present
+if exist "%ROOT_DIR%.env" (
+    for /f "usebackq tokens=1,* delims==" %%A in ("%ROOT_DIR%.env") do (
+        if not "%%A"=="" set "%%A=%%B"
+    )
+)
 
 cd /d "%ROOT_DIR%"
 title TikTok Content Intelligence ^& AI Script Studio

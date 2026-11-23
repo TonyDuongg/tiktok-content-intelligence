@@ -1,6 +1,20 @@
 # TikTok Content Intelligence & AI Script Studio - PowerShell Launcher
+# =======================================================================
+# [QUAN TRONG] DAN GEMINI API KEY CUA BAN VAO DUOI DAY (BO DAU # O DAU DONG DI):
+# $env:GEMINI_API_KEY = "AIzaSy_dien_key_cua_ban_vao_day"
+# =======================================================================
+
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $ScriptDir
+
+# Load .env if present
+if (Test-Path "$ScriptDir\.env") {
+    Get-Content "$ScriptDir\.env" | ForEach-Object {
+        if ($_ -match '^\s*([^#=]+)=(.*)$') {
+            [System.Environment]::SetEnvironmentVariable($matches[1].Trim(), $matches[2].Trim())
+        }
+    }
+}
 
 Write-Host "=======================================================================" -ForegroundColor Cyan
 Write-Host "   TIKTOK CONTENT INTELLIGENCE & AI SCRIPT GENERATOR STUDIO" -ForegroundColor Yellow

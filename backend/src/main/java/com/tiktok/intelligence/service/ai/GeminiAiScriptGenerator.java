@@ -28,7 +28,7 @@ public class GeminiAiScriptGenerator implements AiScriptGeneratorClient {
     @Value("${application.ai.gemini-api-key:}")
     private String apiKey;
 
-    @Value("${application.ai.gemini-model:gemini-1.5-flash}")
+    @Value("${application.ai.gemini-model:gemini-3.5-flash}")
     private String model;
 
     private final HttpClient httpClient = HttpClient.newBuilder()
@@ -95,16 +95,47 @@ public class GeminiAiScriptGenerator implements AiScriptGeneratorClient {
             int endIdx = textResponse.lastIndexOf("}");
             if (startIdx >= 0 && endIdx > startIdx) {
                 String cleanJson = textResponse.substring(startIdx, endIdx + 1);
-                var scriptDto = objectMapper.readValue(cleanJson, GeneratedScriptDto.class);
+                var node = objectMapper.readTree(cleanJson);
+
+                String title = node.path("title").asText(nicheName + " - Xu hướng TikTok");
+                String audience = node.path("targetAudience").asText(targetAudience);
+                String hook3s = node.path("hook3s").asText("Đừng lướt qua video này!");
+
+                String bodyContent;
+                if (node.path("bodyContent").isArray()) {
+                    StringBuilder sb = new StringBuilder();
+                    for (var item : node.path("bodyContent")) {
+                        sb.append(item.asText()).append("\n\n");
+                    }
+                    bodyContent = sb.toString().trim();
+                } else {
+                    bodyContent = node.path("bodyContent").asText("Nội dung chia sẻ giá trị...");
+                }
+
+                String cta = node.path("callToAction").asText("Follow kênh để xem thêm mẹo hay!");
+                String cues = node.path("visualAndSoundCues").asText("Góc quay cận cảnh khuôn mặt, chèn nhạc nền xu hướng.");
+
+                List<String> hashtags = new java.util.ArrayList<>();
+                if (node.path("suggestedHashtags").isArray()) {
+                    for (var tag : node.path("suggestedHashtags")) {
+                        hashtags.add(tag.asText());
+                    }
+                }
+                if (hashtags.isEmpty()) {
+                    hashtags = List.of("#trending", "#tiktok", "#viral");
+                }
+
+                int duration = node.path("estimatedDurationSeconds").asInt(35);
+
                 return new GeneratedScriptDto(
-                        scriptDto.title(),
-                        scriptDto.targetAudience(),
-                        scriptDto.hook3s(),
-                        scriptDto.bodyContent(),
-                        scriptDto.callToAction(),
-                        scriptDto.visualAndSoundCues(),
-                        scriptDto.suggestedHashtags(),
-                        scriptDto.estimatedDurationSeconds(),
+                        title,
+                        audience,
+                        hook3s,
+                        bodyContent,
+                        cta,
+                        cues,
+                        hashtags,
+                        duration,
                         "google-" + model
                 );
             }
