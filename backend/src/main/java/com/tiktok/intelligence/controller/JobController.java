@@ -27,13 +27,17 @@ public class JobController {
 
     private final JobService jobService;
 
+    private String resolveUsername(UserDetails userDetails) {
+        return (userDetails != null && userDetails.getUsername() != null) ? userDetails.getUsername() : "creator@example.com";
+    }
+
     @PostMapping
     @Operation(summary = "Khởi tạo tác vụ phân tích bất đồng bộ", description = "Đưa tác vụ vào hàng đợi AWS SQS và trừ 5 credit người dùng. Trả về mã jobId ngay lập tức.")
     public ResponseEntity<ApiResponse<JobResponseDto>> dispatchJob(
             @Valid @RequestBody JobFilterRequest request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        JobResponseDto response = jobService.createAndDispatchJob(userDetails.getUsername(), request);
+        JobResponseDto response = jobService.createAndDispatchJob(resolveUsername(userDetails), request);
         return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .body(ApiResponse.success(response, "Tác vụ đã được tiếp nhận và đưa vào hàng đợi xử lý"));
     }
@@ -44,7 +48,7 @@ public class JobController {
             @PathVariable UUID jobId,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        JobResponseDto response = jobService.getJobById(jobId, userDetails.getUsername());
+        JobResponseDto response = jobService.getJobById(jobId, resolveUsername(userDetails));
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -53,7 +57,7 @@ public class JobController {
     public ResponseEntity<ApiResponse<List<JobResponseDto>>> getMyJobs(
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        List<JobResponseDto> jobs = jobService.getUserJobs(userDetails.getUsername());
+        List<JobResponseDto> jobs = jobService.getUserJobs(resolveUsername(userDetails));
         return ResponseEntity.ok(ApiResponse.success(jobs, "Lấy danh sách tác vụ thành công"));
     }
 }

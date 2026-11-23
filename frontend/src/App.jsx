@@ -2,178 +2,197 @@ import React, { useState, useEffect } from 'react';
 import {
   Sparkles,
   TrendingUp,
-  Video,
+  Bookmark,
   Copy,
   Check,
-  Bookmark,
   Search,
   Zap,
-  Clock,
   Film,
-  User,
-  LogOut,
-  LogIn,
-  AlertCircle,
-  ExternalLink,
-  ChevronRight
+  Camera,
+  MessageSquare,
+  Hash,
+  PlayCircle,
+  HelpCircle,
+  ChevronRight,
+  Flame,
+  ThumbsUp,
+  Eye,
+  RefreshCw
 } from 'lucide-react';
-import { api, getAuthToken, setAuthToken } from './api';
+import { api } from './api';
+
+// Danh mục mặc định sẵn sàng ngay lập tức không cần đợi backend
+const DEFAULT_CATEGORIES = [
+  { id: 1, name: 'Làm đẹp & Chăm sóc da (Skincare / Makeup)', slug: 'lam-dep-my-pham' },
+  { id: 2, name: 'Thời trang & Phối đồ (OOTD / Phụ kiện)', slug: 'thoi-trang-phoi-do' },
+  { id: 3, name: 'Ăn uống & Review món ngon (Food Tour)', slug: 'an-uong-review' },
+  { id: 4, name: 'Công nghệ, Điện thoại & Mẹo vặt', slug: 'cong-nghe-tien-ich' },
+  { id: 5, name: 'Đời sống, Tâm sự & Truyền cảm hứng', slug: 'doi-song-storytelling' }
+];
+
+// Gợi ý chủ đề nhanh để người dùng bấm thử 1-click
+const QUICK_IDEAS = [
+  '3 Sai lầm chết người khi thoa kem chống nắng khiến da nổi mụn',
+  'Cách phối đồ hack chiều cao thêm 5cm cho người lùn',
+  'Top 3 quán cà phê view ngắm hoàng hôn đẹp nhất không thể bỏ qua',
+  'Mẹo ẩn trên điện thoại 90% người dùng chưa từng biết',
+  'Cách quản lý chi tiêu tháng đầu đi làm không lo rỗng túi'
+];
+
+// Kênh mẫu để người dùng thử tính năng phân tích kênh đối thủ
+const SAMPLE_CHANNELS = [
+  { username: 'beauty_queen', label: 'Kênh Làm Đẹp' },
+  { username: 'chubebe', label: 'Kênh Đời Sống' },
+  { username: 'reviewcongnghe', label: 'Kênh Công Nghệ' },
+  { username: 'foodlover_vn', label: 'Kênh Ẩm Thực' }
+];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('studio');
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(getAuthToken());
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [toast, setToast] = useState('');
   const [copied, setCopied] = useState(false);
 
-  // Auth Modal State
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isLoginMode, setIsLoginMode] = useState(true);
-  const [authEmail, setAuthEmail] = useState('creator@example.com');
-  const [authPassword, setAuthPassword] = useState('SecurePassword123@');
-  const [authFullName, setAuthFullName] = useState('Creator Pro');
-  const [authLoading, setAuthLoading] = useState(false);
+  // Form viết kịch bản
+  const [selectedCategoryId, setSelectedCategoryId] = useState(1);
+  const [scriptTopic, setScriptTopic] = useState('3 Sai lầm chết người khi thoa kem chống nắng khiến da nổi mụn');
+  const [targetAudience, setTargetAudience] = useState('Gen Z da dầu mụn, học sinh sinh viên');
+  const [scriptTone, setScriptTone] = useState('Cảnh báo, chuyên gia, lôi cuốn');
+  const [generatedScript, setGeneratedScript] = useState(null);
+  const [studioLoading, setStudioLoading] = useState(false);
 
-  // Channel Research State
+  // Khám phá kênh đối thủ
   const [searchUsername, setSearchUsername] = useState('beauty_queen');
   const [channelData, setChannelData] = useState(null);
   const [topVideos, setTopVideos] = useState([]);
   const [channelLoading, setChannelLoading] = useState(false);
 
-  // Script Studio State
-  const [selectedCategoryId, setSelectedCategoryId] = useState('');
-  const [scriptTopic, setScriptTopic] = useState('3 Sai lầm chết người khi thoa kem chống nắng');
-  const [targetAudience, setTargetAudience] = useState('Gen Z da dầu mụn, học sinh sinh viên');
-  const [scriptTone, setScriptTone] = useState('Cảnh báo, chuyên gia, lôi cuốn');
-  const [referenceVideoIds, setReferenceVideoIds] = useState([]);
-  const [generatedScript, setGeneratedScript] = useState(null);
-  const [studioLoading, setStudioLoading] = useState(false);
-
-  // My Scripts State
+  // Kịch bản đã lưu
   const [myScripts, setMyScripts] = useState([]);
   const [scriptsLoading, setScriptsLoading] = useState(false);
 
   const showToastMsg = (msg) => {
     setToast(msg);
-    setTimeout(() => setToast(''), 3500);
+    setTimeout(() => setToast(''), 3000);
   };
 
-  // Initial Data Load
+  // Nạp danh mục từ backend khi khởi động
   useEffect(() => {
     loadCategories();
-    if (token) {
-      loadUserProfile();
-    } else {
-      // Auto-connect with default demo creator account on first visit
-      attemptDemoLogin();
-    }
-  }, [token]);
+    loadMyScripts();
+  }, []);
 
-  const attemptDemoLogin = async () => {
-    try {
-      const res = await api.login('creator@example.com', 'SecurePassword123@');
-      if (res?.data?.accessToken) {
-        setAuthToken(res.data.accessToken);
-        setToken(res.data.accessToken);
-      }
-    } catch (err) {
-      // Backend might still be starting, retry once after 3 seconds
-      setTimeout(async () => {
-        try {
-          const retryRes = await api.login('creator@example.com', 'SecurePassword123@');
-          if (retryRes?.data?.accessToken) {
-            setAuthToken(retryRes.data.accessToken);
-            setToken(retryRes.data.accessToken);
-          }
-        } catch (_) {}
-      }, 3000);
-    }
-  };
-
-  const loadCategories = async (retryCount = 0) => {
+  const loadCategories = async () => {
     try {
       const res = await api.getCategories();
       if (res?.data && res.data.length > 0) {
         setCategories(res.data);
-        if (!selectedCategoryId) {
-          setSelectedCategoryId(res.data[0].id);
-        }
       }
-    } catch (err) {
-      // If backend is still starting up during first few seconds, retry smoothly
-      if (retryCount < 6) {
-        setTimeout(() => loadCategories(retryCount + 1), 2500);
-      }
+    } catch (_) {
+      // Giữ DEFAULT_CATEGORIES nếu backend đang khởi động
     }
   };
 
-  const loadUserProfile = async () => {
+  const loadMyScripts = async () => {
     try {
-      const res = await api.getMe();
+      const res = await api.getMyScripts();
       if (res?.data) {
-        setUser(res.data);
+        setMyScripts(res.data);
       }
-    } catch (err) {
-      // Token might be expired
-      setAuthToken('');
-      setToken('');
-      setUser(null);
-    }
+    } catch (_) {}
   };
 
-  // Handle Auth
-  const handleAuthSubmit = async (e) => {
-    e.preventDefault();
-    setAuthLoading(true);
-    try {
-      let res;
-      if (isLoginMode) {
-        res = await api.login(authEmail, authPassword);
-      } else {
-        res = await api.register(authEmail, authPassword, authFullName);
-      }
-
-      if (res?.data?.accessToken) {
-        setAuthToken(res.data.accessToken);
-        setToken(res.data.accessToken);
-        setShowAuthModal(false);
-        showToastMsg(isLoginMode ? 'Đăng nhập thành công!' : 'Đăng ký tài khoản thành công!');
-        await loadUserProfile();
-      }
-    } catch (err) {
-      alert(err.message || 'Lỗi xác thực');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleLogout = () => {
-    setAuthToken('');
-    setToken('');
-    setUser(null);
-    showToastMsg('Đã đăng xuất tài khoản');
-  };
-
-  // Handle Channel Ingestion & Search
-  const handleInspectChannel = async () => {
-    if (!token) {
-      setShowAuthModal(true);
+  // Sinh kịch bản AI (Không yêu cầu đăng nhập)
+  const handleGenerateScript = async () => {
+    if (!scriptTopic.trim()) {
+      alert('Vui lòng nhập chủ đề video bạn muốn làm!');
       return;
     }
-    if (!searchUsername.trim()) return;
 
+    setStudioLoading(true);
+    try {
+      const payload = {
+        categoryId: Number(selectedCategoryId) || 1,
+        topic: scriptTopic.trim(),
+        targetAudience: targetAudience.trim() || 'Người dùng TikTok Việt Nam',
+        tone: scriptTone.trim() || 'Lôi cuốn, thực tế',
+        referenceVideoIds: []
+      };
+
+      const res = await api.generateDirectScript(payload);
+      if (res?.data) {
+        setGeneratedScript(res.data);
+        showToastMsg('✨ Kịch bản đã được sinh thành công!');
+        loadMyScripts();
+      }
+    } catch (err) {
+      alert(err.message || 'Lỗi khi tạo kịch bản, vui lòng thử lại.');
+    } finally {
+      setStudioLoading(false);
+    }
+  };
+
+  // Sao chép kịch bản 1-click
+  const handleCopyScript = () => {
+    if (!generatedScript) return;
+    const structure = generatedScript.scriptStructure || {};
+    const text = `🎬 TIÊU ĐỀ VIDEO: ${generatedScript.title}
+🎯 ĐỐI TƯỢNG XEM: ${generatedScript.targetAudience}
+⏱️ THỜI LƯỢNG ƯỚC TÍNH: ~${structure.estimatedDurationSeconds || 35} giây
+
+==================================================
+1. CÂU MỞ ĐẦU 3 GIÂY ĐẦU TIÊN (GIỮ CHÂN NGƯỜI XEM):
+"${structure.hook3s || ''}"
+
+2. NỘI DUNG CHÍNH (LỜI THOẠI CHI TIẾT):
+${structure.bodyContent || ''}
+
+3. HƯỚNG DẪN QUAY & ĐỘNG TÁC (GÓC MÁY / HÀNH ĐỘNG):
+${generatedScript.visualAndSoundCues || ''}
+
+4. CÂU KẾT THÚC (KÊU GỌI THẢ TIM, COMMENT, FOLLOW):
+"${structure.callToAction || ''}"
+
+5. HASHTAGS GỢI Ý:
+${(generatedScript.suggestedHashtags || []).join(' ')}
+==================================================
+`;
+
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    showToastMsg('Đã sao chép kịch bản! Bạn có thể dán vào ghi chú để quay video.');
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  // Đánh dấu yêu thích
+  const handleToggleFavorite = async (scriptId, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 'FAVORITE' ? 'DRAFT' : 'FAVORITE';
+      const res = await api.updateScriptStatus(scriptId, newStatus);
+      if (generatedScript && generatedScript.id === scriptId) {
+        setGeneratedScript(res.data);
+      }
+      showToastMsg(newStatus === 'FAVORITE' ? 'Đã lưu vào danh sách yêu thích ⭐' : 'Đã bỏ yêu thích');
+      loadMyScripts();
+    } catch (err) {
+      console.warn(err);
+    }
+  };
+
+  // Khám phá kênh
+  const handleSearchChannel = async (customUsername) => {
+    const targetUser = (customUsername || searchUsername).replace('@', '').trim();
+    if (!targetUser) return;
+
+    setSearchUsername(targetUser);
     setChannelLoading(true);
     try {
-      const cleanUser = searchUsername.replace('@', '').trim();
-      const res = await api.ingestChannel(cleanUser, selectedCategoryId || null, 10);
+      const res = await api.ingestChannel(targetUser, selectedCategoryId, 10);
       setChannelData(res.data);
 
-      // Load top viral videos
-      const videoRes = await api.getTopVideos(cleanUser, 10);
-      setTopVideos(videoRes.data || []);
-      showToastMsg(`Đã thu thập dữ liệu kênh @${cleanUser}`);
-      await loadUserProfile(); // Refresh credit
+      const topRes = await api.getTopVideos(targetUser, 8);
+      setTopVideos(topRes.data || []);
+      showToastMsg(`Đã phân tích xong kênh @${targetUser}`);
     } catch (err) {
       alert(err.message || 'Không thể cào dữ liệu kênh');
     } finally {
@@ -181,116 +200,16 @@ export default function App() {
     }
   };
 
-  // Handle Script Generation
-  const handleGenerateScript = async () => {
-    if (!token) {
-      setShowAuthModal(true);
-      return;
-    }
-    if (!scriptTopic.trim()) {
-      alert('Vui lòng nhập chủ đề kịch bản muốn làm');
-      return;
-    }
-
-    setStudioLoading(true);
-    try {
-      const payload = {
-        categoryId: selectedCategoryId ? Number(selectedCategoryId) : null,
-        topic: scriptTopic.trim(),
-        targetAudience: targetAudience.trim() || 'Người dùng TikTok Việt Nam',
-        tone: scriptTone.trim() || 'Hài hước, lôi cuốn',
-        referenceVideoIds: referenceVideoIds
-      };
-
-      const res = await api.generateDirectScript(payload);
-      setGeneratedScript(res.data);
-      showToastMsg('✨ AI đã tạo kịch bản viral thành công!');
-      await loadUserProfile(); // Refresh credit
-    } catch (err) {
-      alert(err.message || 'Lỗi khi sinh kịch bản');
-    } finally {
-      setStudioLoading(false);
-    }
-  };
-
-  // Copy Full Script to Clipboard
-  const handleCopyScript = () => {
-    if (!generatedScript) return;
-    const fullText = `🎬 TIÊU ĐỀ: ${generatedScript.title}
-🎯 ĐỐI TƯỢNG: ${generatedScript.targetAudience}
-⏱️ THỜI LƯỢNG ƯỚC TÍNH: ~${generatedScript.scriptStructure?.estimatedDurationSeconds || 30}s
-
-[1] HOOK 3S ĐẦU (GIỮ CHÂN NGƯỜI XEM):
-${generatedScript.scriptStructure?.hook3s}
-
-[2] NỘI DUNG THÂN BÀI (BODY):
-${generatedScript.scriptStructure?.bodyContent}
-
-[3] CHỈ DẪN QUAY & VISUAL CUES:
-${generatedScript.visualAndSoundCues}
-
-[4] KÊU GỌI HÀNH ĐỘNG (CTA):
-${generatedScript.scriptStructure?.callToAction}
-
-[5] HASHTAGS XU HƯỚNG:
-${(generatedScript.suggestedHashtags || []).join(' ')}
-    `;
-
-    navigator.clipboard.writeText(fullText);
-    setCopied(true);
-    showToastMsg('Đã sao chép toàn bộ kịch bản vào bộ nhớ tạm!');
-    setTimeout(() => setCopied(false), 2500);
-  };
-
-  // Toggle Favorite Status
-  const handleToggleFavorite = async (scriptId, currentStatus) => {
-    if (!token) return;
-    try {
-      const newStatus = currentStatus === 'FAVORITE' ? 'DRAFT' : 'FAVORITE';
-      const res = await api.updateScriptStatus(scriptId, newStatus);
-      if (generatedScript && generatedScript.id === scriptId) {
-        setGeneratedScript(res.data);
-      }
-      showToastMsg(newStatus === 'FAVORITE' ? 'Đã thêm vào Kịch bản yêu thích ⭐' : 'Đã bỏ yêu thích');
-      if (activeTab === 'history') {
-        loadMyScripts();
-      }
-    } catch (err) {
-      alert(err.message || 'Lỗi cập nhật trạng thái');
-    }
-  };
-
-  // Load User Scripts
-  const loadMyScripts = async () => {
-    if (!token) return;
-    setScriptsLoading(true);
-    try {
-      const res = await api.getMyScripts();
-      setMyScripts(res.data || []);
-    } catch (err) {
-      console.warn('Lỗi tải kịch bản:', err);
-    } finally {
-      setScriptsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'history' && token) {
-      loadMyScripts();
-    }
-  }, [activeTab, token]);
-
-  // Use a viral video as inspiration for script
-  const handleInspireFromVideo = (video) => {
-    setScriptTopic(`Mô phỏng trend: ${video.caption?.slice(0, 70) || 'Video triệu view'}`);
-    setReferenceVideoIds([video.id]);
+  // Chọn video viral làm cảm hứng
+  const handleUseVideoInspiration = (video) => {
+    setScriptTopic(`Mô phỏng trend: ${video.caption?.slice(0, 70) || 'Video viral triệu view'}`);
     setActiveTab('studio');
-    showToastMsg('Đã nạp video viral vào Xưởng Kịch Bản!');
+    showToastMsg('Đã nạp video vào Xưởng Kịch Bản! Bạn hãy bấm Sinh Kịch Bản.');
   };
 
   return (
     <div>
-      {/* Toast Notification */}
+      {/* Toast thông báo */}
       {toast && (
         <div className="toast">
           <Zap size={18} color="var(--tiktok-cyan)" />
@@ -298,96 +217,95 @@ ${(generatedScript.suggestedHashtags || []).join(' ')}
         </div>
       )}
 
-      {/* Header */}
+      {/* Header điều hướng */}
       <header className="app-header">
         <div className="header-container">
-          <a href="#" className="logo-area">
+          <div className="logo-area">
             <div className="logo-icon">
-              <Sparkles size={22} color="#fff" />
+              <Flame size={22} color="#fff" />
             </div>
             <div>
-              <h1 style={{ fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.5px' }}>
-                TikTok <span className="gradient-text">Intelligence AI</span>
+              <h1 style={{ fontSize: '1.15rem', fontWeight: 800 }}>
+                TikTok <span className="gradient-text">Creator Studio</span>
               </h1>
-              <p style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>
-                Nghiên cứu đối thủ & Xưởng kịch bản viral 3 hồi
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Nghiên cứu đối thủ & Tự động viết kịch bản video viral bằng AI
               </p>
             </div>
-          </a>
+          </div>
 
-          {/* Nav Tabs */}
+          {/* Các tab chức năng */}
           <nav className="nav-tabs">
             <button
               className={`tab-btn ${activeTab === 'studio' ? 'active' : ''}`}
               onClick={() => setActiveTab('studio')}
             >
               <Sparkles size={16} />
-              Xưởng Kịch Bản AI
+              Viết Kịch Bản Nhanh (AI)
             </button>
             <button
               className={`tab-btn ${activeTab === 'channel' ? 'active' : ''}`}
               onClick={() => setActiveTab('channel')}
             >
               <TrendingUp size={16} />
-              Nghiên cứu Kênh
+              Khám Phá Kênh Đối Thủ
             </button>
             <button
               className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
-              onClick={() => setActiveTab('history')}
+              onClick={() => {
+                setActiveTab('history');
+                loadMyScripts();
+              }}
             >
               <Bookmark size={16} />
-              Kho Kịch Bản ({myScripts.length})
+              Kịch Bản Đã Lưu ({myScripts.length})
             </button>
           </nav>
 
-          {/* User Auth Info */}
-          <div className="user-badge">
-            {user ? (
-              <>
-                <div className="credit-pill">
-                  <Zap size={14} />
-                  <span>{user.creditBalance} Credits</span>
-                </div>
-                <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{user.fullName}</span>
-                  <button
-                    className="btn btn-secondary"
-                    style={{ padding: '0.4rem', borderRadius: '50%' }}
-                    onClick={handleLogout}
-                    title="Đăng xuất"
-                  >
-                    <LogOut size={15} />
-                  </button>
-                </div>
-              </>
-            ) : (
-              <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>
-                <LogIn size={16} />
-                Đăng Nhập / Đăng Ký
-              </button>
-            )}
+          {/* Huy hiệu chế độ trực tiếp (Không cần đăng nhập) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.4rem 0.85rem',
+                background: 'rgba(37, 244, 238, 0.1)',
+                border: '1px solid rgba(37, 244, 238, 0.3)',
+                borderRadius: '999px',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                color: 'var(--tiktok-cyan)'
+              }}
+            >
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#25f4ee' }}></span>
+              Chế độ sử dụng tự do (Không cần tài khoản)
+            </span>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Nội dung chính */}
       <main className="main-container">
-        {/* TAB 1: SCRIPT STUDIO */}
+        {/* ============================================================== */}
+        {/* TAB 1: VIẾT KỊCH BẢN NHANH */}
+        {/* ============================================================== */}
         {activeTab === 'studio' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 420px) 1fr', gap: '2rem' }}>
-            {/* Form Left */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(330px, 440px) 1fr', gap: '2rem' }}>
+            {/* Cột trái: Nhập thông tin */}
             <div className="glass-panel" style={{ padding: '1.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
                 <Sparkles size={20} color="var(--tiktok-pink)" />
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Thiết Lập Kịch Bản</h2>
+                <h2 style={{ fontSize: '1.2rem', fontWeight: 800 }}>1. Nhập Ý Tưởng Video</h2>
               </div>
 
+              {/* Chọn chủ đề kênh */}
               <div className="form-group">
-                <label className="form-label">Ngành hàng / Niche TikTok</label>
+                <label className="form-label">Chủ đề kênh của bạn (Ngành hàng):</label>
                 <select
                   className="form-select"
                   value={selectedCategoryId}
-                  onChange={(e) => setSelectedCategoryId(e.target.value)}
+                  onChange={(e) => setSelectedCategoryId(Number(e.target.value))}
                 >
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -397,168 +315,222 @@ ${(generatedScript.suggestedHashtags || []).join(' ')}
                 </select>
               </div>
 
+              {/* Nhập nội dung muốn làm */}
               <div className="form-group">
-                <label className="form-label">Chủ đề video / Ý tưởng muốn làm *</label>
+                <label className="form-label">Chủ đề hoặc nội dung bạn muốn làm video:</label>
                 <textarea
                   className="form-textarea"
                   rows={3}
                   value={scriptTopic}
                   onChange={(e) => setScriptTopic(e.target.value)}
-                  placeholder="VD: 3 Lỗi dùng kem chống nắng khiến da nổi mụn nhiều hơn..."
+                  placeholder="Ví dụ: 3 Sai lầm chăm da khiến mụn nhiều hơn..."
                 />
+
+                {/* Gợi ý chủ đề nhanh */}
+                <div style={{ marginTop: '0.5rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>
+                    💡 Bấm vào gợi ý để điền nhanh:
+                  </span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.35rem' }}>
+                    {QUICK_IDEAS.map((idea, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        style={{
+                          background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid var(--border-subtle)',
+                          borderRadius: '6px',
+                          color: 'var(--text-muted)',
+                          fontSize: '0.75rem',
+                          padding: '0.25rem 0.5rem',
+                          cursor: 'pointer',
+                          textAlign: 'left'
+                        }}
+                        onClick={() => setScriptTopic(idea)}
+                      >
+                        {idea.slice(0, 36)}...
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
+              {/* Đối tượng xem */}
               <div className="form-group">
-                <label className="form-label">Đối tượng mục tiêu (Target Audience)</label>
+                <label className="form-label">Video này dành cho ai xem?</label>
                 <input
                   type="text"
                   className="form-input"
                   value={targetAudience}
                   onChange={(e) => setTargetAudience(e.target.value)}
-                  placeholder="VD: Gen Z, Dân văn phòng, Người mới bắt đầu..."
+                  placeholder="Ví dụ: Học sinh sinh viên, Gen Z, Dân văn phòng..."
                 />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Tone giọng truyền tải (Tone of Voice)</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={scriptTone}
-                  onChange={(e) => setScriptTone(e.target.value)}
-                  placeholder="VD: Chuyên gia, Hài hước, Cảnh báo giật gân, Kể chuyện..."
-                />
-              </div>
-
-              {referenceVideoIds.length > 0 && (
-                <div style={{ padding: '0.75rem', background: 'rgba(37, 244, 238, 0.1)', borderRadius: '8px', marginBottom: '1.25rem', fontSize: '0.825rem' }}>
-                  <span>🎯 Đã gắn <strong>{referenceVideoIds.length}</strong> video viral làm mẫu tham khảo.</span>
-                  <button
-                    style={{ background: 'none', border: 'none', color: 'var(--tiktok-pink)', marginLeft: '8px', cursor: 'pointer', fontWeight: 600 }}
-                    onClick={() => setReferenceVideoIds([])}
-                  >
-                    Xóa
-                  </button>
+                <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.4rem' }}>
+                  {['Gen Z da dầu mụn', 'Dân văn phòng', 'Người mới bắt đầu', 'Mẹ bỉm sữa'].map((aud, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        fontSize: '0.725rem',
+                        background: 'rgba(37, 244, 238, 0.08)',
+                        color: 'var(--tiktok-cyan)',
+                        padding: '0.2rem 0.5rem',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => setTargetAudience(aud)}
+                    >
+                      +{aud}
+                    </span>
+                  ))}
                 </div>
-              )}
+              </div>
 
+              {/* Phong cách nói chuyện */}
+              <div className="form-group">
+                <label className="form-label">Phong cách nói chuyện (Tone giọng):</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  {[
+                    { label: 'Cảnh báo, giật tít', desc: 'Gây chú ý mạnh' },
+                    { label: 'Hài hước, gần gũi', desc: 'Dễ viral chia sẻ' },
+                    { label: 'Chuyên gia, uy tín', desc: 'Tạo độ tin cậy' },
+                    { label: 'Tâm sự, kể chuyện', desc: 'Chạm cảm xúc' }
+                  ].map((item, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      style={{
+                        padding: '0.5rem',
+                        borderRadius: '8px',
+                        border: scriptTone === item.label ? '1px solid var(--tiktok-pink)' : '1px solid var(--border-subtle)',
+                        background: scriptTone === item.label ? 'rgba(254, 44, 85, 0.15)' : 'rgba(255,255,255,0.03)',
+                        color: scriptTone === item.label ? '#fff' : 'var(--text-muted)',
+                        cursor: 'pointer',
+                        textAlign: 'left'
+                      }}
+                      onClick={() => setScriptTone(item.label)}
+                    >
+                      <div style={{ fontSize: '0.8rem', fontWeight: 700 }}>{item.label}</div>
+                      <div style={{ fontSize: '0.675rem', color: 'var(--text-dim)' }}>{item.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Nút bấm sinh kịch bản */}
               <button
                 className="btn btn-primary"
-                style={{ width: '100%', padding: '0.85rem' }}
+                style={{ width: '100%', padding: '0.9rem', fontSize: '1rem', marginTop: '0.5rem' }}
                 onClick={handleGenerateScript}
                 disabled={studioLoading}
               >
                 {studioLoading ? (
-                  <span>Đang triệu hồi AI viết kịch bản...</span>
+                  <>
+                    <RefreshCw size={18} className="spin" />
+                    <span>AI đang phân tích và viết kịch bản...</span>
+                  </>
                 ) : (
                   <>
                     <Sparkles size={18} />
-                    Sinh Kịch Bản Viral 3 Hồi
+                    Sinh Kịch Bản TikTok Viral 3 Hồi
                   </>
                 )}
               </button>
-
-              <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                <Zap size={14} color="var(--tiktok-cyan)" />
-                <span>Mỗi kịch bản sử dụng mô hình Google Gemini 1.5 Flash (hoặc Bedrock).</span>
-              </div>
             </div>
 
-            {/* Script Result Right */}
+            {/* Cột phải: Kết quả kịch bản */}
             <div>
               {generatedScript ? (
                 <div className="script-card">
-                  {/* Script Header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                  {/* Tiêu đề & nút hành động */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '1.25rem' }}>
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
-                        <span className="badge badge-model">{generatedScript.aiModelUsed || 'Google Gemini'}</span>
-                        <span style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>
-                          <Clock size={13} style={{ display: 'inline', marginRight: 4 }} />
-                          Ước tính: ~{generatedScript.scriptStructure?.estimatedDurationSeconds || 30}s
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                        <span className="badge badge-model">Google Gemini 3.5 Flash</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          ⏱️ Thời lượng ước tính: ~{generatedScript.scriptStructure?.estimatedDurationSeconds || 35} giây
                         </span>
                       </div>
-                      <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff' }}>
+                      <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#fff' }}>
                         {generatedScript.title}
                       </h2>
                     </div>
 
                     <div style={{ display: 'flex', gap: '0.6rem' }}>
-                      <button
-                        className="btn btn-secondary"
-                        onClick={handleCopyScript}
-                        style={{ padding: '0.5rem 0.9rem' }}
-                      >
-                        {copied ? <Check size={16} color="var(--tiktok-cyan)" /> : <Copy size={16} />}
-                        {copied ? 'Đã sao chép!' : 'Copy Kịch Bản'}
+                      <button className="btn btn-primary" onClick={handleCopyScript} style={{ padding: '0.55rem 1.1rem' }}>
+                        {copied ? <Check size={16} /> : <Copy size={16} />}
+                        {copied ? 'Đã sao chép!' : 'Sao chép kịch bản'}
                       </button>
                       <button
                         className="btn btn-secondary"
                         onClick={() => handleToggleFavorite(generatedScript.id, generatedScript.status)}
-                        style={{ padding: '0.5rem 0.9rem' }}
-                        title="Đánh dấu yêu thích"
+                        title="Lưu yêu thích"
                       >
                         <Bookmark
                           size={16}
                           color={generatedScript.status === 'FAVORITE' ? 'var(--tiktok-pink)' : 'currentColor'}
                           fill={generatedScript.status === 'FAVORITE' ? 'var(--tiktok-pink)' : 'none'}
                         />
-                        {generatedScript.status === 'FAVORITE' ? 'Đã thích' : 'Lưu'}
                       </button>
                     </div>
                   </div>
 
-                  {/* Hook 3s Section */}
-                  <div className="hook-box">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--tiktok-pink)', fontWeight: 700, fontSize: '0.825rem', marginBottom: '0.4rem' }}>
-                      <Zap size={16} />
-                      PHẦN 1: HOOK 3 GIÂY ĐẦU (GIỮ CHÂN NGƯỜI XEM)
+                  {/* PHẦN 1: 3 GIÂY ĐẦU (HOOK) */}
+                  <div className="hook-box" style={{ marginTop: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--tiktok-pink)', fontWeight: 800, fontSize: '0.85rem', marginBottom: '0.4rem' }}>
+                      <Flame size={16} />
+                      1. CÂU MỞ ĐẦU 3 GIÂY ĐẦU TIÊN (GIỮ CHÂN NGƯỜI XEM KHÔNG LƯỚT QUA)
                     </div>
-                    <p style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff', fontStyle: 'italic' }}>
+                    <p style={{ fontSize: '1.15rem', fontWeight: 800, color: '#fff', lineHeight: 1.5 }}>
                       "{generatedScript.scriptStructure?.hook3s}"
+                    </p>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '0.35rem' }}>
+                      👉 Mẹo: Nói câu này to, rõ, nét mặt biểu cảm ngay khi bấm nút quay!
                     </p>
                   </div>
 
-                  {/* Body Section */}
+                  {/* PHẦN 2: THÂN BÀI */}
                   <div style={{ marginTop: '1.5rem' }}>
-                    <div style={{ fontWeight: 700, color: 'var(--tiktok-cyan)', fontSize: '0.85rem', marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <div style={{ fontWeight: 800, color: 'var(--tiktok-cyan)', fontSize: '0.875rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <Film size={16} />
-                      PHẦN 2: NỘI DUNG THÂN BÀI (BODY CONTENT)
+                      2. NỘI DUNG CHÍNH (LỜI THOẠI CHI TIẾT TỪNG Ý)
                     </div>
-                    <div style={{ whiteSpace: 'pre-line', fontSize: '0.975rem', lineHeight: 1.7, background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '10px' }}>
+                    <div style={{ whiteSpace: 'pre-line', fontSize: '0.975rem', lineHeight: 1.7, background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
                       {generatedScript.scriptStructure?.bodyContent}
                     </div>
                   </div>
 
-                  {/* Visual Cues */}
+                  {/* PHẦN 3: HƯỚNG DẪN QUAY DỰNG */}
                   {generatedScript.visualAndSoundCues && (
                     <div className="cues-box">
-                      <div style={{ fontWeight: 700, color: 'var(--tiktok-cyan)', fontSize: '0.825rem', marginBottom: '0.4rem' }}>
-                        🎬 CHỈ DẪN QUAY & VISUAL CUES (GÓC MÁY / HÀNH ĐỘNG / ÂM THANH):
+                      <div style={{ fontWeight: 800, color: 'var(--tiktok-cyan)', fontSize: '0.825rem', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <Camera size={15} />
+                        3. HƯỚNG DẪN QUAY DỰNG & GÓC MÁY (VISUAL CUES)
                       </div>
-                      <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                      <p style={{ fontSize: '0.9rem', color: '#cbd5e1', lineHeight: 1.6 }}>
                         {generatedScript.visualAndSoundCues}
                       </p>
                     </div>
                   )}
 
-                  {/* Call to Action */}
-                  <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', borderLeft: '3px solid #fff' }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
-                      PHẦN 3: KÊU GỌI HÀNH ĐỘNG (CALL TO ACTION)
+                  {/* PHẦN 4: KÊU GỌI HÀNH ĐỘNG (CTA) */}
+                  <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', borderLeft: '4px solid #fff' }}>
+                    <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <MessageSquare size={15} />
+                      4. CÂU KẾT THÚC KÊU GỌI HÀNH ĐỘNG (CTA)
                     </div>
-                    <p style={{ fontWeight: 600, fontSize: '0.95rem' }}>
-                      {generatedScript.scriptStructure?.callToAction}
+                    <p style={{ fontWeight: 700, fontSize: '1rem', color: '#fff' }}>
+                      "{generatedScript.scriptStructure?.callToAction}"
                     </p>
                   </div>
 
-                  {/* Hashtags */}
+                  {/* PHẦN 5: HASHTAGS */}
                   {generatedScript.suggestedHashtags?.length > 0 && (
-                    <div style={{ marginTop: '1.5rem' }}>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '0.4rem', fontWeight: 600 }}>
-                        GỢI Ý HASHTAGS XU HƯỚNG:
+                    <div style={{ marginTop: '1.25rem' }}>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '0.4rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <Hash size={14} />
+                        DANH SÁCH HASHTAGS ĐỀ XUẤT:
                       </div>
-                      <div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
                         {generatedScript.suggestedHashtags.map((tag, idx) => (
                           <span key={idx} className="badge badge-tag">
                             {tag}
@@ -569,38 +541,58 @@ ${(generatedScript.suggestedHashtags || []).join(' ')}
                   )}
                 </div>
               ) : (
+                /* Hướng dẫn khi chưa có kịch bản */
                 <div
                   className="glass-panel"
                   style={{
                     height: '100%',
-                    minHeight: '400px',
+                    minHeight: '450px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     textAlign: 'center',
-                    padding: '2rem',
-                    color: 'var(--text-muted)'
+                    padding: '2.5rem'
                   }}
                 >
-                  <Sparkles size={48} color="rgba(254, 44, 85, 0.4)" style={{ marginBottom: '1rem' }} />
-                  <h3 style={{ color: '#fff', fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                    Xưởng Kịch Bản Đang Chờ Bạn
+                  <Sparkles size={52} color="var(--tiktok-pink)" style={{ marginBottom: '1.25rem' }} />
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '0.5rem' }}>
+                    Kịch Bản Của Bạn Sẽ Xuất Hiện Ở Đây
                   </h3>
-                  <p style={{ maxWidth: '450px', fontSize: '0.925rem' }}>
-                    Điền chủ đề và ấn <strong>"Sinh Kịch Bản Viral 3 Hồi"</strong> để AI phân tích cấu trúc video ngắn và viết kịch bản chi tiết kèm góc máy cho bạn!
+                  <p style={{ maxWidth: '460px', fontSize: '0.925rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                    Điền ý tưởng video ở cột bên trái và bấm <strong>"Sinh Kịch Bản TikTok Viral"</strong>. AI sẽ tự động chia kịch bản thành từng cảnh, viết lời thoại và hướng dẫn góc máy cho bạn!
                   </p>
+
+                  <div style={{ display: 'flex', gap: '1rem', textAlign: 'left', maxWidth: '480px' }}>
+                    <div style={{ padding: '0.85rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--border-subtle)', flex: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--tiktok-pink)' }}>🔥 Câu Hook 3 giây</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '0.2rem' }}>Giật tít để người xem dừng tay không lướt qua.</div>
+                    </div>
+                    <div style={{ padding: '0.85rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--border-subtle)', flex: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--tiktok-cyan)' }}>🎬 Góc quay & Lời thoại</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '0.2rem' }}>Hướng dẫn cụ thể góc máy và động tác tay khi quay.</div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* TAB 2: CHANNEL & VIDEO RESEARCH */}
+        {/* ============================================================== */}
+        {/* TAB 2: KHÁM PHÁ KÊNH ĐỐI THỦ */}
+        {/* ============================================================== */}
         {activeTab === 'channel' && (
           <div>
-            {/* Search Box */}
-            <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
+            {/* Hộp tìm kiếm kênh */}
+            <div className="glass-panel" style={{ padding: '1.75rem', marginBottom: '2rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.4rem' }}>
+                Nghiên Cứu Kênh Đối Thủ & Xem Video Triệu View
+              </h2>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                Nhập tên tài khoản bất kỳ trên TikTok để phân tích xem họ làm video nào nhiều view nhất và xem tỷ lệ tương tác của họ.
+              </p>
+
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <div style={{ position: 'relative', flex: 1 }}>
                   <Search
@@ -614,29 +606,48 @@ ${(generatedScript.suggestedHashtags || []).join(' ')}
                     style={{ paddingLeft: '2.75rem' }}
                     value={searchUsername}
                     onChange={(e) => setSearchUsername(e.target.value)}
-                    placeholder="Nhập username kênh TikTok đối thủ (VD: beauty_queen, chubebe...)"
-                    onKeyDown={(e) => e.key === 'Enter' && handleInspectChannel()}
+                    placeholder="Nhập tên tài khoản TikTok (ví dụ: beauty_queen, chubebe...)"
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearchChannel()}
                   />
                 </div>
-                <button
-                  className="btn btn-primary"
-                  onClick={handleInspectChannel}
-                  disabled={channelLoading}
-                >
-                  {channelLoading ? 'Đang phân tích...' : 'Cào & Phân Tích Kênh'}
+                <button className="btn btn-primary" onClick={() => handleSearchChannel()} disabled={channelLoading}>
+                  {channelLoading ? 'Đang phân tích...' : 'Xem Video Nhiều View Nhất'}
                 </button>
+              </div>
+
+              {/* Kênh mẫu bấm thử */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>Kênh mẫu thử nhanh:</span>
+                {SAMPLE_CHANNELS.map((item, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    style={{
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: '6px',
+                      color: 'var(--tiktok-cyan)',
+                      fontSize: '0.775rem',
+                      padding: '0.25rem 0.6rem',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handleSearchChannel(item.username)}
+                  >
+                    @{item.username} ({item.label})
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Channel Info Card */}
+            {/* Thông tin kênh đối thủ */}
             {channelData && (
               <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
                     <div
                       style={{
-                        width: '64px',
-                        height: '64px',
+                        width: '60px',
+                        height: '60px',
                         borderRadius: '50%',
                         background: 'linear-gradient(135deg, var(--tiktok-pink), var(--tiktok-cyan))',
                         display: 'flex',
@@ -660,34 +671,34 @@ ${(generatedScript.suggestedHashtags || []).join(' ')}
 
                   <div style={{ display: 'flex', gap: '2rem', textAlign: 'center' }}>
                     <div>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>
+                      <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#fff' }}>
                         {(channelData.followerCount || 0).toLocaleString()}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>FOLLOWERS</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700 }}>NGƯỜI THEO DÕI</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--tiktok-pink)' }}>
+                      <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--tiktok-pink)' }}>
                         {(channelData.likeCount || 0).toLocaleString()}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>LƯỢT THÍCH</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700 }}>LƯỢT THÍCH</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--tiktok-cyan)' }}>
+                      <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--tiktok-cyan)' }}>
                         {channelData.averageEngagementRate || '0.00'}%
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>ENGAGEMENT RATE</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700 }}>TỶ LỆ TƯƠNG TÁC (ER)</div>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Top Viral Videos */}
+            {/* Danh sách video triệu view */}
             {topVideos.length > 0 && (
               <div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Video size={18} color="var(--tiktok-pink)" />
-                  Top Video Viral Nhất Của Kênh (Sắp xếp theo Engagement Rate)
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Flame size={18} color="var(--tiktok-pink)" />
+                  Video Có Tỷ Lệ Tương Tác Cao Nhất Của Kênh (Sắp xếp theo độ viral)
                 </h3>
 
                 <div className="video-grid">
@@ -696,27 +707,27 @@ ${(generatedScript.suggestedHashtags || []).join(' ')}
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                           <span className="badge" style={{ background: 'rgba(37, 244, 238, 0.15)', color: 'var(--tiktok-cyan)' }}>
-                            ER: {vid.engagementRate || '0'}%
+                            Độ tương tác: {vid.engagementRate || '0'}%
                           </span>
-                          <span style={{ fontSize: '0.775rem', color: 'var(--text-dim)' }}>
-                            👁️ {(vid.viewCount || 0).toLocaleString()} views
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                            <Eye size={13} /> {(vid.viewCount || 0).toLocaleString()}
                           </span>
                         </div>
-                        <p style={{ fontSize: '0.925rem', fontWeight: 600, marginBottom: '1rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        <p style={{ fontSize: '0.925rem', fontWeight: 600, marginBottom: '1rem', lineHeight: 1.5 }}>
                           {vid.caption || 'Video không có caption'}
                         </p>
                       </div>
 
                       <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        <span style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>
                           ❤️ {(vid.likeCount || 0).toLocaleString()} • 💬 {(vid.commentCount || 0).toLocaleString()}
                         </span>
                         <button
                           className="btn btn-secondary"
                           style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
-                          onClick={() => handleInspireFromVideo(vid)}
+                          onClick={() => handleUseVideoInspiration(vid)}
                         >
-                          Lấy ý tưởng
+                          Dùng ý tưởng này
                           <ChevronRight size={14} />
                         </button>
                       </div>
@@ -728,57 +739,73 @@ ${(generatedScript.suggestedHashtags || []).join(' ')}
           </div>
         )}
 
-        {/* TAB 3: MY SCRIPTS */}
+        {/* ============================================================== */}
+        {/* TAB 3: KỊCH BẢN ĐÃ LƯU */}
+        {/* ============================================================== */}
         {activeTab === 'history' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ fontSize: '1.35rem', fontWeight: 800 }}>Kho Kịch Bản Của Tôi</h2>
+              <div>
+                <h2 style={{ fontSize: '1.35rem', fontWeight: 800 }}>Kho Kịch Bản Của Bạn</h2>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Toàn bộ các kịch bản bạn đã sinh bằng AI trong các lần sử dụng
+                </p>
+              </div>
               <button className="btn btn-secondary" onClick={loadMyScripts} disabled={scriptsLoading}>
-                {scriptsLoading ? 'Đang tải...' : 'Làm mới'}
+                {scriptsLoading ? 'Đang tải...' : 'Làm mới danh sách'}
               </button>
             </div>
 
             {myScripts.length === 0 ? (
-              <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                <Bookmark size={40} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                <h3>Chưa có kịch bản nào được lưu</h3>
+              <div className="glass-panel" style={{ padding: '3.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <Bookmark size={48} style={{ marginBottom: '1rem', opacity: 0.4 }} />
+                <h3 style={{ fontSize: '1.2rem', color: '#fff' }}>Chưa có kịch bản nào được lưu</h3>
                 <p style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
-                  Hãy vào tab <strong>Xưởng Kịch Bản AI</strong> để bắt đầu tạo kịch bản đầu tiên cho kênh của bạn!
+                  Hãy chuyển sang tab <strong>Viết Kịch Bản Nhanh (AI)</strong> để tạo kịch bản đầu tiên cho video của bạn!
                 </p>
+                <button
+                  className="btn btn-primary"
+                  style={{ marginTop: '1.25rem' }}
+                  onClick={() => setActiveTab('studio')}
+                >
+                  Tạo Kịch Bản Ngay
+                </button>
               </div>
             ) : (
               <div style={{ display: 'grid', gap: '1rem' }}>
                 {myScripts.map((script) => (
-                  <div key={script.id} className="glass-panel" style={{ padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
+                  <div key={script.id} className="glass-panel" style={{ padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
                         <span className={`badge ${script.status === 'FAVORITE' ? 'badge-model' : ''}`}>
-                          {script.status}
+                          {script.status === 'FAVORITE' ? '⭐ Yêu thích' : 'Bản nháp'}
                         </span>
-                        <span style={{ fontSize: '0.775rem', color: 'var(--text-dim)' }}>
-                          ~{script.scriptStructure?.estimatedDurationSeconds || 30}s
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
+                          ~{script.scriptStructure?.estimatedDurationSeconds || 35} giây
                         </span>
                       </div>
-                      <h4 style={{ fontSize: '1.05rem', fontWeight: 700 }}>{script.title}</h4>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '0.2rem' }}>
+                      <h4 style={{ fontSize: '1.1rem', fontWeight: 800 }}>{script.title}</h4>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '0.25rem' }}>
                         Hook: "{script.scriptStructure?.hook3s}"
                       </p>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.6rem' }}>
                       <button
-                        className="btn btn-secondary"
+                        className="btn btn-primary"
+                        style={{ padding: '0.5rem 0.9rem', fontSize: '0.85rem' }}
                         onClick={() => {
                           setGeneratedScript(script);
                           setActiveTab('studio');
                         }}
                       >
-                        Mở Xem Chi Tiết
+                        Mở Xem Kịch Bản
                       </button>
                       <button
                         className="btn btn-secondary"
+                        style={{ padding: '0.5rem 0.9rem' }}
                         onClick={() => handleToggleFavorite(script.id, script.status)}
-                        title="Yêu thích"
+                        title="Đánh dấu yêu thích"
                       >
                         <Bookmark
                           size={16}
@@ -794,104 +821,6 @@ ${(generatedScript.suggestedHashtags || []).join(' ')}
           </div>
         )}
       </main>
-
-      {/* Auth Modal */}
-      {showAuthModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.7)',
-            backdropFilter: 'blur(8px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}
-        >
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', padding: '2rem' }}>
-            <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '0.5rem', textAlign: 'center' }}>
-              {isLoginMode ? 'Đăng Nhập Tài Khoản' : 'Đăng Ký Tài Khoản Mới'}
-            </h2>
-            <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '1.5rem' }}>
-              {isLoginMode
-                ? 'Đăng nhập để sử dụng tính năng cào kênh và sinh kịch bản'
-                : 'Đăng ký ngay để nhận miễn phí 50 Credits khởi đầu'}
-            </p>
-
-            <form onSubmit={handleAuthSubmit}>
-              {!isLoginMode && (
-                <div className="form-group">
-                  <label className="form-label">Họ và tên</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={authFullName}
-                    onChange={(e) => setAuthFullName(e.target.value)}
-                    required
-                  />
-                </div>
-              )}
-
-              <div className="form-group">
-                <label className="form-label">Email</label>
-                <input
-                  type="email"
-                  className="form-input"
-                  value={authEmail}
-                  onChange={(e) => setAuthEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Mật khẩu</label>
-                <input
-                  type="password"
-                  className="form-input"
-                  value={authPassword}
-                  onChange={(e) => setAuthPassword(e.target.value)}
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-primary"
-                style={{ width: '100%', padding: '0.85rem', marginTop: '0.5rem' }}
-                disabled={authLoading}
-              >
-                {authLoading ? 'Đang xử lý...' : isLoginMode ? 'Đăng Nhập' : 'Tạo Tài Khoản & Nhận 50 Credits'}
-              </button>
-            </form>
-
-            <div style={{ marginTop: '1.25rem', textAlign: 'center', fontSize: '0.85rem' }}>
-              <button
-                style={{ background: 'none', border: 'none', color: 'var(--tiktok-cyan)', cursor: 'pointer' }}
-                onClick={() => setIsLoginMode(!isLoginMode)}
-              >
-                {isLoginMode ? 'Chưa có tài khoản? Đăng ký ngay' : 'Đã có tài khoản? Đăng nhập'}
-              </button>
-            </div>
-
-            <button
-              style={{
-                width: '100%',
-                marginTop: '1rem',
-                padding: '0.5rem',
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-dim)',
-                cursor: 'pointer',
-                fontSize: '0.8rem'
-              }}
-              onClick={() => setShowAuthModal(false)}
-            >
-              Đóng lại
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

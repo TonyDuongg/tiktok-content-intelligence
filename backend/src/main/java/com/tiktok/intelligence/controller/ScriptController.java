@@ -27,13 +27,17 @@ public class ScriptController {
 
     private final AiScriptService aiScriptService;
 
+    private String resolveUsername(UserDetails userDetails) {
+        return (userDetails != null && userDetails.getUsername() != null) ? userDetails.getUsername() : "creator@example.com";
+    }
+
     @PostMapping("/generate")
     @Operation(summary = "Sinh kịch bản trực tiếp bằng AI", description = "Sinh kịch bản video TikTok 3 phần (Hook, Body, CTA) theo chủ đề hoặc dựa trên các video mẫu")
     public ResponseEntity<ApiResponse<ScriptDetailResponse>> generateDirectScript(
             @Valid @RequestBody DirectGenerateScriptRequest request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        ScriptDetailResponse response = aiScriptService.generateDirectScript(userDetails.getUsername(), request);
+        ScriptDetailResponse response = aiScriptService.generateDirectScript(resolveUsername(userDetails), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "Sinh kịch bản video AI thành công"));
     }
@@ -44,7 +48,7 @@ public class ScriptController {
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        ScriptDetailResponse response = aiScriptService.getScriptDetail(id, userDetails.getUsername());
+        ScriptDetailResponse response = aiScriptService.getScriptDetail(id, resolveUsername(userDetails));
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -53,7 +57,7 @@ public class ScriptController {
     public ResponseEntity<ApiResponse<List<ScriptDetailResponse>>> getMyScripts(
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        List<ScriptDetailResponse> scripts = aiScriptService.getUserScripts(userDetails.getUsername());
+        List<ScriptDetailResponse> scripts = aiScriptService.getUserScripts(resolveUsername(userDetails));
         return ResponseEntity.ok(ApiResponse.success(scripts, "Lấy danh sách kịch bản thành công"));
     }
 
@@ -64,7 +68,7 @@ public class ScriptController {
             @RequestParam ScriptStatus status,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        ScriptDetailResponse response = aiScriptService.updateScriptStatus(id, status, userDetails.getUsername());
+        ScriptDetailResponse response = aiScriptService.updateScriptStatus(id, status, resolveUsername(userDetails));
         return ResponseEntity.ok(ApiResponse.success(response, "Cập nhật trạng thái kịch bản thành công"));
     }
 }
