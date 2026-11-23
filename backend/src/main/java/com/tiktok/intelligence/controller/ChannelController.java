@@ -1,0 +1,64 @@
+package com.tiktok.intelligence.controller;
+
+import com.tiktok.intelligence.domain.entity.TikTokChannel;
+import com.tiktok.intelligence.domain.entity.TikTokVideo;
+import com.tiktok.intelligence.dto.response.ApiResponse;
+import com.tiktok.intelligence.exception.ResourceNotFoundException;
+import com.tiktok.intelligence.repository.TikTokChannelRepository;
+import com.tiktok.intelligence.repository.TikTokVideoRepository;
+import com.tiktok.intelligence.service.scraper.DataIngestionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/channels")
+@RequiredArgsConstructor
+@Tag(name = "Channels & Videos", description = "Thu thập và quản lý kênh TikTok, video và chỉ số tương tác")
+public class ChannelController {
+
+    private final DataIngestionService dataIngestionService;
+    private final TikTokChannelRepository channelRepository;
+    private final TikTokVideoRepository videoRepository;
+
+    @PostMapping("/ingest")
+    @Operation(summary = "Thu thập dữ liệu kênh TikTok", description = "Cào thông tin kênh, danh sách video, tính Engagement Rate và lưu raw JSON lên AWS S3")
+    public ResponseEntity<ApiResponse<TikTokChannel>> ingestChannel(
+            @RequestParam String username,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(defaultValue = "10") int maxVideos
+    ) {
+        TikTokChannel channel = dataIngestionService.ingestChannelData(username, categoryId, maxVideos);
+        return ResponseEntity.ok(ApiResponse.success(channel, "Thu thập dữ liệu kênh thành công"));
+    }
+
+    @GetMapping("/{username}")
+    @Operation(summary = "Lấy thông tin kênh TikTok")
+    public ResponseEntity<ApiResponse<TikTokChannel>> getChannel(@PathVariable String username) {
+        String cleanUsername = username.replace("@", "").trim().toLowerCase();
+        TikTokChannel channel = channelRepository.findByTiktokUsername(cleanUsername)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy kênh: @" + cleanUsername));
+        return ResponseEntity.ok(ApiResponse.success(channel));
+    }
+
+    @GetMapping("/{username}/top-videos")
+    @Operation(summary = "Lấy danh sách video viral nhất của kênh", description = "Sắp xếp theo Engagement Rate giảm dần")
+    public ResponseEntity<ApiResponse<List<TikTokVideo>>> getTopVideos(
+            @PathVariable String username,
+            @RequestParam(defaultValue = "5") int limit
+    ) {
+        String cleanUsername = username.replace("@", "").trim().toLowerCase();
+        TikTokChannel channel = channelRepository.findByTiktokUsername(cleanUsername)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy kênh: @" + cleanUsername));
+
+        List<TikTokVideo> topVideos = videoRepository.findByChannelIdOrderByEngagementRateDesc(
+                channel.getId(), PageRequest.of(0, limit)
+        );
+        return ResponseEntity.ok(ApiResponse.success(topVideos, "Lấy danh sách video viral thành công"));
+    }
+}

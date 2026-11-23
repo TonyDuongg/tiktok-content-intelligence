@@ -43,4 +43,15 @@ application:
     jwt:
       secret-key: ${JWT_SECRET_KEY:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
       expiration: 86400000 # 24 hours in ms
+  aws:
+    region: ${AWS_REGION:ap-southeast-1}
+    s3-bucket: ${AWS_S3_BUCKET:tiktok-intelligence-bucket}
+    endpoint: ${AWS_ENDPOINT:http://localhost:4566}
+    access-key-id: ${AWS_ACCESS_KEY_ID:mock_access_key}
+    secret-access-key: ${AWS_SECRET_ACCESS_KEY:mock_secret_key}
+  scraper:
+    provider: ${SCRAPER_PROVIDER:mock}
+    rapidapi-key: ${RAPIDAPI_KEY:}
+    rapidapi-host: ${RAPIDAPI_HOST:tiktok-all-in-one.p.rapidapi.com}
+
 

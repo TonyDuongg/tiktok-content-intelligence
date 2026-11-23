@@ -20,7 +20,20 @@
         <springdoc.version>2.6.0</springdoc.version>
         <hypersistence-utils.version>3.8.3</hypersistence-utils.version>
         <jjwt.version>0.12.6</jjwt.version>
+        <aws.sdk.version>2.29.19</aws.sdk.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws.sdk.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- Spring Boot Starters -->
@@ -58,6 +71,12 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>${jjwt.version}</version>
             <scope>runtime</scope>
+        </dependency>
+
+        <!-- AWS SDK for Java v2 (Amazon S3) -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
         </dependency>
 
         <!-- PostgreSQL & JSONB Support -->

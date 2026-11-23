@@ -23,5 +23,16 @@ application:
     jwt:
       secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
       expiration: 86400000
+  aws:
+    region: ap-southeast-1
+    s3-bucket: test-tiktok-bucket
+    endpoint: http://localhost:4566
+    access-key-id: test_key
+    secret-access-key: test_secret
+  scraper:
+    provider: mock
+    rapidapi-key: mock_key
+    rapidapi-host: tiktok-all-in-one.p.rapidapi.com
+
 
 
