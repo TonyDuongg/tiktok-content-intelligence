@@ -113,4 +113,27 @@ class JobServiceTest {
         verify(sqsProducerService, never()).sendJobMessage(any());
         verify(jobRepository, never()).save(any());
     }
+
+    @Test
+    @DisplayName("Verify IDOR protection: access denied when requesting another user's job")
+    void testOtherUserCannotAccessJob() {
+        UUID jobId = UUID.randomUUID();
+        User owner = User.builder()
+                .id(UUID.randomUUID())
+                .email("creator@example.com")
+                .role(UserRole.ROLE_USER)
+                .build();
+
+        AnalysisJob job = AnalysisJob.builder()
+                .id(jobId)
+                .user(owner)
+                .status(JobStatus.COMPLETED)
+                .build();
+
+        when(jobRepository.findById(jobId)).thenReturn(Optional.of(job));
+
+        assertThatThrownBy(() -> jobService.getJobById(jobId, "user2@example.com"))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
+                .hasMessageContaining("Bạn không có quyền xem thông tin tác vụ này");
+    }
 }

@@ -33,6 +33,8 @@ public class S3StorageService {
             log.info("S3 Bucket '{}' does not exist. Creating new bucket...", bucket);
             s3Client.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
             log.info("S3 Bucket '{}' created successfully.", bucket);
+        } catch (BucketAlreadyExistsException | BucketAlreadyOwnedByYouException e) {
+            log.debug("S3 Bucket '{}' already exists.", bucket);
         } catch (Exception e) {
             log.warn("Could not verify S3 bucket '{}': {}", bucket, e.getMessage());
         }

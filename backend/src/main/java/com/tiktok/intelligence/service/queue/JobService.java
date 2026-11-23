@@ -73,6 +73,16 @@ public class JobService {
         AnalysisJob job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tác vụ với ID: " + jobId));
 
+        String normalizedEmail = userEmail.toLowerCase().trim();
+        boolean isOwner = job.getUser().getEmail().equalsIgnoreCase(normalizedEmail);
+        boolean isAdmin = job.getUser().getRole() != null && job.getUser().getRole().name().equals("ROLE_ADMIN");
+
+        if (!isOwner && !isAdmin) {
+            log.warn("Access denied: User [{}] attempted to view Job [{}] belonging to [{}]",
+                    normalizedEmail, jobId, job.getUser().getEmail());
+            throw new org.springframework.security.access.AccessDeniedException("Bạn không có quyền xem thông tin tác vụ này");
+        }
+
         return JobResponseDto.fromEntity(job);
     }
 
