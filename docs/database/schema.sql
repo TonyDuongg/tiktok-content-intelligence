@@ -142,3 +142,15 @@ CREATE TABLE script_reference_videos (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uq_script_video UNIQUE(script_id, video_id)
 );
+
+-- ==============================================================================
+-- INITIAL SEED DATA (Dữ liệu ban đầu cho hệ thống)
+-- ==============================================================================
+INSERT INTO categories (name, slug, description) VALUES
+('Mỹ phẩm & Skincare', 'my-pham-skincare', 'Chăm sóc da, trang điểm, review mỹ phẩm và chu trình làm đẹp'),
+('Thời trang & Phối đồ', 'thoi-trang-phoi-do', 'Outfit hàng ngày, mẹo phối đồ, xu hướng thời trang theo mùa'),
+('Công nghệ & Setup', 'cong-nghe-setup', 'Review đồ công nghệ, góc làm việc, điện thoại, phụ kiện thông minh'),
+('Ẩm thực & Nấu ăn', 'am-thuc-nau-an', 'Công thức nấu ăn nhanh, review quán ăn, mẹo nhà bếp'),
+('Thể thao & Fitness', 'the-thao-fitness', 'Luyện tập gym, yoga, chế độ dinh dưỡng và lối sống lành mạnh')
+ON CONFLICT (slug) DO NOTHING;
+

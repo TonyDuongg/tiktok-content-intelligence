@@ -63,4 +63,21 @@ public class AnalysisJob {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    public void markProcessing() {
+        this.status = JobStatus.PROCESSING;
+        this.startedAt = Instant.now();
+    }
+
+    public void markCompleted(String s3Url) {
+        this.status = JobStatus.COMPLETED;
+        this.s3RawDataUrl = s3Url;
+        this.completedAt = Instant.now();
+    }
+
+    public void markFailed(String error) {
+        this.status = JobStatus.FAILED;
+        this.errorMessage = error;
+        this.completedAt = Instant.now();
+    }
 }

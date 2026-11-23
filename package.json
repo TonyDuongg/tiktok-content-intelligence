@@ -1,0 +1,21 @@
+{
+  "name": "tiktok-content-intelligence",
+  "version": "1.0.0",
+  "description": "Hệ thống phân tích xu hướng video TikTok theo ngành hàng (Mỹ phẩm, Thời trang, v.v.), nghiên cứu kênh đối thủ và tự động sinh kịch bản video viral bằng Generative AI (LLMs).",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "scan:secrets": "agent-redact .",
+    "scan:staged": "agent-redact --staged",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "agent-redact": "^0.5.0"
+  }
+}

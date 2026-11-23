@@ -85,6 +85,8 @@ public class TikTokVideo {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @PrePersist
+    @PreUpdate
     public void calculateEngagementRate() {
         if (viewCount != null && viewCount > 0) {
             long totalInteractions = (likeCount != null ? likeCount : 0) +

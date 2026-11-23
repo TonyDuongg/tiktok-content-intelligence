@@ -1,0 +1,18 @@
+{
+  "presets": ["vn-pii"],
+  "entropy": true,
+  "allowlist": [
+    "creator@example.com",
+    "user2@example.com",
+    "SecurePassword123@"
+  ],
+  "ignore": [
+    "node_modules/**",
+    "target/**",
+    "dist/**",
+    ".git/**",
+    "**/*.class",
+    "**/*.jar",
+    "package-lock.json"
+  ]
+}
