@@ -38,7 +38,8 @@ goto :START_FRONTEND
 echo [!] Docker Desktop is not running or still starting.
 echo [*] Starting Spring Boot in lightweight LOCAL mode (In-Memory H2 DB)...
 echo [*] All features and Gemini AI script generator will work 100%%!
-start "TikTok AI Backend" /D "%BACKEND_DIR%" cmd /k "mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local"
+set "SPRING_PROFILES_ACTIVE=local"
+start "TikTok AI Backend" /D "%BACKEND_DIR%" cmd /k "mvnw.cmd spring-boot:run"
 goto :START_FRONTEND
 
 :START_FRONTEND
