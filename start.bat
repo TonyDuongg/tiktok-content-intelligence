@@ -42,8 +42,8 @@ echo   * Swagger API:       http://localhost:8080/swagger-ui.html
 echo   * Health Check:      http://localhost:8080/actuator/health
 echo =======================================================================
 echo.
-echo Opening web browser in 5 seconds...
-ping localhost -n 6 >nul
+echo Opening web browser in 8 seconds (waiting for backend to be ready)...
+ping localhost -n 9 >nul
 start http://localhost:3000
 
 echo.

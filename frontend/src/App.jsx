@@ -64,20 +64,47 @@ export default function App() {
     loadCategories();
     if (token) {
       loadUserProfile();
+    } else {
+      // Auto-connect with default demo creator account on first visit
+      attemptDemoLogin();
     }
   }, [token]);
 
-  const loadCategories = async () => {
+  const attemptDemoLogin = async () => {
+    try {
+      const res = await api.login('creator@example.com', 'SecurePassword123@');
+      if (res?.data?.accessToken) {
+        setAuthToken(res.data.accessToken);
+        setToken(res.data.accessToken);
+      }
+    } catch (err) {
+      // Backend might still be starting, retry once after 3 seconds
+      setTimeout(async () => {
+        try {
+          const retryRes = await api.login('creator@example.com', 'SecurePassword123@');
+          if (retryRes?.data?.accessToken) {
+            setAuthToken(retryRes.data.accessToken);
+            setToken(retryRes.data.accessToken);
+          }
+        } catch (_) {}
+      }, 3000);
+    }
+  };
+
+  const loadCategories = async (retryCount = 0) => {
     try {
       const res = await api.getCategories();
-      if (res?.data) {
+      if (res?.data && res.data.length > 0) {
         setCategories(res.data);
-        if (res.data.length > 0 && !selectedCategoryId) {
+        if (!selectedCategoryId) {
           setSelectedCategoryId(res.data[0].id);
         }
       }
     } catch (err) {
-      console.warn('Lỗi tải danh mục:', err);
+      // If backend is still starting up during first few seconds, retry smoothly
+      if (retryCount < 6) {
+        setTimeout(() => loadCategories(retryCount + 1), 2500);
+      }
     }
   };
 
