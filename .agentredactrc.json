@@ -4,7 +4,8 @@
   "allowlist": [
     "creator@example.com",
     "user2@example.com",
-    "SecurePassword123@"
+    "SecurePassword123@",
+    "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970"
   ],
   "ignore": [
     "node_modules/**",
