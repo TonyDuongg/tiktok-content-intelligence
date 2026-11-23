@@ -20,33 +20,33 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Tag(name = "Authentication", description = "Đăng ký, đăng nhập và lấy thông tin tài khoản người dùng")
+@Tag(name = "Authentication", description = "User registration, authentication, and session token management")
 public class AuthController {
 
     private final AuthService authService;
 
     @PostMapping("/register")
-    @Operation(summary = "Đăng ký tài khoản mới", description = "Tạo tài khoản người dùng mới và tự động cấp 50 credit ban đầu")
+    @Operation(summary = "Register a new user account", description = "Creates a new user account with initial credits balance")
     public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
         AuthResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(response, "Đăng ký tài khoản thành công"));
+                .body(ApiResponse.success(response, "User registered successfully"));
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Đăng nhập", description = "Xác thực email và mật khẩu, trả về JWT Access Token")
+    @Operation(summary = "User login", description = "Authenticates user credentials and issues a stateless JWT Bearer token")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
-        return ResponseEntity.ok(ApiResponse.success(response, "Đăng nhập thành công"));
+        return ResponseEntity.ok(ApiResponse.success(response, "Login successful"));
     }
 
     @GetMapping("/me")
-    @Operation(summary = "Lấy thông tin tài khoản hiện tại", description = "Yêu cầu Bearer JWT Token trong Header Authorization")
+    @Operation(summary = "Get current authenticated user profile", description = "Requires valid Bearer JWT Token in Authorization header")
     @SecurityRequirement(name = "BearerAuth")
     public ResponseEntity<ApiResponse<UserDto>> getCurrentUser(
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         UserDto userDto = authService.getCurrentUser(userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.success(userDto, "Lấy thông tin tài khoản thành công"));
+        return ResponseEntity.ok(ApiResponse.success(userDto, "Fetched user profile successfully"));
     }
 }

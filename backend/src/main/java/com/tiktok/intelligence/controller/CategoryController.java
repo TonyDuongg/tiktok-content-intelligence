@@ -18,15 +18,15 @@ import java.util.List;
 @RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "BearerAuth")
-@Tag(name = "Categories & Niches", description = "Quản lý và lấy danh sách ngành hàng (Mỹ phẩm, Thời trang, v.v.)")
+@Tag(name = "Categories & Niches", description = "Supported TikTok niches and industry categories")
 public class CategoryController {
 
     private final CategoryRepository categoryRepository;
 
     @GetMapping
-    @Operation(summary = "Lấy danh sách các ngành hàng", description = "Trả về toàn bộ các ngành hàng hỗ trợ phân tích xu hướng TikTok")
+    @Operation(summary = "List all supported categories", description = "Returns all available TikTok niches for trend analysis and script generation")
     public ResponseEntity<ApiResponse<List<Category>>> getAllCategories() {
         List<Category> categories = categoryRepository.findAll();
-        return ResponseEntity.ok(ApiResponse.success(categories, "Lấy danh sách ngành hàng thành công"));
+        return ResponseEntity.ok(ApiResponse.success(categories, "Fetched categories successfully"));
     }
 }

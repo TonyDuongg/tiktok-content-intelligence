@@ -22,7 +22,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/jobs")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "BearerAuth")
-@Tag(name = "Analysis Jobs", description = "Quản lý và điều phối các tác vụ phân tích cào dữ liệu bất đồng bộ qua AWS SQS")
+@Tag(name = "Analysis Jobs", description = "Asynchronous analysis jobs and AWS SQS queue coordination")
 public class JobController {
 
     private final JobService jobService;
@@ -32,18 +32,18 @@ public class JobController {
     }
 
     @PostMapping
-    @Operation(summary = "Khởi tạo tác vụ phân tích bất đồng bộ", description = "Đưa tác vụ vào hàng đợi AWS SQS và trừ 5 credit người dùng. Trả về mã jobId ngay lập tức.")
+    @Operation(summary = "Dispatch asynchronous analysis job", description = "Submits a background job to AWS SQS queue and deducts user credits. Returns HTTP 202 Accepted.")
     public ResponseEntity<ApiResponse<JobResponseDto>> dispatchJob(
             @Valid @RequestBody JobFilterRequest request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         JobResponseDto response = jobService.createAndDispatchJob(resolveUsername(userDetails), request);
         return ResponseEntity.status(HttpStatus.ACCEPTED)
-                .body(ApiResponse.success(response, "Tác vụ đã được tiếp nhận và đưa vào hàng đợi xử lý"));
+                .body(ApiResponse.success(response, "Analysis job dispatched to queue"));
     }
 
     @GetMapping("/{jobId}")
-    @Operation(summary = "Kiểm tra tiến trình và trạng thái tác vụ")
+    @Operation(summary = "Get analysis job status and progress", description = "Fetches job status, processing duration, and error logs if failed")
     public ResponseEntity<ApiResponse<JobResponseDto>> getJob(
             @PathVariable UUID jobId,
             @AuthenticationPrincipal UserDetails userDetails
@@ -53,11 +53,11 @@ public class JobController {
     }
 
     @GetMapping("/my-jobs")
-    @Operation(summary = "Lấy danh sách các tác vụ của tài khoản hiện tại")
+    @Operation(summary = "List all jobs for current user account", description = "Returns history of all dispatched analysis jobs")
     public ResponseEntity<ApiResponse<List<JobResponseDto>>> getMyJobs(
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         List<JobResponseDto> jobs = jobService.getUserJobs(resolveUsername(userDetails));
-        return ResponseEntity.ok(ApiResponse.success(jobs, "Lấy danh sách tác vụ thành công"));
+        return ResponseEntity.ok(ApiResponse.success(jobs, "Fetched user jobs successfully"));
     }
 }

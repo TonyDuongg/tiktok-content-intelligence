@@ -1,6 +1,6 @@
 # TikTok Content Intelligence & AI Script Generator - ERD Specification
 
-## 1. Sơ đồ thực thể liên kết (Mermaid ERD)
+## 1. Entity Relationship Diagram (Mermaid ERD)
 
 ```mermaid
 erDiagram
@@ -103,39 +103,39 @@ erDiagram
 
 ---
 
-## 2. Giải thích chi tiết các thực thể & Điểm nhấn thiết kế
+## 2. Detailed Entity Explanation & Architectural Highlights
 
-### 2.1. `ANALYSIS_JOBS` (Trọng tâm kiến trúc bất đồng bộ)
-* **Mục đích:** Khi người dùng chọn bộ lọc (VD: Ngách "Mỹ phẩm", chọn 5 kênh tiêu biểu, lấy video trên 50k view trong 30 ngày qua), việc cào dữ liệu và phân tích AI có thể mất 30s - 2 phút.
-* **Cơ chế:**
-  1. API Backend tạo một bản ghi `ANALYSIS_JOBS` với trạng thái `PENDING` và trả về ngay mã `job_id` cho Frontend.
-  2. Backend bắn message chứa `job_id` và `filter_params` vào **AWS SQS**.
-  3. Worker kéo message từ SQS về xử lý. Khi hoàn thành, cập nhật trạng thái `COMPLETED` kèm `s3_raw_data_url` (nơi lưu file raw data dạng JSON trên S3).
+### 2.1. `ANALYSIS_JOBS` (Asynchronous Job Coordination)
+* **Purpose:** When a creator filters a niche (e.g. "Beauty & Skincare", top 5 competitor channels, videos exceeding 50k views in the last 30 days), scraping and AI processing can take 15s - 60s.
+* **Mechanism:**
+  1. Backend API persists an `ANALYSIS_JOBS` record with `PENDING` status and immediately returns `job_id` (HTTP 202 Accepted).
+  2. The job message is dispatched into **AWS SQS**.
+  3. Background worker polls SQS, executes scraping, uploads raw JSON payloads to **AWS S3**, triggers Generative AI, and marks the job `COMPLETED`.
 
 ### 2.2. `TIKTOK_VIDEOS` & `engagement_rate`
-* **Công thức tỷ lệ tương tác:**
+* **Engagement Rate Formula:**
   $$\text{Engagement Rate} = \frac{\text{Like} + \text{Comment} + \text{Share}}{\text{View}} \times 100$$
-* Trường này được đánh Index `idx_videos_engagement DESC` để AI có thể nhanh chóng truy vấn ra **Top 5% video giữ chân người xem tốt nhất** trong ngách làm đẹp để học hỏi cấu trúc.
-* Trường `transcript`: Chứa nội dung lời thoại (được bóc tách từ phụ đề gốc hoặc chuyển hóa giọng nói qua speech-to-text). Đây là "nguyên liệu vàng" để đưa vào prompt cho LLM.
+* Indexed via `idx_videos_engagement DESC` to allow rapid querying of the **top 5% high-retention viral videos** within any niche.
+* The `transcript` field stores video spoken transcripts/closed captions as high-value few-shot training context for LLM prompt engineering.
 
-### 2.3. `AI_SCRIPTS` (Cấu trúc kịch bản chuẩn TikTok)
-Kịch bản không lưu thành 1 đoạn văn chung chung mà được bóc tách theo công thức Video ngắn chuyên nghiệp:
-* `hook_3s`: Câu nói hoặc hành động mở đầu gây sốc / tò mò trong 3 giây đầu để ngăn người dùng lướt đi.
-* `body_content`: Giá trị cốt lõi, review chân thực, nêu bật vấn đề và giải pháp.
-* `call_to_action`: Kêu gọi hành động rõ ràng (mua tại giỏ hàng, follow kênh để xem phần tiếp theo).
-* `visual_and_sound_cues`: Gợi ý góc máy quay cận cảnh texture kem dưỡng, hiệu ứng âm thanh ASMR, nhạc trending phù hợp.
+### 2.3. `AI_SCRIPTS` (Enterprise Short-form Video Script Structure)
+Scripts are structured into 3 distinct, high-converting short-video acts:
+* `hook_3s`: High-impact verbal hook delivered in the first 3 seconds to maximize 3s-retention and stop user scrolling.
+* `body_content`: Core value delivery with scene-by-scene script lines.
+* `call_to_action`: Direct closing CTA (follow, comment, save).
+* `visual_and_sound_cues`: Practical director instructions (camera angles, gestures, sound effects, B-roll text overlays).
 
-### 2.4. `SCRIPT_REFERENCE_VIDEOS` (Minh bạch dữ liệu)
-Bảng quan hệ nhiều-nhiều giúp người dùng biết được kịch bản này được AI "học hỏi" và lấy cảm hứng từ những video cụ thể nào, kèm số liệu view/like của video gốc để tạo độ tin cậy.
+### 2.4. `SCRIPT_REFERENCE_VIDEOS` (Data Provenance & Traceability)
+Many-to-many relationship establishing transparency on which viral competitor videos inspired the AI-generated script, providing full data lineage.
 
 ---
 
-## 3. Tích hợp với Hạ tầng AWS
+## 3. AWS Cloud Infrastructure Mapping
 
-| Bảng dữ liệu | Dịch vụ AWS tương ứng | Vai trò trong hệ thống |
+| Database Table / Entity | Target AWS Cloud Service | System Role & Responsibility |
 | :--- | :--- | :--- |
-| **All Tables** | **Amazon RDS (PostgreSQL)** | Lưu trữ dữ liệu quan hệ, transactional, đảm bảo tính toàn vẹn ACID. |
-| **ANALYSIS_JOBS** | **Amazon SQS** | Đóng vai trò Message Payload chứa ID của Job để phân phối tác vụ. |
-| **s3_raw_data_url** | **Amazon S3** | Lưu toàn bộ JSON response cào từ TikTok, giảm tải dung lượng cho RDS. |
-| **cover_image_url** | **Amazon CloudFront + S3** | Cache và phân phối ảnh thumbnail video với tốc độ cao. |
-| **AI Generation** | **Amazon Bedrock (Claude 3.5 Sonnet)** | LLM Engine nhận transcript từ `TIKTOK_VIDEOS` để sinh ra bản ghi `AI_SCRIPTS`. |
+| **All Tables** | **Amazon RDS (PostgreSQL)** | Relational, transactional ACID storage. |
+| **ANALYSIS_JOBS** | **Amazon SQS** | Distributed asynchronous job queuing and worker dispatch. |
+| **s3_raw_data_url** | **Amazon S3** | Durable raw scraping JSON storage, offloading large payloads from RDS. |
+| **cover_image_url** | **Amazon CloudFront + S3** | Edge caching and low-latency thumbnail delivery. |
+| **AI Generation** | **AWS Bedrock / Google Gemini** | LLM Engine generating structured viral script payloads. |

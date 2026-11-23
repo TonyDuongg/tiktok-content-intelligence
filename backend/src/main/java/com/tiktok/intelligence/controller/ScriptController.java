@@ -22,7 +22,7 @@ import java.util.List;
 @RequestMapping("/api/v1/scripts")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "BearerAuth")
-@Tag(name = "AI Scripts", description = "Quản lý và sinh kịch bản video TikTok viral bằng AI")
+@Tag(name = "AI Scripts", description = "Generative AI TikTok video script generator and script library management")
 public class ScriptController {
 
     private final AiScriptService aiScriptService;
@@ -32,18 +32,18 @@ public class ScriptController {
     }
 
     @PostMapping("/generate")
-    @Operation(summary = "Sinh kịch bản trực tiếp bằng AI", description = "Sinh kịch bản video TikTok 3 phần (Hook, Body, CTA) theo chủ đề hoặc dựa trên các video mẫu")
+    @Operation(summary = "Direct AI script generation", description = "Generates a high-converting 3-part TikTok video script (Hook 3s, Body with visual cues, CTA) by topic or viral reference videos")
     public ResponseEntity<ApiResponse<ScriptDetailResponse>> generateDirectScript(
             @Valid @RequestBody DirectGenerateScriptRequest request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         ScriptDetailResponse response = aiScriptService.generateDirectScript(resolveUsername(userDetails), request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(response, "Sinh kịch bản video AI thành công"));
+                .body(ApiResponse.success(response, "Generated AI script successfully"));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Lấy chi tiết kịch bản video", description = "Bao gồm cấu trúc kịch bản 3 phần, gợi ý góc máy quay và danh sách video mẫu tham khảo")
+    @Operation(summary = "Get video script details", description = "Fetches complete script structure, visual/sound cues, hashtags, and reference viral videos")
     public ResponseEntity<ApiResponse<ScriptDetailResponse>> getScriptDetail(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails
@@ -53,22 +53,22 @@ public class ScriptController {
     }
 
     @GetMapping("/my-scripts")
-    @Operation(summary = "Lấy danh sách các kịch bản của người dùng hiện tại")
+    @Operation(summary = "List all scripts for current user", description = "Returns user's saved and generated script library")
     public ResponseEntity<ApiResponse<List<ScriptDetailResponse>>> getMyScripts(
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         List<ScriptDetailResponse> scripts = aiScriptService.getUserScripts(resolveUsername(userDetails));
-        return ResponseEntity.ok(ApiResponse.success(scripts, "Lấy danh sách kịch bản thành công"));
+        return ResponseEntity.ok(ApiResponse.success(scripts, "Fetched scripts successfully"));
     }
 
     @PatchMapping("/{id}/status")
-    @Operation(summary = "Cập nhật trạng thái kịch bản", description = "Đổi trạng thái giữa DRAFT, FAVORITE, ARCHIVED")
+    @Operation(summary = "Update script status", description = "Toggles status between DRAFT, FAVORITE, ARCHIVED")
     public ResponseEntity<ApiResponse<ScriptDetailResponse>> updateScriptStatus(
             @PathVariable Long id,
             @RequestParam ScriptStatus status,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         ScriptDetailResponse response = aiScriptService.updateScriptStatus(id, status, resolveUsername(userDetails));
-        return ResponseEntity.ok(ApiResponse.success(response, "Cập nhật trạng thái kịch bản thành công"));
+        return ResponseEntity.ok(ApiResponse.success(response, "Updated script status successfully"));
     }
 }

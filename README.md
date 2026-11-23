@@ -3,29 +3,30 @@
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://adoptium.net/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![AWS SDK](https://img.shields.io/badge/AWS%20SDK%20v2-2.29.19-blue.svg)](https://aws.amazon.com/sdk-for-java/)
+[![AI Engine](https://img.shields.io/badge/AI-Google%20Gemini%20%7C%20Bedrock-blueviolet.svg)](https://aistudio.google.com/)
 [![Security](https://img.shields.io/badge/Firewall-agent--redact-purple.svg)](https://github.com/TonyDuongg/agent-redact)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Hệ thống phân tích xu hướng video TikTok theo ngành hàng (Mỹ phẩm, Thời trang, v.v.), nghiên cứu kênh đối thủ và tự động sinh kịch bản video viral 3 phần (Hook 3s, Body, CTA) bằng Generative AI (AWS Bedrock / Claude 3.5 Sonnet).
+An enterprise-grade cloud-native platform built with **Java 21, Spring Boot 3, and AWS** to analyze TikTok competitor channels, identify viral video trends by niche, and automatically produce high-retention 3-part viral video scripts (Hook 3s, Body with visual cues, CTA) using **Generative AI (Google Gemini 3.5 Flash / AWS Bedrock Claude 3.5 Sonnet)**.
 
 ---
 
-## 🏗 Kiến trúc tổng thể (Architecture)
+## 🏗 System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                             CLIENT / FRONTEND                               │
+│                       TIKTOK CREATOR STUDIO (WEB UI)                        │
 └──────────────────────────────────────┬──────────────────────────────────────┘
-                                       │ HTTP / REST APIs (JWT Auth)
+                                       │ HTTP / REST APIs (Optional JWT)
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                    SPRING BOOT 3 ENTERPRISE BACKEND                         │
 │                                                                             │
 │  [ Spring Security 6 ] ──► [ Auth & User Service (BCrypt + JWT) ]           │
 │                                      │                                      │
-│  [ Scraper Client ]    ──► [ Data Ingestion Service ]                       │
+│  [ Scraper Strategy ]  ──► [ Data Ingestion Service ]                       │
 │    (RapidAPI / Mock)                 │                                      │
-│                                      ├──► [ AWS S3 Storage ] (Raw Scrape)   │
+│                                      ├──► [ AWS S3 Storage ] (Raw Payloads) │
 │                                      └──► [ PostgreSQL DB ] (Metrics/Videos)│
 │                                                                             │
 │  [ Job Dispatcher ]    ──► [ AWS SQS Message Queue ]                        │
@@ -35,7 +36,7 @@ Hệ thống phân tích xu hướng video TikTok theo ngành hàng (Mỹ phẩm
 │                                      │                                      │
 │                                      ▼                                      │
 │                        [ AI Script Generator Engine ]                       │
-│                          (AWS Bedrock Claude 3.5 / Mock)                    │
+│                        (Google Gemini 3.5 Flash / Bedrock)                  │
 │                                      │                                      │
 │                                      ▼                                      │
 │                        [ AiScript & Reference Videos ]                      │
@@ -52,120 +53,107 @@ Hệ thống phân tích xu hướng video TikTok theo ngành hàng (Mỹ phẩm
 
 ---
 
-## 🛠 Tech Stack
+## 🌟 Key Features
 
-* **Ngôn ngữ & Framework:** Java 21 LTS, Spring Boot 3.3.5.
-* **Bảo mật & Phân quyền:** Spring Security 6, Stateless JWT (JJWT 0.12.6), BCrypt Password Hashing, RBAC (`ROLE_USER`, `ROLE_ADMIN`), phòng chống lỗ hổng **IDOR**.
-* **Tường lửa mã nguồn:** [agent-redact](https://github.com/TonyDuongg/agent-redact) quét tự động ngăn chặn rò rỉ secret, key và PII qua Git Pre-commit Hook & CI.
-* **Message Queue & Async Worker:** AWS SDK v2 SQS Producer/Consumer, Dead Letter Queue (DLQ), cơ chế tự động hoàn lại Credit khi tác vụ thất bại.
-* **Lưu trữ đám mây & Dữ liệu:**
-  * **Amazon S3 (AWS SDK v2):** Lưu trữ raw JSON payloads và video metadata.
-  * **PostgreSQL 16:** Bảng dữ liệu chuẩn hóa, Foreign Keys, Indexes, Native JSON mapping.
-  * **Redis 7:** Cache và rate limiting.
-* **Generative AI & Prompt Engineering:** AWS Bedrock Runtime Client (Claude 3.5 Sonnet / Amazon Titan) & Mock Smart Fallback Engine.
-* **API Documentation:** SpringDoc OpenAPI 3.0 / Swagger UI.
-* **DevOps & CI/CD:** Docker Compose, LocalStack, GitHub Actions CI Pipeline.
+* **Competitor Channel Intelligence:** Ingests TikTok channel profiles and video metrics, automatically calculating standardized **Engagement Rates (ER)** to isolate the top 5% viral benchmark videos.
+* **Generative AI Script Engine:** Transforms few-shot viral transcripts into structured 3-part short-video scripts:
+  * **3-Second Hook:** High-impact verbal hook designed to maximize initial retention and stop user scrolling.
+  * **Body Content:** Scene-by-scene script lines addressing core viewer pain points and solutions.
+  * **Visual & Sound Cues:** Practical camera angle recommendations, facial expressions, and B-roll sound guidance.
+  * **Call to Action (CTA):** Clear closing engagement drivers (likes, comments, bookmarks, follows).
+  * **Trending Hashtags:** Auto-extracted niche-relevant hashtag bundles.
+* **Dual-Engine AI Strategy:** Native integration with **Google Gemini (3.5 Flash)** for zero-cost rapid local generation, plus **AWS Bedrock Runtime SDK** (Anthropic Claude 3.5 Sonnet / Amazon Titan) for enterprise deployments.
+* **Distributed Cloud Architecture:** AWS SQS asynchronous message queue with Dead Letter Queue (DLQ), automatic user credit refunds on failure, and durable raw scraping JSON storage in Amazon S3.
+* **Security & Secret Firewall:** Enforced via [agent-redact](https://github.com/TonyDuongg/agent-redact) across Git pre-commit hooks and GitHub Actions CI pipelines, preventing PII and cloud credentials from ever leaking to remote repositories.
+* **Zero-Friction Creator Web Studio:** Modern React + Vite Single Page Application offering instant access with no mandatory login wall required.
 
 ---
 
-## 📂 Cấu trúc thư mục dự án
+## 📂 Repository Structure
 
 ```
 tiktok-content-intelligence/
-├── .agentredactrc.json          # Cấu hình bảo mật quét PII & Secret với agent-redact
+├── .agentredactrc.json          # Security firewall rules for agent-redact
 ├── .github/
 │   └── workflows/
-│       └── ci.yml               # GitHub Actions CI: Scan PII, Setup Java 21, Run Tests
+│       └── ci.yml               # GitHub Actions CI: Scan Secrets, Java 21 Build & Test
 ├── docker/
-│   └── docker-compose.yml       # Môi trường Local: PostgreSQL, Redis, LocalStack
+│   └── docker-compose.yml       # Local Infra: PostgreSQL, Redis, LocalStack
 ├── docs/
 │   ├── database/
-│   │   ├── schema.sql           # Script DDL khởi tạo Database PostgreSQL
-│   │   └── ERD.md               # Sơ đồ quan hệ thực thể (ERD) Mermaid
+│   │   ├── schema.sql           # Complete PostgreSQL DDL Script with Indexes & Seeds
+│   │   └── ERD.md               # Mermaid Entity Relationship Diagram specification
 ├── backend/
-│   ├── pom.xml                  # Cấu hình Maven, Dependencies Spring Boot 3 & AWS SDK
-│   ├── mvnw / mvnw.cmd          # Maven Wrapper cross-platform
+│   ├── pom.xml                  # Maven POM (Spring Boot 3.3.5, AWS SDK v2, JJWT)
+│   ├── mvnw / mvnw.cmd          # Cross-platform Maven Wrapper
 │   └── src/
-│       ├── main/
-│       │   ├── java/com/tiktok/intelligence/
-│       │   │   ├── config/      # Security, JWT Filter, AWS, OpenAPI Configs
-│       │   │   ├── controller/  # REST API Controllers (Auth, Channels, Jobs, Scripts, Categories)
-│       │   │   ├── domain/      # JPA Entities & Enums
-│       │   │   ├── dto/         # Request / Response Immutable Records
-│       │   │   ├── exception/   # GlobalExceptionHandler & Custom Exceptions
-│       │   │   ├── repository/  # Spring Data JPA Repositories
-│       │   │   └── service/     # Business Services (Auth, S3, SQS Worker, Scraper, AI Engine)
-│       │   └── resources/
-│       │       └── application.yml
-│       └── test/                # Unit & Integration Tests (16/16 Passed)
-└── package.json                 # Cấu hình npm script chạy agent-redact
+│       ├── main/java/com/tiktok/intelligence/
+│       │   ├── config/          # Security, OpenAPI, AWS, and DataSeeder configurations
+│       │   ├── controller/      # REST API Controllers (Auth, Categories, Channels, Jobs, Scripts)
+│       │   ├── domain/          # JPA Entities and Enums
+│       │   ├── dto/             # Immutable Java 21 Records (Requests/Responses)
+│       │   ├── exception/       # GlobalExceptionHandler and custom exceptions
+│       │   ├── repository/      # Spring Data JPA Repositories
+│       │   └── service/         # Business Services (Auth, Scraper, S3, SQS Worker, AI Engines)
+│       └── test/                # Unit & Integration Test Suite (18/18 Passing)
+├── frontend/                    # TikTok Creator Studio Web App (React 19, Vite 8, Lucide)
+├── start.bat                    # One-Click Windows launcher script
+├── start.ps1                    # One-Click PowerShell launcher script
+├── stop.bat                     # Shutdown script
+└── package.json                 # Security and build tooling
 ```
 
 ---
 
-## ⚡ Bắt đầu nhanh (Quick Start)
+## ⚡ Quick Start
 
-### 1. Yêu cầu môi trường
+### 1. Prerequisites
 * **Java 21 LTS** (`java -version`)
 * **Node.js 18+** (`node -v`)
-* **Docker & Docker Desktop** (`docker compose version`)
+* **Docker & Docker Desktop** (Optional: the application supports an auto-fallback in-memory mode if Docker is not active)
 
-### 2. Khởi động hạ tầng Local (PostgreSQL, Redis, LocalStack)
-```bash
-cd docker
-docker compose up -d
+### 2. Configure Google Gemini API Key
+Obtain a free API key from [Google AI Studio](https://aistudio.google.com/), then add it to your local environment. Create a `.env` file in the project root:
+```ini
+GEMINI_API_KEY=AIzaSy_your_api_key_here
 ```
-* **PostgreSQL:** `localhost:5432` (User: `dev_user`, Pass: `dev_password`, DB: `tiktok_intelligence`)
-* **Redis:** `localhost:6379`
-* **LocalStack:** `http://localhost:4566` (Giả lập S3 Bucket & SQS Queue miễn phí)
+*(Note: `.env` is already configured in `.gitignore` to protect your key from being pushed).*
 
-### 3. Cài đặt tường lửa bảo mật agent-redact
-```bash
-# Tại thư mục gốc dự án
-npm install
-npm run scan:secrets
-```
+### 3. One-Click Launch
 
-### 4. Chạy ứng dụng Backend
-```bash
-cd backend
+**On Windows:**
+Double-click `start.bat` (or execute via PowerShell: `.\start.ps1`).
 
-# Trên Windows
-.\mvnw.cmd spring-boot:run
-
-# Trên Linux / macOS
-chmod +x ./mvnw
-./mvnw spring-boot:run
-```
-
-Ứng dụng sẽ khởi chạy tại: `http://localhost:8080`
+The script automatically:
+1. Detects Docker status (starts PostgreSQL/Redis/LocalStack if Docker is running, or falls back gracefully to in-memory H2 database).
+2. Boots the Spring Boot backend on port `8080`.
+3. Boots the React Creator Studio on port `3000`.
+4. Opens your default web browser to `http://localhost:3000`.
 
 ---
 
-## 📖 Tài liệu API & Giám sát
+## 📖 API Documentation & Monitoring
 
 * **Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-* **OpenAPI 3 JSON Spec:** [http://localhost:8080/api-docs](http://localhost:8080/api-docs)
+* **OpenAPI 3 Spec (JSON):** [http://localhost:8080/api-docs](http://localhost:8080/api-docs)
 * **Actuator Health Check:** [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
 
 ---
 
-## 🧪 Hướng dẫn kiểm thử toàn diện End-to-End (cURL Walkthrough)
+## 🧪 End-to-End API Walkthrough (cURL)
 
-Dưới đây là chuỗi lệnh cURL kiểm thử toàn bộ các giai đoạn từ Authentication, Cào kênh, Tạo tác vụ bất đồng bộ qua AWS SQS đến Sinh kịch bản video AI.
-
-### Bước 1: Đăng ký tài khoản người dùng mới (Tặng kèm 50 credit ban đầu)
+### 1. User Registration (Optional - Grants 50 Initial Credits)
 ```bash
 curl -X POST http://localhost:8080/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "creator@example.com",
     "password": "SecurePassword123@",
-    "fullName": "Nguyen Van Creator"
+    "fullName": "Creator Pro"
   }'
 ```
 
-### Bước 2: Đăng nhập để nhận JWT Token
+### 2. User Authentication (Get JWT Bearer Token)
 ```bash
 curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
@@ -174,114 +162,80 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
     "password": "SecurePassword123@"
   }'
 ```
-> **Ghi chú:** Lưu lại giá trị `accessToken` trả về để gán vào biến môi trường:
-> ```bash
-> export TOKEN="eyJhbGciOiJIUzI1NiJ9..."
-> ```
 
-### Bước 3: Lấy thông tin tài khoản & số dư Credit hiện tại
+### 3. List Supported Categories / Niches
 ```bash
-curl -X GET http://localhost:8080/api/v1/auth/me \
-  -H "Authorization: Bearer $TOKEN"
+curl -X GET http://localhost:8080/api/v1/categories
 ```
 
-### Bước 4: Lấy danh sách các ngành hàng (Categories & Niches)
+### 4. Ingest Competitor Channel & Compute Viral Engagement Rates
 ```bash
-curl -X GET http://localhost:8080/api/v1/categories \
-  -H "Authorization: Bearer $TOKEN"
+curl -X POST "http://localhost:8080/api/v1/channels/ingest?username=beauty_queen&categoryId=1&maxVideos=10"
 ```
 
-### Bước 5: Cào dữ liệu kênh TikTok & Video (Lưu Raw JSON vào S3)
+### 5. Fetch Channel's Top Performing Viral Videos
 ```bash
-curl -X POST "http://localhost:8080/api/v1/channels/ingest?username=beauty_queen&categoryId=1&maxVideos=10" \
-  -H "Authorization: Bearer $TOKEN"
+curl -X GET "http://localhost:8080/api/v1/channels/beauty_queen/top-videos?limit=5"
 ```
 
-### Bước 6: Xem top video viral nhất của kênh theo Engagement Rate
-```bash
-curl -X GET "http://localhost:8080/api/v1/channels/beauty_queen/top-videos?limit=5" \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-### Bước 7: Khởi tạo tác vụ phân tích bất đồng bộ qua AWS SQS (Trừ 5 credit)
-```bash
-curl -X POST http://localhost:8080/api/v1/jobs \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jobType": "ANALYZE_AND_GENERATE_SCRIPT",
-    "targetUsername": "beauty_queen",
-    "categoryId": 1,
-    "targetAudience": "Gen Z da dầu mụn",
-    "tone": "Thuyết phục, lôi cuốn, hài hước",
-    "maxVideos": 10
-  }'
-```
-> Trả về HTTP `202 ACCEPTED` kèm `jobId`. Worker chạy nền tự động cào dữ liệu, đẩy S3 và kích hoạt sinh kịch bản AI.
-
-### Bước 8: Kiểm tra trạng thái tác vụ
-```bash
-curl -X GET http://localhost:8080/api/v1/jobs/{jobId} \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-### Bước 9: Sinh kịch bản video AI trực tiếp theo chủ đề
+### 6. Generate High-Retention AI Video Script Directly
 ```bash
 curl -X POST http://localhost:8080/api/v1/scripts/generate \
-  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "categoryId": 1,
-    "topic": "3 Sai lầm chết người khi dùng Retinol",
-    "targetAudience": "Người mới bắt đầu skincare",
-    "tone": "Chuyên gia, lôi cuốn, cảnh báo",
+    "topic": "3 Deadly sunscreen mistakes that trigger acne breakouts",
+    "targetAudience": "Gen Z oily skin, students and beginners",
+    "tone": "Urgent warning, expert authority, compelling",
     "referenceVideoIds": []
   }'
 ```
 
-### Bước 10: Xem chi tiết kịch bản 3 phần (Hook, Body, CTA) & Video tham khảo
+### 7. Retrieve Full Script Detail with Visual Cues
 ```bash
-curl -X GET http://localhost:8080/api/v1/scripts/{scriptId} \
-  -H "Authorization: Bearer $TOKEN"
+curl -X GET http://localhost:8080/api/v1/scripts/{scriptId}
 ```
 
-### Bước 11: Đánh dấu yêu thích kịch bản (Favorite)
+### 8. Mark Script as Favorite
 ```bash
-curl -X PATCH "http://localhost:8080/api/v1/scripts/{scriptId}/status?status=FAVORITE" \
-  -H "Authorization: Bearer $TOKEN"
+curl -X PATCH "http://localhost:8080/api/v1/scripts/{scriptId}/status?status=FAVORITE"
 ```
 
 ---
 
-## 🛡️ Bảo mật & Tường lửa agent-redact
+## ⚙️ Configuration & Environment Variables
 
-Dự án tích hợp cơ chế bảo mật nghiêm ngặt chống rò rỉ bí mật, API key, AWS access key và dữ liệu nhạy cảm PII:
-1. **Git Pre-commit Hook:** Tự động chặn lệnh commit nếu phát hiện secret hoặc PII chưa được xử lý.
-2. **Bộ quy tắc `.agentredactrc.json`:** Áp dụng preset `vn-pii`, bộ phát hiện entropy cao và danh sách an toàn cho môi trường test.
-3. **CI Security Gate:** Mỗi lần Push hoặc Pull Request đều được quét độc lập trên máy ảo GitHub Actions trước khi build.
-
----
-
-## ⚙️ Biến môi trường cấu hình (Environment Variables)
-
-| Tên biến | Mặc định | Mô tả |
+| Variable Name | Default Value | Description |
 |---|---|---|
-| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/tiktok_intelligence` | URL kết nối PostgreSQL |
-| `SPRING_DATASOURCE_USERNAME`| `dev_user` | Tài khoản Database |
-| `SPRING_DATASOURCE_PASSWORD`| `dev_password` | Mật khẩu Database |
-| `JWT_SECRET_KEY` | Hex 256-bit key | Khóa bí mật ký JWT Token |
-| `AWS_REGION` | `ap-southeast-1` | AWS Region (Singapore) |
-| `AWS_ENDPOINT` | `http://localhost:4566` | Endpoint LocalStack (Local) hoặc AWS Cloud |
-| `AWS_S3_BUCKET` | `tiktok-intelligence-bucket` | Tên S3 Bucket lưu trữ Scrape JSON |
-| `AWS_SQS_QUEUE_NAME` | `tiktok-job-queue` | Tên SQS Queue xử lý tác vụ |
-| `AWS_SQS_DLQ_NAME` | `tiktok-job-dlq` | Tên Dead Letter Queue khi lỗi quá 3 lần |
-| `SCRAPER_PROVIDER` | `mock` | `mock` (miễn phí) hoặc `rapidapi` (production) |
-| `AI_PROVIDER` | `mock` | `mock` (miễn phí) hoặc `bedrock` (AWS Bedrock) |
-| `AI_MODEL_ID` | `anthropic.claude-3-5-sonnet-20240620-v1:0` | ID mô hình AI trên AWS Bedrock |
+| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/tiktok_intelligence` | PostgreSQL JDBC Connection URL |
+| `SPRING_DATASOURCE_USERNAME`| `dev_user` | Database Username |
+| `SPRING_DATASOURCE_PASSWORD`| `dev_password` | Database Password |
+| `JWT_SECRET_KEY` | Hex 256-bit key | Secret key for signing stateless JWT tokens |
+| `AWS_REGION` | `ap-southeast-1` | Target AWS Region |
+| `AWS_ENDPOINT` | `http://localhost:4566` | LocalStack Endpoint (Local) or AWS Cloud |
+| `AWS_S3_BUCKET` | `tiktok-intelligence-bucket` | S3 bucket storing raw scraped JSON payloads |
+| `AWS_SQS_QUEUE_NAME` | `tiktok-job-queue` | Inbound SQS queue for async analysis tasks |
+| `AWS_SQS_DLQ_NAME` | `tiktok-job-dlq` | Dead Letter Queue for failed job retries |
+| `AI_PROVIDER` | `gemini` | Active AI Engine: `gemini`, `bedrock`, or `mock` |
+| `GEMINI_API_KEY` | `""` | Google Gemini API Key from Google AI Studio |
+| `GEMINI_MODEL` | `gemini-3.5-flash` | Gemini model name |
+| `AI_MODEL_ID` | `anthropic.claude-3-5-sonnet-20240620-v1:0` | AWS Bedrock model identifier |
 
 ---
 
-## 👥 Tác giả & Giấy phép
-* **Author:** haiduong2102 (<nguyenhaiduong052005@gmail.com>)
+## 🛡️ Security Audit & Pre-Commit Firewall
+
+This project enforces a zero-secrets leak guarantee via `agent-redact`:
+```bash
+npm run scan:secrets
+```
+* **Git Pre-commit Hook:** Automatically scans staged files before any commit is finalized.
+* **CI Integration:** GitHub Actions runs independent security audits on all PRs and pushes to `main`.
+
+---
+
+## 👥 Authors & License
+
+* **Author:** haiduong2102 ([@TonyDuongg](https://github.com/TonyDuongg))
 * **Repository:** [TonyDuongg/tiktok-content-intelligence](https://github.com/TonyDuongg/tiktok-content-intelligence)
 * **License:** MIT

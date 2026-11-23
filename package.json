@@ -1,7 +1,7 @@
 {
   "name": "tiktok-content-intelligence",
   "version": "1.0.0",
-  "description": "Hệ thống phân tích xu hướng video TikTok theo ngành hàng (Mỹ phẩm, Thời trang, v.v.), nghiên cứu kênh đối thủ và tự động sinh kịch bản video viral bằng Generative AI (LLMs).",
+  "description": "TikTok Content Intelligence & Viral Video AI Script Generator platform on Spring Boot 3 & AWS.",
   "main": "index.js",
   "directories": {
     "doc": "docs"
