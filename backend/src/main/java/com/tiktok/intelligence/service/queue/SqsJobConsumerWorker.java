@@ -2,12 +2,14 @@ package com.tiktok.intelligence.service.queue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tiktok.intelligence.config.AwsProperties;
+import com.tiktok.intelligence.domain.entity.AiScript;
 import com.tiktok.intelligence.domain.entity.AnalysisJob;
 import com.tiktok.intelligence.domain.entity.User;
 import com.tiktok.intelligence.domain.enums.JobStatus;
 import com.tiktok.intelligence.dto.queue.JobMessageDto;
 import com.tiktok.intelligence.repository.AnalysisJobRepository;
 import com.tiktok.intelligence.repository.UserRepository;
+import com.tiktok.intelligence.service.ai.AiScriptService;
 import com.tiktok.intelligence.service.scraper.DataIngestionService;
 import com.tiktok.intelligence.service.storage.S3StorageService;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,7 @@ public class SqsJobConsumerWorker {
     private final UserRepository userRepository;
     private final DataIngestionService dataIngestionService;
     private final S3StorageService s3StorageService;
+    private final AiScriptService aiScriptService;
 
     private static final int MAX_RETRIES = 3;
 
@@ -113,17 +116,21 @@ public class SqsJobConsumerWorker {
             ingestedCount++;
         }
 
-        // 3. Archive analysis summary to AWS S3
+        // 3. Generate AI Viral Script based on top videos
+        AiScript script = aiScriptService.generateAndSaveScriptForJob(job);
+
+        // 4. Archive analysis summary to AWS S3
         String s3Key = String.format("jobs/%s/analysis_summary.json", job.getId());
         String s3Url = s3StorageService.uploadJsonPayload(s3Key, Map.of(
                 "jobId", job.getId(),
+                "scriptId", script.getId(),
                 "channelsAnalyzed", targetChannels,
                 "ingestedChannelsCount", ingestedCount,
                 "filterParams", filters,
                 "completedAt", java.time.Instant.now().toString()
         ));
 
-        // 4. Mark job completed
+        // 5. Mark job completed
         job.markCompleted(s3Url);
         jobRepository.save(job);
     }

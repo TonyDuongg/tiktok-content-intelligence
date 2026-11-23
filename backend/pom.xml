@@ -73,7 +73,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- AWS SDK for Java v2 (Amazon S3 & SQS) -->
+        <!-- AWS SDK for Java v2 (Amazon S3, SQS & Bedrock Runtime) -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
@@ -81,6 +81,10 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>sqs</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>bedrockruntime</artifactId>
         </dependency>
 
         <!-- PostgreSQL & JSONB Support -->

@@ -37,6 +37,11 @@ application:
     provider: mock
     rapidapi-key: mock_key
     rapidapi-host: tiktok-all-in-one.p.rapidapi.com
+  ai:
+    provider: mock
+    model-id: anthropic.claude-3-5-sonnet-20240620-v1:0
+    temperature: 0.7
+
 
 
 

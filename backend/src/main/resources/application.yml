@@ -57,5 +57,10 @@ application:
     provider: ${SCRAPER_PROVIDER:mock}
     rapidapi-key: ${RAPIDAPI_KEY:}
     rapidapi-host: ${RAPIDAPI_HOST:tiktok-all-in-one.p.rapidapi.com}
+  ai:
+    provider: ${AI_PROVIDER:mock} # 'mock' or 'bedrock'
+    model-id: ${AI_MODEL_ID:anthropic.claude-3-5-sonnet-20240620-v1:0}
+    temperature: 0.7
+
 
 
