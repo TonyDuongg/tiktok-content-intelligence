@@ -1,7 +1,7 @@
 # TikTok Content Intelligence & AI Script Studio - PowerShell Launcher
 # =======================================================================
-# [QUAN TRONG] DAN GEMINI API KEY CUA BAN VAO DUOI DAY (BO DAU # O DAU DONG DI):
-# $env:GEMINI_API_KEY = "AIzaSy_dien_key_cua_ban_vao_day"
+# [OPTIONAL] Set GEMINI_API_KEY below or define in root .env file:
+# $env:GEMINI_API_KEY = "AIzaSy_your_key_here"
 # =======================================================================
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path

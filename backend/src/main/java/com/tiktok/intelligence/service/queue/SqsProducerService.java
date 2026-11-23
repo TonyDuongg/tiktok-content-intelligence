@@ -54,7 +54,7 @@ public class SqsProducerService {
             log.info("Dispatched Job [{}] to SQS queue '{}', messageId: {}", message.jobId(), queueName, response.messageId());
         } catch (Exception e) {
             log.error("Failed to dispatch Job [{}] to SQS queue '{}': {}", message.jobId(), queueName, e.getMessage());
-            throw new RuntimeException("Lỗi gửi tác vụ vào hàng đợi SQS: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to dispatch job to SQS queue: " + e.getMessage(), e);
         }
     }
 

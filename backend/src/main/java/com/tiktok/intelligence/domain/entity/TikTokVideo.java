@@ -1,5 +1,7 @@
 package com.tiktok.intelligence.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -22,6 +24,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class TikTokVideo {
 
     @Id
@@ -30,6 +33,7 @@ public class TikTokVideo {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "channel_id", nullable = false)
+    @JsonIgnore
     private TikTokChannel channel;
 
     @Column(name = "tiktok_video_id", nullable = false, unique = true, length = 100)

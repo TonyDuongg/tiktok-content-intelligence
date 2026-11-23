@@ -29,14 +29,14 @@ public class GlobalExceptionHandler {
         });
         log.warn("Validation error on request: {}", errors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("Dữ liệu không hợp lệ", errors));
+                .body(ApiResponse.error("Invalid request payload", errors));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadCredentialsException(BadCredentialsException ex) {
         log.warn("Authentication failure: Bad credentials");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("Email hoặc mật khẩu không chính xác"));
+                .body(ApiResponse.error("Invalid email or password"));
     }
 
     @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleGeneralException(Exception ex) {
         log.error("Unhandled server exception: ", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("Đã xảy ra lỗi hệ thống: " + ex.getMessage()));
+                .body(ApiResponse.error("Internal system error: " + ex.getMessage()));
     }
 }
 

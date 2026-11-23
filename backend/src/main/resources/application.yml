@@ -5,6 +5,10 @@ spring:
   application:
     name: tiktok-content-intelligence
 
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/tiktok_intelligence}
     username: ${SPRING_DATASOURCE_USERNAME:dev_user}

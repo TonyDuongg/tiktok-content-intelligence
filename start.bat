@@ -1,7 +1,7 @@
 @echo off
 REM =======================================================================
-REM [QUAN TRONG] DAN GEMINI API KEY CUA BAN VAO DUOI DAY (BO DAU REM DI):
-REM set "GEMINI_API_KEY=AIzaSy_dien_key_cua_ban_vao_day"
+REM [OPTIONAL] Set GEMINI_API_KEY below or define in root .env file:
+REM set "GEMINI_API_KEY=AIzaSy_your_key_here"
 REM =======================================================================
 
 set "ROOT_DIR=%~dp0"

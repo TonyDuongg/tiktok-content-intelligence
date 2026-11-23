@@ -107,7 +107,7 @@ public class AiScriptService {
     @Transactional
     public ScriptDetailResponse generateDirectScript(String userEmail, DirectGenerateScriptRequest request) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
 
         Category category = null;
         String nicheName = request.topic();
@@ -148,7 +148,7 @@ public class AiScriptService {
     @Transactional(readOnly = true)
     public ScriptDetailResponse getScriptDetail(Long scriptId, String userEmail) {
         AiScript script = scriptRepository.findById(scriptId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy kịch bản với ID: " + scriptId));
+                .orElseThrow(() -> new ResourceNotFoundException("Script not found with ID: " + scriptId));
 
         List<ScriptReferenceVideo> refs = referenceVideoRepository.findByScriptId(scriptId);
         return ScriptDetailResponse.fromEntity(script, refs);
@@ -157,7 +157,7 @@ public class AiScriptService {
     @Transactional(readOnly = true)
     public List<ScriptDetailResponse> getUserScripts(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
 
         return scriptRepository.findByUserIdOrderByCreatedAtDesc(user.getId()).stream()
                 .map(s -> ScriptDetailResponse.fromEntity(s, referenceVideoRepository.findByScriptId(s.getId())))
@@ -167,7 +167,7 @@ public class AiScriptService {
     @Transactional
     public ScriptDetailResponse updateScriptStatus(Long scriptId, ScriptStatus newStatus, String userEmail) {
         AiScript script = scriptRepository.findById(scriptId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy kịch bản với ID: " + scriptId));
+                .orElseThrow(() -> new ResourceNotFoundException("Script not found with ID: " + scriptId));
 
         script.setStatus(newStatus);
         script = scriptRepository.save(script);

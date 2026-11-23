@@ -32,11 +32,11 @@ public class JobService {
     @Transactional
     public JobResponseDto createAndDispatchJob(String userEmail, JobFilterRequest request) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với email: " + userEmail));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + userEmail));
 
         if (user.getCreditsBalance() < JOB_CREDIT_COST) {
             throw new IllegalArgumentException(String.format(
-                    "Số dư credit không đủ (%d/%d). Vui lòng nạp thêm credit để tiếp tục.",
+                    "Insufficient credit balance (%d/%d). Please recharge credits to proceed.",
                     user.getCreditsBalance(), JOB_CREDIT_COST
             ));
         }
@@ -71,7 +71,7 @@ public class JobService {
     @Transactional(readOnly = true)
     public JobResponseDto getJobById(UUID jobId, String userEmail) {
         AnalysisJob job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tác vụ với ID: " + jobId));
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with ID: " + jobId));
 
         String normalizedEmail = userEmail.toLowerCase().trim();
         boolean isOwner = job.getUser().getEmail().equalsIgnoreCase(normalizedEmail);
@@ -80,7 +80,7 @@ public class JobService {
         if (!isOwner && !isAdmin) {
             log.warn("Access denied: User [{}] attempted to view Job [{}] belonging to [{}]",
                     normalizedEmail, jobId, job.getUser().getEmail());
-            throw new org.springframework.security.access.AccessDeniedException("Bạn không có quyền xem thông tin tác vụ này");
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: You do not have permission to view this job");
         }
 
         return JobResponseDto.fromEntity(job);
@@ -89,7 +89,7 @@ public class JobService {
     @Transactional(readOnly = true)
     public List<JobResponseDto> getUserJobs(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với email: " + userEmail));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + userEmail));
 
         return jobRepository.findByUserIdOrderByCreatedAtDesc(user.getId()).stream()
                 .map(JobResponseDto::fromEntity)

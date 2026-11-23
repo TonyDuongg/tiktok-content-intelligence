@@ -60,7 +60,7 @@ public class S3StorageService {
             return s3Uri;
         } catch (Exception e) {
             log.error("Failed to upload JSON payload to S3 [bucket={}, key={}]: {}", bucket, key, e.getMessage());
-            throw new RuntimeException("Lỗi lưu trữ dữ liệu S3: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to store data in S3: " + e.getMessage(), e);
         }
     }
 

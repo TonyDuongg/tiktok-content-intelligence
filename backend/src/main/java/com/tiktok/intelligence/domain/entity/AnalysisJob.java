@@ -1,5 +1,6 @@
 package com.tiktok.intelligence.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tiktok.intelligence.domain.enums.JobStatus;
 import com.tiktok.intelligence.domain.enums.JobType;
 import jakarta.persistence.*;
@@ -23,6 +24,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class AnalysisJob {
 
     @Id
@@ -32,6 +34,7 @@ public class AnalysisJob {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "passwordHash"})
     private User user;
 
     @Enumerated(EnumType.STRING)

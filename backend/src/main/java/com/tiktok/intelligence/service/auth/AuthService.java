@@ -31,7 +31,7 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
         String normalizedEmail = request.email().toLowerCase().trim();
         if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new DuplicateResourceException("Email này đã được sử dụng: " + normalizedEmail);
+            throw new DuplicateResourceException("Email is already registered: " + normalizedEmail);
         }
 
         User user = User.builder()
@@ -65,7 +65,7 @@ public class AuthService {
         );
 
         User user = userRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + normalizedEmail));
 
         CustomUserDetails userDetails = new CustomUserDetails(user);
         Map<String, Object> extraClaims = Map.of(
@@ -81,7 +81,7 @@ public class AuthService {
     public UserDto getCurrentUser(String email) {
         String normalizedEmail = email.toLowerCase().trim();
         User user = userRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với email: " + normalizedEmail));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + normalizedEmail));
         return UserDto.fromEntity(user);
     }
 }

@@ -108,7 +108,7 @@ class JobServiceTest {
 
         assertThatThrownBy(() -> jobService.createAndDispatchJob("user2@example.com", request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Số dư credit không đủ");
+                .hasMessageContaining("Insufficient credit balance");
 
         verify(sqsProducerService, never()).sendJobMessage(any());
         verify(jobRepository, never()).save(any());
@@ -134,6 +134,6 @@ class JobServiceTest {
 
         assertThatThrownBy(() -> jobService.getJobById(jobId, "user2@example.com"))
                 .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
-                .hasMessageContaining("Bạn không có quyền xem thông tin tác vụ này");
+                .hasMessageContaining("Access denied: You do not have permission to view this job");
     }
 }

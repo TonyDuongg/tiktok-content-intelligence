@@ -1,10 +1,13 @@
 package com.tiktok.intelligence.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 
 @Entity
@@ -17,6 +20,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class TikTokChannel {
 
     @Id
@@ -25,6 +29,7 @@ public class TikTokChannel {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Category category;
 
     @Column(name = "tiktok_username", nullable = false, unique = true, length = 100)
@@ -64,4 +69,22 @@ public class TikTokChannel {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    // Helper compatibility getters for frontend
+    public Long getFollowerCount() {
+        return followersCount != null ? followersCount : 0L;
+    }
+
+    public Long getLikeCount() {
+        return totalLikes != null ? totalLikes : 0L;
+    }
+
+    public BigDecimal getAverageEngagementRate() {
+        if (followersCount != null && followersCount > 0 && totalLikes != null && totalVideos != null && totalVideos > 0) {
+            double avgLikesPerVideo = (double) totalLikes / totalVideos;
+            return BigDecimal.valueOf((avgLikesPerVideo / followersCount) * 100.0)
+                    .setScale(2, RoundingMode.HALF_UP);
+        }
+        return BigDecimal.ZERO;
+    }
 }

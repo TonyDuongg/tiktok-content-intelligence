@@ -44,7 +44,7 @@ public class DataIngestionService {
         Category category = null;
         if (categoryId != null) {
             category = categoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục với ID: " + categoryId));
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + categoryId));
         }
 
         // 3. Save or Update TikTokChannel

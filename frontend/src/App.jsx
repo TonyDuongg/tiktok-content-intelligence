@@ -190,11 +190,16 @@ ${(generatedScript.suggestedHashtags || []).join(' ')}
       const res = await api.ingestChannel(targetUser, selectedCategoryId, 10);
       setChannelData(res.data);
 
-      const topRes = await api.getTopVideos(targetUser, 8);
-      setTopVideos(topRes.data || []);
-      showToastMsg(`Đã phân tích xong kênh @${targetUser}`);
+      try {
+        const topRes = await api.getTopVideos(targetUser, 8);
+        setTopVideos(topRes.data || []);
+      } catch (videoErr) {
+        console.warn('Top videos warning:', videoErr);
+      }
+
+      showToastMsg(`✨ Đã phân tích xong kênh @${targetUser}`);
     } catch (err) {
-      alert(err.message || 'Không thể cào dữ liệu kênh');
+      alert(err.message || 'Không thể phân tích dữ liệu kênh, vui lòng thử lại');
     } finally {
       setChannelLoading(false);
     }
@@ -644,21 +649,38 @@ ${(generatedScript.suggestedHashtags || []).join(' ')}
               <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                    <div
-                      style={{
-                        width: '60px',
-                        height: '60px',
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, var(--tiktok-pink), var(--tiktok-cyan))',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '1.5rem',
-                        fontWeight: 800
-                      }}
-                    >
-                      {channelData.tiktokUsername?.charAt(0).toUpperCase()}
-                    </div>
+                    {channelData.avatarUrl ? (
+                      <img
+                        src={channelData.avatarUrl}
+                        alt={channelData.nickname || channelData.tiktokUsername}
+                        style={{
+                          width: '60px',
+                          height: '60px',
+                          borderRadius: '50%',
+                          objectFit: 'cover',
+                          border: '2px solid var(--tiktok-cyan)'
+                        }}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: '60px',
+                          height: '60px',
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, var(--tiktok-pink), var(--tiktok-cyan))',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '1.5rem',
+                          fontWeight: 800
+                        }}
+                      >
+                        {channelData.tiktokUsername?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <div>
                       <h2 style={{ fontSize: '1.35rem', fontWeight: 800 }}>
                         @{channelData.tiktokUsername}
@@ -672,13 +694,13 @@ ${(generatedScript.suggestedHashtags || []).join(' ')}
                   <div style={{ display: 'flex', gap: '2rem', textAlign: 'center' }}>
                     <div>
                       <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#fff' }}>
-                        {(channelData.followerCount || 0).toLocaleString()}
+                        {(channelData.followersCount ?? channelData.followerCount ?? 0).toLocaleString()}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700 }}>NGƯỜI THEO DÕI</div>
                     </div>
                     <div>
                       <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--tiktok-pink)' }}>
-                        {(channelData.likeCount || 0).toLocaleString()}
+                        {(channelData.totalLikes ?? channelData.likeCount ?? 0).toLocaleString()}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700 }}>LƯỢT THÍCH</div>
                     </div>
