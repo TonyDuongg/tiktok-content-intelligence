@@ -73,10 +73,14 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- AWS SDK for Java v2 (Amazon S3) -->
+        <!-- AWS SDK for Java v2 (Amazon S3 & SQS) -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sqs</artifactId>
         </dependency>
 
         <!-- PostgreSQL & JSONB Support -->

@@ -15,4 +15,13 @@ public class AwsProperties {
     private String endpoint = "http://localhost:4566";
     private String accessKeyId = "mock_access_key";
     private String secretAccessKey = "mock_secret_key";
+    private SqsProperties sqs = new SqsProperties();
+
+    @Getter
+    @Setter
+    public static class SqsProperties {
+        private String queueName = "tiktok-job-queue";
+        private String dlqName = "tiktok-job-dlq";
+        private boolean workerEnabled = true;
+    }
 }

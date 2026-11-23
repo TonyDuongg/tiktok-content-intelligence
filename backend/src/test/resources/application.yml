@@ -29,6 +29,10 @@ application:
     endpoint: http://localhost:4566
     access-key-id: test_key
     secret-access-key: test_secret
+    sqs:
+      queue-name: test-tiktok-job-queue
+      dlq-name: test-tiktok-job-dlq
+      worker-enabled: false # disable background worker polling during unit tests
   scraper:
     provider: mock
     rapidapi-key: mock_key

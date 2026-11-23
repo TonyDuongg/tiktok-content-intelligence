@@ -49,6 +49,10 @@ application:
     endpoint: ${AWS_ENDPOINT:http://localhost:4566}
     access-key-id: ${AWS_ACCESS_KEY_ID:mock_access_key}
     secret-access-key: ${AWS_SECRET_ACCESS_KEY:mock_secret_key}
+    sqs:
+      queue-name: ${AWS_SQS_QUEUE_NAME:tiktok-job-queue}
+      dlq-name: ${AWS_SQS_DLQ_NAME:tiktok-job-dlq}
+      worker-enabled: ${SQS_WORKER_ENABLED:true}
   scraper:
     provider: ${SCRAPER_PROVIDER:mock}
     rapidapi-key: ${RAPIDAPI_KEY:}

@@ -54,4 +54,19 @@ public class AwsConfig {
 
         return builder.build();
     }
+
+    @Bean
+    public software.amazon.awssdk.services.sqs.SqsClient sqsClient() {
+        software.amazon.awssdk.services.sqs.SqsClientBuilder builder = software.amazon.awssdk.services.sqs.SqsClient.builder()
+                .region(Region.of(awsProperties.getRegion()))
+                .credentialsProvider(StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create(awsProperties.getAccessKeyId(), awsProperties.getSecretAccessKey())
+                ));
+
+        if (awsProperties.getEndpoint() != null && !awsProperties.getEndpoint().isBlank()) {
+            builder.endpointOverride(URI.create(awsProperties.getEndpoint()));
+        }
+
+        return builder.build();
+    }
 }
