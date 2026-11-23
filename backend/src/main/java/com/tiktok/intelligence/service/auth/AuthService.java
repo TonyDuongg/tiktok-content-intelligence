@@ -29,12 +29,13 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
-            throw new DuplicateResourceException("Email này đã được sử dụng: " + request.email());
+        String normalizedEmail = request.email().toLowerCase().trim();
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            throw new DuplicateResourceException("Email này đã được sử dụng: " + normalizedEmail);
         }
 
         User user = User.builder()
-                .email(request.email().toLowerCase().trim())
+                .email(normalizedEmail)
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .fullName(request.fullName().trim())
                 .role(UserRole.ROLE_USER)
@@ -55,14 +56,15 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
+        String normalizedEmail = request.email().toLowerCase().trim();
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.email().toLowerCase().trim(),
+                        normalizedEmail,
                         request.password()
                 )
         );
 
-        User user = userRepository.findByEmail(request.email().toLowerCase().trim())
+        User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
         CustomUserDetails userDetails = new CustomUserDetails(user);
@@ -77,8 +79,9 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public UserDto getCurrentUser(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với email: " + email));
+        String normalizedEmail = email.toLowerCase().trim();
+        User user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với email: " + normalizedEmail));
         return UserDto.fromEntity(user);
     }
 }
