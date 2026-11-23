@@ -1,5 +1,9 @@
 @echo off
-cd /d "%~dp0"
+set "ROOT_DIR=%~dp0"
+set "BACKEND_DIR=%ROOT_DIR%backend"
+set "FRONTEND_DIR=%ROOT_DIR%frontend"
+
+cd /d "%ROOT_DIR%"
 title TikTok Content Intelligence ^& AI Script Studio
 
 echo =======================================================================
@@ -15,19 +19,19 @@ goto :LOCAL_MODE
 echo [*] Docker is active. Starting PostgreSQL, Redis, LocalStack...
 docker compose -f docker/docker-compose.yml up -d
 echo [*] Starting Backend Spring Boot on port 8080...
-start "TikTok AI Backend" cmd /k "cd /d \"%~dp0backend\" && .\mvnw.cmd spring-boot:run"
+start "TikTok AI Backend" /D "%BACKEND_DIR%" cmd /k "mvnw.cmd spring-boot:run"
 goto :START_FRONTEND
 
 :LOCAL_MODE
 echo [!] Docker Desktop is not running or still starting.
 echo [*] Starting Spring Boot in lightweight LOCAL mode (In-Memory H2 DB)...
 echo [*] All features and Gemini AI script generator will work 100%%!
-start "TikTok AI Backend" cmd /k "cd /d \"%~dp0backend\" && .\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local"
+start "TikTok AI Backend" /D "%BACKEND_DIR%" cmd /k "mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local"
 goto :START_FRONTEND
 
 :START_FRONTEND
 echo [*] Starting Frontend Creator Studio on port 3000...
-start "TikTok AI Studio Frontend" cmd /k "cd /d \"%~dp0frontend\" && npm run dev"
+start "TikTok AI Studio Frontend" /D "%FRONTEND_DIR%" cmd /k "npm.cmd run dev"
 
 echo.
 echo =======================================================================

@@ -20,16 +20,16 @@ if ($DockerActive) {
     Write-Host "[*] Docker is active. Starting PostgreSQL, Redis, LocalStack..." -ForegroundColor Green
     docker compose -f docker/docker-compose.yml up -d
     Write-Host "[*] Starting Backend Spring Boot on port 8080..." -ForegroundColor Green
-    Start-Process cmd.exe -ArgumentList "/k cd /d `"$ScriptDir\backend`" && .\mvnw.cmd spring-boot:run"
+    Start-Process cmd.exe -WorkingDirectory "$ScriptDir\backend" -ArgumentList "/k .\mvnw.cmd spring-boot:run"
 } else {
     Write-Host "[!] Docker Desktop is not running." -ForegroundColor Yellow
     Write-Host "[*] Starting Spring Boot in lightweight LOCAL mode (In-Memory H2 DB)..." -ForegroundColor Green
     Write-Host "[*] All features and Gemini AI script generator will work 100%!" -ForegroundColor Green
-    Start-Process cmd.exe -ArgumentList "/k cd /d `"$ScriptDir\backend`" && .\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local"
+    Start-Process cmd.exe -WorkingDirectory "$ScriptDir\backend" -ArgumentList "/k .\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local"
 }
 
 Write-Host "[*] Starting Frontend Creator Studio on port 3000..." -ForegroundColor Green
-Start-Process cmd.exe -ArgumentList "/k cd /d `"$ScriptDir\frontend`" && npm run dev"
+Start-Process cmd.exe -WorkingDirectory "$ScriptDir\frontend" -ArgumentList "/k npm.cmd run dev"
 
 Write-Host ""
 Write-Host "=======================================================================" -ForegroundColor Cyan
