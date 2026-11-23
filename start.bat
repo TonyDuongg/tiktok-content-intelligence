@@ -1,45 +1,47 @@
 @echo off
-chcp 65001 >nul
+cd /d "%~dp0"
+title TikTok Content Intelligence ^& AI Script Studio
+
 echo =======================================================================
-echo   🚀 TIKTOK CONTENT INTELLIGENCE ^& AI SCRIPT GENERATOR STUDIO
+echo   TIKTOK CONTENT INTELLIGENCE ^& AI SCRIPT GENERATOR STUDIO
 echo =======================================================================
 echo.
 
-REM 1. Kiem tra Docker Desktop
-echo [1/4] Kiem tra ha tang Docker...
 docker info >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [!] Docker Desktop chua bat. Dang mo Docker Desktop...
-    if exist "C:\Program Files\Docker\Docker\Docker Desktop.exe" (
-        start "" "C:\Program Files\Docker\Docker\Docker Desktop.exe"
-        echo Dang cho Docker khoi dong (15 giay)...
-        timeout /t 15 /nobreak >nul
-    ) else (
-        echo [!] Khong tim thay Docker Desktop. Vui long bat Docker thu cong.
-    )
-)
+if %errorlevel% equ 0 goto :DOCKER_MODE
+goto :LOCAL_MODE
 
-REM 2. Khoi dong PostgreSQL, Redis, LocalStack
-echo [2/4] Khoi dong Database ^& Cloud Services (PostgreSQL, Redis, LocalStack)...
+:DOCKER_MODE
+echo [*] Docker is active. Starting PostgreSQL, Redis, LocalStack...
 docker compose -f docker/docker-compose.yml up -d
+echo [*] Starting Backend Spring Boot on port 8080...
+start "TikTok AI Backend" cmd /k "cd /d \"%~dp0backend\" && .\mvnw.cmd spring-boot:run"
+goto :START_FRONTEND
 
-REM 3. Khoi chay Backend Spring Boot (Port 8080)
-echo [3/4] Khoi dong Backend Spring Boot tren port 8080...
-start "TikTok AI Backend (Spring Boot)" cmd /k "cd backend && .\mvnw.cmd spring-boot:run"
+:LOCAL_MODE
+echo [!] Docker Desktop is not running or still starting.
+echo [*] Starting Spring Boot in lightweight LOCAL mode (In-Memory H2 DB)...
+echo [*] All features and Gemini AI script generator will work 100%%!
+start "TikTok AI Backend" cmd /k "cd /d \"%~dp0backend\" && .\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local"
+goto :START_FRONTEND
 
-REM 4. Khoi chay Frontend React Studio (Port 3000)
-echo [4/4] Khoi dong Frontend Creator Studio tren port 3000...
-start "TikTok AI Studio Frontend" cmd /k "cd frontend && npm run dev"
+:START_FRONTEND
+echo [*] Starting Frontend Creator Studio on port 3000...
+start "TikTok AI Studio Frontend" cmd /k "cd /d \"%~dp0frontend\" && npm run dev"
 
 echo.
 echo =======================================================================
-echo   ✅ HE THONG DA DUOC KHOI DONG!
+echo   SYSTEM IS STARTING UP!
 echo.
-echo   * Giao dien Creator Studio: http://localhost:3000
-echo   * Swagger API Documentation: http://localhost:8080/swagger-ui.html
-echo   * Actuator Health Check:    http://localhost:8080/actuator/health
+echo   * Creator Studio UI: http://localhost:3000
+echo   * Swagger API:       http://localhost:8080/swagger-ui.html
+echo   * Health Check:      http://localhost:8080/actuator/health
 echo =======================================================================
 echo.
-echo Tu dong mo trinh duyet sau 5 giay...
-timeout /t 5 /nobreak >nul
+echo Opening web browser in 5 seconds...
+ping localhost -n 6 >nul
 start http://localhost:3000
+
+echo.
+echo Press any key to close this launcher window (Services will keep running).
+pause >nul
