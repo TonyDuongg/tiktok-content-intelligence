@@ -70,7 +70,9 @@ application:
     rapidapi-key: ${RAPIDAPI_KEY:}
     rapidapi-host: ${RAPIDAPI_HOST:tiktok-all-in-one.p.rapidapi.com}
   ai:
-    provider: ${AI_PROVIDER:mock} # 'mock' or 'bedrock'
+    provider: ${AI_PROVIDER:gemini} # 'gemini', 'bedrock' or 'mock'
+    gemini-api-key: ${GEMINI_API_KEY:}
+    gemini-model: ${GEMINI_MODEL:gemini-1.5-flash}
     model-id: ${AI_MODEL_ID:anthropic.claude-3-5-sonnet-20240620-v1:0}
     temperature: 0.7
 

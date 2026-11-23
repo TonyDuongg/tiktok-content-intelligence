@@ -1,7 +1,10 @@
 # ==============================================================================
-# Node & Security Tooling (agent-redact)
+# Node & Security Tooling (agent-redact & Frontend)
 # ==============================================================================
 node_modules/
+**/node_modules/
+dist/
+**/dist/
 .npm/
 npm-debug.log*
 
