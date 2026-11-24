@@ -1,4 +1,5 @@
 @import "./fonts.css";
+@import "./desktop.css";
 
 :root {
   color-scheme: light;
@@ -235,11 +236,6 @@ fieldset {
   font-size: var(--type-small);
 }
 .desktop-settings { white-space: nowrap; }
-@media (min-width: 641px) and (max-width: 1180px) {
-  .desktop-mode .header-inner { flex-wrap: wrap; gap: var(--space-3); padding-block: var(--space-4) 0; }
-  .desktop-mode .desktop-settings { margin-inline-start: auto; }
-  .desktop-mode .navigation { order: 3; width: 100%; margin: 0; }
-}
 .connection-dot {
   width: 6px;
   height: 6px;

@@ -12,6 +12,8 @@ The page uses a pale neutral canvas and white working surfaces. A 400px brief co
 
 Duration is a native select with common presets; custom seconds/minutes are revealed only when needed. Generated speech is broken into timed paragraphs. Filming and audio notes use a disclosure so long scripts keep speech as the primary reading task. The requested duration and the AI estimate remain distinct in the preview, library and text export.
 
+The Windows app uses the window height as its workspace. Header, footer and primary actions stay visible; script content, library results and expanded form options scroll within their own panes. Desktop fields use two columns, with the topic spanning both. At widths up to 1000px, a brief/preview switch shows one pane at a time and opening a script selects the preview. Keep the web layout naturally scrolling. For unusually short viewports (480px or less), allow the main workspace to scroll so zoom cannot make controls unreachable.
+
 ## Color and interaction
 
 Primary text is `#20242c`, secondary `#4b5360`, canvas `#f6f7f8`, surface white. The rose accent `#9f1f3b` is reserved for primary actions and selection. Navigation and content sections use neutral colors. Status always includes readable text. Focus uses a blue outline; touch targets are at least 44px. No decorative gradients, glows, promotional badges or emoji icons.

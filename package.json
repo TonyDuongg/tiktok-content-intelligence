@@ -1,6 +1,6 @@
 {
   "name": "tiktok-content-intelligence",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Creator Studio desktop tool for TikTok research and script writing.",
   "private": true,
   "main": "desktop/main.cjs",

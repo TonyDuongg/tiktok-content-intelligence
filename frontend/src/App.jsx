@@ -42,6 +42,8 @@ const TONES = [
   "Chuyên gia, rõ ràng",
   "Tâm sự, kể chuyện",
 ];
+const SHORT_TONES = ["Chân thực", "Hài hước", "Chuyên gia", "Kể chuyện"];
+const SHORT_CATEGORIES = { beauty: "Làm đẹp", fashion: "Thời trang", food: "Ẩm thực", tech: "Công nghệ", lifestyle: "Đời sống" };
 const IDEAS = [
   ["beauty", "3 điều cần kiểm tra khi chọn kem chống nắng"],
   ["fashion", "Phối một chiếc áo sơ mi thành 3 bộ đồ đi làm"],
@@ -93,6 +95,7 @@ export default function App() {
   const [filter, setFilter] = useState("ALL");
   const [page, setPage] = useState(1);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [desktopPane, setDesktopPane] = useState("brief");
 
   useEffect(() => {
     void window.creatorDesktop?.setBusy(generating || channelLoading).catch(() => {});
@@ -200,8 +203,13 @@ export default function App() {
     setActionError("");
   }
   function focusPreview() {
+    setDesktopPane("preview");
     requestAnimationFrame(() => {
       previewRef.current?.focus({ preventScroll: true });
+      if (window.creatorDesktop) {
+        previewRef.current?.querySelector(".preview-content")?.scrollTo({ top: 0 });
+        return;
+      }
       previewRef.current?.scrollIntoView({
         behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
           ? "instant"
@@ -414,7 +422,7 @@ export default function App() {
   );
 
   return (
-    <div className={window.creatorDesktop ? "app-shell desktop-mode" : "app-shell"}>
+    <div className={window.creatorDesktop ? `app-shell desktop-mode workspace-${activeTab}` : "app-shell"}>
       <a href="#main" className="skip-link">
         Đến nội dung chính
       </a>
@@ -460,9 +468,9 @@ export default function App() {
             ))}
           </nav>
           {window.creatorDesktop ? (
-            <button className="button subtle desktop-settings" disabled={generating || channelLoading}
+            <button className="button subtle desktop-settings" aria-label="Cài đặt" disabled={generating || channelLoading}
               onClick={() => window.creatorDesktop.openSettings().catch(() => notify("Không mở được cài đặt. Hãy thử lại."))}>
-              <Settings size={18} /> Cài đặt
+              <Settings size={18} /> <span className="desktop-settings-label">Cài đặt</span>
             </button>
           ) : <div className="workspace-label">
             <span
@@ -494,6 +502,12 @@ export default function App() {
                   : "Tìm lại, đánh dấu và chuẩn bị cho lần quay tiếp theo."}
             </p>
           </div>
+          {activeTab === "studio" && window.creatorDesktop && (
+            <div className="pane-switch" role="group" aria-label="Chọn vùng làm việc">
+              <button type="button" aria-pressed={desktopPane === "brief"} onClick={() => setDesktopPane("brief")}>Thiết lập</button>
+              <button type="button" aria-pressed={desktopPane === "preview"} onClick={() => setDesktopPane("preview")}>Kịch bản</button>
+            </div>
+          )}
           {activeTab === "history" && (
             <button
               className="button primary"
@@ -504,6 +518,7 @@ export default function App() {
             </button>
           )}
         </div>
+        <div className="workspace-notices">
         {setupError && <Notice onRetry={reloadSetup}>{setupError}</Notice>}
         {workspaceError && (
           <Notice warning onRetry={reloadSetup}>
@@ -511,7 +526,7 @@ export default function App() {
           </Notice>
         )}
         {window.creatorDesktop && workspace?.issues?.length ? (
-          <Notice>Mở Cài đặt để thêm khóa API cho {[
+          <Notice warning>Mở Cài đặt để thêm khóa API cho {[
             !workspace.aiConfigured && "Gemini",
             !workspace.scraperConfigured && "RapidAPI",
           ].filter(Boolean).join(" và ") || "dịch vụ chưa kết nối"}.</Notice>
@@ -519,8 +534,9 @@ export default function App() {
           <Notice key={issue}>{issue}</Notice>
         ))}
         {actionError && <Notice>{actionError}</Notice>}
+        </div>
         {activeTab === "studio" && (
-          <div className="studio-layout">
+          <div className={`studio-layout show-${desktopPane}`}>
             <section
               className="panel brief-panel"
               aria-label="Thiết lập kịch bản"
@@ -539,7 +555,7 @@ export default function App() {
               )}
               <form onSubmit={generate}>
                 <fieldset disabled={generating} className="brief-fields">
-                  <div className="field">
+                  <div className="field field-category">
                     <label htmlFor="category">Lĩnh vực</label>
                     <select
                       id="category"
@@ -558,12 +574,12 @@ export default function App() {
                       )}
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>
-                          {c.name}
+                          {window.creatorDesktop ? SHORT_CATEGORIES[categoryKind(c)] || c.name : c.name}
                         </option>
                       ))}
                     </select>
                   </div>
-                  <div className="field">
+                  <div className="field field-topic">
                     <div className="label-row">
                       <label htmlFor="topic">
                         Chủ đề video <span className="required">*</span>
@@ -585,37 +601,40 @@ export default function App() {
                     <button
                       type="button"
                       className="idea-button"
+                      aria-label={`Dùng gợi ý: ${idea}`}
+                      title={idea}
                       onClick={() => updateDraft("topic", idea)}
                     >
                       <Plus size={14} />
-                      <span>Dùng gợi ý: {idea}</span>
+                      <span className="idea-copy">Dùng gợi ý: {idea}</span>
+                      <span className="idea-short" aria-hidden="true">Dùng gợi ý</span>
                     </button>
                   </div>
-                  <div className="field">
+                  <div className="field field-audience">
                     <label htmlFor="audience">Người xem mục tiêu</label>
                     <input
                       id="audience"
                       maxLength={300}
-                      placeholder="Ví dụ: sinh viên mới bắt đầu chăm sóc da"
+                      placeholder={window.creatorDesktop ? "Ví dụ: sinh viên" : "Ví dụ: sinh viên mới bắt đầu chăm sóc da"}
                       value={draft.targetAudience}
                       onChange={(e) =>
                         updateDraft("targetAudience", e.target.value)
                       }
                     />
                   </div>
-                  <div className="field">
+                  <div className="field field-tone">
                     <label htmlFor="tone">Giọng điệu</label>
                     <select
                       id="tone"
                       value={draft.tone}
                       onChange={(e) => updateDraft("tone", e.target.value)}
                     >
-                      {TONES.map((tone) => (
-                        <option key={tone}>{tone}</option>
+                      {TONES.map((tone, index) => (
+                        <option key={tone} value={tone}>{window.creatorDesktop ? SHORT_TONES[index] : tone}</option>
                       ))}
                     </select>
                   </div>
-                  <div className="field">
+                  <div className="field field-duration">
                     <label htmlFor="duration-preset">Thời lượng video</label>
                     <select
                       id="duration-preset"
@@ -757,6 +776,7 @@ export default function App() {
                     </button>
                   </details>
                 </fieldset>
+                <div className="brief-actions" aria-busy={generating}>
                 {generateError && <Notice>{generateError}</Notice>}
                 <button
                   type="submit"
@@ -785,6 +805,7 @@ export default function App() {
                     ? "Đang chờ AI phản hồi, có thể mất tối đa 2 phút."
                     : "Tự lưu vào kho kịch bản dùng chung"}
                 </p>
+                </div>
               </form>
             </section>
             <ScriptPreview
@@ -878,6 +899,7 @@ export default function App() {
                 liệu đang được cấu hình.
               </p>
             </section>
+            <div className="channel-results">
             {channelError && <Notice>{channelError}</Notice>}
             {channelLoading && (
               <p role="status" className="loading-line">
@@ -1004,11 +1026,12 @@ export default function App() {
                 video tham khảo để đưa vào brief của bạn.
               </EmptyState>
             )}
+            </div>
           </div>
         )}
 
         {activeTab === "history" && (
-          <section aria-label="Kho kịch bản">
+          <section className="library-workspace" aria-label="Kho kịch bản">
             <div className="library-toolbar">
               <div
                 className="filter-tabs"

@@ -168,6 +168,7 @@ export function ScriptPreview({
           </button>
         </div>
       </div>
+      <div className="preview-content" tabIndex={0} role="region" aria-label="Nội dung kịch bản">
       {script.requestedDurationSeconds && (
         <p className="duration-note">
           AI ước tính {formatDuration(script.estimatedDurationSeconds)}. Đọc thử
@@ -236,6 +237,7 @@ export function ScriptPreview({
         Kịch bản đã tự động lưu vào kho · {formatDate(script.createdAt)}. Kiểm
         tra thông tin và điều chỉnh lời thoại trước khi quay.
       </p>
+      </div>
     </article>
   );
 }

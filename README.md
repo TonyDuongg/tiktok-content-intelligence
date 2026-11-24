@@ -59,7 +59,7 @@ The light studio supports persistent browser briefs, up to five saved video refe
 
 ## Windows desktop application
 
-Run `npm run desktop:build` to create `release/Creator-Studio-1.0.0-Windows-x64.zip`. Extract the complete ZIP and open **Creator Studio.exe** on Windows x64. Java and local storage are included; no Docker or login is required. Each user enters their own Gemini/RapidAPI keys in Settings. See [Windows portable instructions, storage and backups](docs/DESKTOP.md).
+Run `npm run desktop:build` to create `release/Creator-Studio-1.0.1-Windows-x64.zip`. Extract the complete ZIP and open **Creator Studio.exe** on Windows x64. Java and local storage are included; no Docker or login is required. Each user enters their own Gemini/RapidAPI keys in Settings. The desktop workspace fits the window, with pinned actions and independently scrolling script and library panes. See [Windows portable instructions, storage and backups](docs/DESKTOP.md).
 
 [Download for Windows](https://github.com/TonyDuongg/tiktok-content-intelligence/releases/latest) · [Deployment and releases](docs/PUBLISHING.md) · [MIT License](LICENSE)
 
