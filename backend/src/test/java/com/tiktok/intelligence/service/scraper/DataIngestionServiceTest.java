@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -57,6 +58,7 @@ class DataIngestionServiceTest {
                 categoryRepository,
                 s3StorageService
         );
+        org.springframework.test.util.ReflectionTestUtils.setField(dataIngestionService, "archiveEnabled", true);
     }
 
     @Test
@@ -98,5 +100,13 @@ class DataIngestionServiceTest {
         verify(channelRepository, times(1)).save(any(TikTokChannel.class));
         verify(videoRepository, times(1)).save(any(TikTokVideo.class));
         verify(s3StorageService, times(1)).uploadJsonPayload(anyString(), any(ScrapeResultDto.class));
+    }
+
+    @Test
+    void missingCategoryDoesNotSpendScraperRequest() {
+        when(categoryRepository.findById(999L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> dataIngestionService.ingestChannelData("creator", 999L, 10))
+                .isInstanceOf(com.tiktok.intelligence.exception.ResourceNotFoundException.class);
+        verifyNoInteractions(scraperFactory, scraperClient, channelRepository, videoRepository, s3StorageService);
     }
 }

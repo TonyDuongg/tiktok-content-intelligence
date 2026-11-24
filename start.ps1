@@ -1,62 +1,75 @@
-# TikTok Content Intelligence & AI Script Studio - PowerShell Launcher
-# =======================================================================
-# [OPTIONAL] Set GEMINI_API_KEY below or define in root .env file:
-# $env:GEMINI_API_KEY = "AIzaSy_your_key_here"
-# =======================================================================
+param([switch]$NoBrowser)
 
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-Set-Location $ScriptDir
+$ErrorActionPreference = 'Stop'
+$projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+Set-Location -LiteralPath $projectRoot
 
-# Load .env if present
-if (Test-Path "$ScriptDir\.env") {
-    Get-Content "$ScriptDir\.env" | ForEach-Object {
-        if ($_ -match '^\s*([^#=]+)=(.*)$') {
-            [System.Environment]::SetEnvironmentVariable($matches[1].Trim(), $matches[2].Trim())
+if (Test-Path -LiteralPath (Join-Path $projectRoot '.env')) {
+    Get-Content -LiteralPath (Join-Path $projectRoot '.env') | ForEach-Object {
+        if ($_ -match '^\s*([A-Z][A-Z0-9_]+)\s*=(.*)$') {
+            [Environment]::SetEnvironmentVariable($matches[1], $matches[2].Trim().Trim('"').Trim("'"), 'Process')
         }
     }
 }
+if (!$env:AI_PROVIDER) { $env:AI_PROVIDER = 'gemini' }
+if (!$env:SCRAPER_PROVIDER) { $env:SCRAPER_PROVIDER = 'rapidapi' }
+if ($env:AI_PROVIDER -notin @('gemini', 'google', 'bedrock') -or $env:SCRAPER_PROVIDER -ne 'rapidapi') {
+    throw 'Only real providers are supported. Set AI_PROVIDER=gemini (or bedrock) and SCRAPER_PROVIDER=rapidapi in .env.'
+}
+if (($env:AI_PROVIDER -in @('gemini', 'google')) -and !$env:GEMINI_API_KEY) {
+    Write-Warning 'GEMINI_API_KEY is missing. Add it to .env to generate scripts.'
+}
+if (!$env:RAPIDAPI_KEY) { Write-Warning 'RAPIDAPI_KEY is missing. Add it to .env to research TikTok channels.' }
 
-Write-Host "=======================================================================" -ForegroundColor Cyan
-Write-Host "   TIKTOK CONTENT INTELLIGENCE & AI SCRIPT GENERATOR STUDIO" -ForegroundColor Yellow
-Write-Host "=======================================================================" -ForegroundColor Cyan
-Write-Host ""
+$logDirectory = Join-Path $projectRoot 'logs'
+New-Item -ItemType Directory -Force -Path $logDirectory | Out-Null
+$backendRunning = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue
+$frontendRunning = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue
 
-# 1. Check Docker
-$DockerActive = $false
-try {
-    $null = docker info 2>&1
-    if ($LASTEXITCODE -eq 0) {
-        $DockerActive = $true
+if (!$backendRunning) {
+    $dockerReady = $false
+    if (Get-Command docker -ErrorAction SilentlyContinue) {
+        try { docker info *> $null; $dockerReady = $LASTEXITCODE -eq 0 } catch { $dockerReady = $false }
     }
-} catch {}
-
-if ($DockerActive) {
-    Write-Host "[*] Docker is active. Starting PostgreSQL, Redis, LocalStack..." -ForegroundColor Green
-    docker compose -f docker/docker-compose.yml up -d
-    Write-Host "[*] Starting Backend Spring Boot on port 8080..." -ForegroundColor Green
-    Start-Process cmd.exe -WorkingDirectory "$ScriptDir\backend" -ArgumentList "/k .\mvnw.cmd spring-boot:run"
-} else {
-    Write-Host "[!] Docker Desktop is not running." -ForegroundColor Yellow
-    Write-Host "[*] Starting Spring Boot in lightweight LOCAL mode (In-Memory H2 DB)..." -ForegroundColor Green
-    Write-Host "[*] All features and Gemini AI script generator will work 100%!" -ForegroundColor Green
-    $env:SPRING_PROFILES_ACTIVE = "local"
-    Start-Process cmd.exe -WorkingDirectory "$ScriptDir\backend" -ArgumentList "/k .\mvnw.cmd spring-boot:run"
+    if ($dockerReady) {
+        $ErrorActionPreference = 'Continue'
+        docker compose -f docker/docker-compose.yml up -d 2>&1 | Out-File (Join-Path $logDirectory 'docker.log') -Encoding utf8
+        $dockerExitCode = $LASTEXITCODE
+        $ErrorActionPreference = 'Stop'
+        if ($dockerExitCode -ne 0) { throw 'Docker services did not start. Check logs/docker.log and retry.' }
+        $env:SPRING_PROFILES_ACTIVE = 'default'
+    } else {
+        $env:SPRING_PROFILES_ACTIVE = 'local'
+        Write-Host 'Using a persistent local database in backend/data. TikTok and AI still use real providers.'
+    }
+    Start-Process cmd.exe -WindowStyle Hidden -WorkingDirectory (Join-Path $projectRoot 'backend') `
+        -ArgumentList @('/d', '/c', 'call', ('"{0}"' -f (Join-Path $projectRoot 'backend\mvnw.cmd')), 'spring-boot:run') `
+        -RedirectStandardOutput (Join-Path $logDirectory 'backend.log') `
+        -RedirectStandardError (Join-Path $logDirectory 'backend-error.log') | Out-Null
 }
 
-Write-Host "[*] Starting Frontend Creator Studio on port 3000..." -ForegroundColor Green
-Start-Process cmd.exe -WorkingDirectory "$ScriptDir\frontend" -ArgumentList "/k npm.cmd run dev"
+if (!$frontendRunning) {
+    if (!(Test-Path -LiteralPath (Join-Path $projectRoot 'frontend/node_modules'))) {
+        Push-Location (Join-Path $projectRoot 'frontend')
+        try { npm.cmd ci; if ($LASTEXITCODE -ne 0) { throw 'Frontend dependency installation failed.' } }
+        finally { Pop-Location }
+    }
+    Start-Process cmd.exe -WindowStyle Hidden -WorkingDirectory (Join-Path $projectRoot 'frontend') `
+        -ArgumentList '/d /c npm.cmd run dev' `
+        -RedirectStandardOutput (Join-Path $logDirectory 'frontend.log') `
+        -RedirectStandardError (Join-Path $logDirectory 'frontend-error.log') | Out-Null
+}
 
-Write-Host ""
-Write-Host "=======================================================================" -ForegroundColor Cyan
-Write-Host "   SYSTEM IS STARTING UP!" -ForegroundColor Yellow
-Write-Host "   * Creator Studio UI: http://localhost:3000" -ForegroundColor White
-Write-Host "   * Swagger API:       http://localhost:8080/swagger-ui.html" -ForegroundColor White
-Write-Host "   * Health Check:      http://localhost:8080/actuator/health" -ForegroundColor White
-Write-Host "=======================================================================" -ForegroundColor Cyan
-Write-Host ""
-
-Start-Sleep -Seconds 12
-Start-Process "http://localhost:3000"
-
-Write-Host "Press any key to exit this window (Backend & Frontend will stay running)..."
-$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+$startupTimer = [Diagnostics.Stopwatch]::StartNew()
+$ready = $false
+while ($startupTimer.Elapsed.TotalSeconds -lt 60) {
+    try {
+        $health = Invoke-RestMethod 'http://127.0.0.1:8080/actuator/health' -TimeoutSec 2
+        if ($health.status -eq 'UP') { $ready = $true; break }
+    } catch {}
+    Start-Sleep -Milliseconds 500
+}
+if (!$ready) { throw 'Backend did not become ready within 60 seconds. Check logs/backend.log and logs/backend-error.log.' }
+Write-Host 'Creator Studio: http://localhost:3000'
+Write-Host 'Live providers enabled. Logs are saved in logs/.'
+if (!$NoBrowser) { Start-Process 'http://localhost:3000' }

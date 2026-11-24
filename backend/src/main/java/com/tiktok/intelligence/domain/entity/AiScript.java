@@ -49,7 +49,7 @@ public class AiScript {
     @Column(name = "title", nullable = false, length = 255)
     private String title;
 
-    @Column(name = "target_audience", length = 255)
+    @Column(name = "target_audience", length = 300)
     private String targetAudience;
 
     @Column(name = "hook_3s", nullable = false, columnDefinition = "TEXT")
@@ -64,7 +64,7 @@ public class AiScript {
     @Column(name = "visual_and_sound_cues", columnDefinition = "TEXT")
     private String visualAndSoundCues;
 
-    @JdbcTypeCode(SqlTypes.JSON)
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "suggested_hashtags")
     @Builder.Default
     private List<String> suggestedHashtags = new ArrayList<>();
@@ -72,6 +72,9 @@ public class AiScript {
     @Column(name = "estimated_duration_seconds")
     @Builder.Default
     private Integer estimatedDurationSeconds = 30;
+
+    @Column(name = "requested_duration_seconds")
+    private Integer requestedDurationSeconds;
 
     @Column(name = "ai_model_name", length = 100)
     @Builder.Default

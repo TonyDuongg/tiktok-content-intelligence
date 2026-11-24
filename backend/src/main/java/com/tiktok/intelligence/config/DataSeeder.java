@@ -8,7 +8,6 @@ import com.tiktok.intelligence.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -20,12 +19,11 @@ public class DataSeeder implements CommandLineRunner {
 
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
         seedCategories();
-        seedDefaultUser();
+        seedWorkspaceOwner();
     }
 
     private void seedCategories() {
@@ -43,19 +41,19 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
-    private void seedDefaultUser() {
-        if (!userRepository.existsByEmail("creator@example.com")) {
-            log.info("Seeding default demo creator user (creator@example.com)...");
+    private void seedWorkspaceOwner() {
+        if (!userRepository.existsByEmail(WorkspaceIdentity.OWNER_EMAIL)) {
+            log.info("Creating storage owner for the shared workspace...");
             User user = User.builder()
-                    .email("creator@example.com")
-                    .fullName("Creator Pro")
-                    .passwordHash(passwordEncoder.encode("SecurePassword123@"))
+                    .email(WorkspaceIdentity.OWNER_EMAIL)
+                    .fullName("Creator Studio")
+                    .passwordHash("{disabled}")
                     .role(UserRole.ROLE_USER)
                     .creditsBalance(100)
                     .isActive(true)
                     .build();
             userRepository.save(user);
-            log.info("Default creator user created with 100 credits.");
+            log.info("Shared workspace storage owner created.");
         }
     }
 }

@@ -1,0 +1,33 @@
+server:
+  address: 0.0.0.0
+  port: ${PORT:8080}
+  shutdown: graceful
+  forward-headers-strategy: framework
+spring:
+  config:
+    import: ""
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+  lifecycle:
+    timeout-per-shutdown-phase: 15s
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+logging:
+  level:
+    com.tiktok.intelligence: INFO
+application:
+  aws:
+    archive-enabled: false
+    sqs:
+      worker-enabled: false

@@ -4,7 +4,6 @@ import com.tiktok.intelligence.domain.entity.Category;
 import com.tiktok.intelligence.dto.response.ApiResponse;
 import com.tiktok.intelligence.repository.CategoryRepository;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +16,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
-@SecurityRequirement(name = "BearerAuth")
 @Tag(name = "Categories & Niches", description = "Supported TikTok niches and industry categories")
 public class CategoryController {
 

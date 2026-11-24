@@ -14,19 +14,14 @@ public class TikTokScraperFactory {
 
     private final List<TikTokScraperClient> scraperClients;
 
-    @Value("${application.scraper.provider:mock}")
+    @Value("${application.scraper.provider:rapidapi}")
     private String activeProvider;
 
     public TikTokScraperClient getScraperClient() {
         return scraperClients.stream()
                 .filter(client -> client.supports(activeProvider))
                 .findFirst()
-                .orElseGet(() -> {
-                    log.warn("Scraper provider '{}' not found. Defaulting to mock provider.", activeProvider);
-                    return scraperClients.stream()
-                            .filter(c -> c.supports("mock"))
-                            .findFirst()
-                            .orElseThrow(() -> new IllegalStateException("No valid TikTok scraper client found."));
-                });
+                .orElseThrow(() -> new com.tiktok.intelligence.exception.UpstreamServiceException(
+                        "Nguồn TikTok chưa hợp lệ. Cấu hình SCRAPER_PROVIDER=rapidapi."));
     }
 }

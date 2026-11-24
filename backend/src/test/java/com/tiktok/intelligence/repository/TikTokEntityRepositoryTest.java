@@ -22,6 +22,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TikTokEntityRepositoryTest {
 
     @Autowired
+    private org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager entityManager;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -118,10 +121,14 @@ class TikTokEntityRepositoryTest {
         // (8000 + 500 + 1500) / 100000 * 100 = 10.000%
         assertThat(video.getEngagementRate()).isEqualByComparingTo(new BigDecimal("10.000"));
 
+        entityManager.flush();
+        entityManager.clear();
+
         List<TikTokVideo> topVideos = videoRepository.findByChannelIdOrderByEngagementRateDesc(
                 channel.getId(), PageRequest.of(0, 5));
         assertThat(topVideos).hasSize(1);
         assertThat(topVideos.get(0).getTiktokVideoId()).isEqualTo("v_123456789");
+        assertThat(topVideos.get(0).getHashtags()).containsExactly("#fashion", "#style");
     }
 
     @Test
@@ -148,17 +155,25 @@ class TikTokEntityRepositoryTest {
                 .job(job)
                 .user(user)
                 .title("Bí quyết thoa son không bị khô môi")
+                .targetAudience("x".repeat(300))
                 .hook3s("Đừng thoa son trực tiếp nếu bạn không muốn môi bong vảy!")
                 .bodyContent("Dùng son dưỡng lót trước 5 phút rồi lau nhẹ...")
                 .callToAction("Follow kênh để nhận thêm mẹo làm đẹp!")
                 .suggestedHashtags(List.of("#sonmoi", "#lipstick", "#beautytips"))
+                .requestedDurationSeconds(120)
                 .build();
         script = scriptRepository.save(script);
 
         assertThat(script.getId()).isNotNull();
         assertThat(script.getSuggestedHashtags()).contains("#sonmoi");
 
+        entityManager.flush();
+        entityManager.clear();
+
         List<AiScript> userScripts = scriptRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
         assertThat(userScripts).hasSize(1);
+        assertThat(userScripts.getFirst().getSuggestedHashtags()).containsExactly("#sonmoi", "#lipstick", "#beautytips");
+        assertThat(userScripts.getFirst().getRequestedDurationSeconds()).isEqualTo(120);
+        assertThat(userScripts.getFirst().getTargetAudience()).hasSize(300);
     }
 }

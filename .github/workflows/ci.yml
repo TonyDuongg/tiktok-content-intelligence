@@ -20,12 +20,15 @@ jobs:
       - name: Setup Node.js (for agent-redact)
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install Dependencies & Run agent-redact Security Scan
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
         run: |
           npm ci
           npx agent-redact .
+          npm test
 
       - name: Setup Java 21 JDK (Temurin)
         uses: actions/setup-java@v4
@@ -33,6 +36,14 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
+
+      - name: Check Frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run lint
+          npm test
+          npm run build
 
       - name: Make Maven Wrapper Executable
         run: chmod +x backend/mvnw

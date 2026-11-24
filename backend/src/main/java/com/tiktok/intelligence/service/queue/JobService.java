@@ -3,6 +3,7 @@ package com.tiktok.intelligence.service.queue;
 import com.tiktok.intelligence.domain.entity.AnalysisJob;
 import com.tiktok.intelligence.domain.entity.User;
 import com.tiktok.intelligence.domain.enums.JobStatus;
+import com.tiktok.intelligence.domain.enums.UserRole;
 import com.tiktok.intelligence.dto.queue.JobMessageDto;
 import com.tiktok.intelligence.dto.request.JobFilterRequest;
 import com.tiktok.intelligence.dto.response.JobResponseDto;
@@ -75,7 +76,9 @@ public class JobService {
 
         String normalizedEmail = userEmail.toLowerCase().trim();
         boolean isOwner = job.getUser().getEmail().equalsIgnoreCase(normalizedEmail);
-        boolean isAdmin = job.getUser().getRole() != null && job.getUser().getRole().name().equals("ROLE_ADMIN");
+        boolean isAdmin = !isOwner && userRepository.findByEmail(normalizedEmail)
+                .filter(caller -> Boolean.TRUE.equals(caller.getIsActive()))
+                .map(caller -> caller.getRole() == UserRole.ROLE_ADMIN).orElse(false);
 
         if (!isOwner && !isAdmin) {
             log.warn("Access denied: User [{}] attempted to view Job [{}] belonging to [{}]",

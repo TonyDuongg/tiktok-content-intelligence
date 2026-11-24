@@ -59,3 +59,11 @@ logs/
 *.log
 tmp/
 temp/
+.playwright-cli/
+output/playwright/
+backend/data/
+desktop/.cache/
+desktop/.runtime/
+desktop/resources/
+desktop/ui/fonts/
+release/

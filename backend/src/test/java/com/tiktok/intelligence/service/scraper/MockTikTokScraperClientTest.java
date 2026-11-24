@@ -40,4 +40,14 @@ class MockTikTokScraperClientTest {
         BigDecimal engagementRate = firstVideo.calculateEngagementRate();
         assertThat(engagementRate).isGreaterThan(BigDecimal.ZERO);
     }
+
+    @Test
+    void sampleMetricsAreStableAndRequestedLimitIsSupported() {
+        var first = scraperClient.scrapeChannel("@creator", 50);
+        var second = scraperClient.scrapeChannel("creator", 50);
+        assertThat(first.videos()).hasSize(50);
+        assertThat(first.videos().getFirst().viewCount()).isEqualTo(second.videos().getFirst().viewCount());
+        assertThat(first.videos().getFirst().videoUrl()).isEmpty();
+        assertThat(first.videos().getFirst().videoId()).isNotEqualTo(scraperClient.scrapeChannel("other_creator", 1).videos().getFirst().videoId());
+    }
 }

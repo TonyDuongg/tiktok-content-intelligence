@@ -2,6 +2,7 @@ package com.tiktok.intelligence.service.scraper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tiktok.intelligence.exception.UpstreamServiceException;
 import com.tiktok.intelligence.dto.scraper.ScrapeResultDto;
 import com.tiktok.intelligence.dto.scraper.TikTokChannelProfileDto;
 import com.tiktok.intelligence.dto.scraper.TikTokVideoDto;
@@ -28,7 +29,6 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class RapidApiTikTokScraperClient implements TikTokScraperClient {
 
-    private final MockTikTokScraperClient fallbackMockClient;
     private final ObjectMapper objectMapper;
 
     @Value("${application.scraper.rapidapi-key:}")
@@ -55,8 +55,7 @@ public class RapidApiTikTokScraperClient implements TikTokScraperClient {
         if (rapidApiKey == null || rapidApiKey.isBlank()
                 || rapidApiKey.contains("your_key")
                 || rapidApiKey.contains("cua_ban")) {
-            log.warn("[RapidApi] RapidAPI key is not configured or placeholder detected. Falling back to mock data.");
-            return fallbackMockClient.scrapeChannel(username, maxVideos);
+            throw new UpstreamServiceException("Chưa cấu hình khóa RapidAPI hợp lệ. Kiểm tra RAPIDAPI_KEY và gói API đã đăng ký.");
         }
 
         try {
@@ -64,22 +63,16 @@ public class RapidApiTikTokScraperClient implements TikTokScraperClient {
 
             TikTokChannelProfileDto profile = fetchUserProfile(cleanUsername);
             if (profile == null) {
-                log.warn("[RapidApi] Could not fetch profile for @{}. Falling back to mock data.", cleanUsername);
-                return fallbackMockClient.scrapeChannel(username, maxVideos);
+                throw new UpstreamServiceException("Không lấy được hồ sơ kênh. Kiểm tra tên kênh hoặc thử lại sau.");
             }
 
-            List<TikTokVideoDto> videos = fetchUserVideos(cleanUsername, Math.max(1, Math.min(maxVideos, 30)));
-            if (videos.isEmpty()) {
-                log.info("[RapidApi] No videos returned by API. Falling back to mock videos for profile @{}", cleanUsername);
-                ScrapeResultDto mockFallback = fallbackMockClient.scrapeChannel(username, maxVideos);
-                return ScrapeResultDto.of(profile, mockFallback.videos());
-            }
+            List<TikTokVideoDto> videos = fetchUserVideos(cleanUsername, Math.max(1, Math.min(maxVideos, 50)));
 
             return ScrapeResultDto.of(profile, videos);
         } catch (Exception e) {
-            log.error("[RapidApi] Unexpected error during RapidAPI fetch for @{}: {}. Falling back to mock data.",
-                    cleanUsername, e.getMessage(), e);
-            return fallbackMockClient.scrapeChannel(username, maxVideos);
+            log.warn("[RapidApi] Could not fetch channel @{}: {}", cleanUsername, e.getMessage());
+            if (e instanceof UpstreamServiceException upstream) throw upstream;
+            throw new UpstreamServiceException("Không kết nối được nguồn dữ liệu TikTok. Vui lòng thử lại sau.");
         }
     }
 
@@ -114,6 +107,7 @@ public class RapidApiTikTokScraperClient implements TikTokScraperClient {
             JsonNode dataNode = root.has("data") ? root.path("data") : root;
             JsonNode userNode = dataNode.path("user");
             JsonNode statsNode = dataNode.path("stats");
+            if (!userNode.isObject() || !statsNode.isObject()) return null;
 
             String nickname = userNode.path("nickname").asText(username);
             String avatarUrl = userNode.path("avatarLarger").asText(
@@ -160,14 +154,14 @@ public class RapidApiTikTokScraperClient implements TikTokScraperClient {
 
             if (response.statusCode() != 200) {
                 log.warn("[RapidApi] Video posts fetch returned HTTP {} for @{}: {}", response.statusCode(), username, response.body());
-                return result;
+                throw new UpstreamServiceException("Nguồn TikTok chưa trả về video. Vui lòng thử lại sau.");
             }
 
             JsonNode root = objectMapper.readTree(response.body());
             int code = root.path("code").asInt(-1);
             if (code != 0 && code != 200) {
                 log.warn("[RapidApi] Video posts API returned error code {} for @{}: {}", code, username, root.path("msg").asText());
-                return result;
+                throw new UpstreamServiceException("Nguồn TikTok từ chối yêu cầu lấy video. Kiểm tra kênh hoặc thử lại sau.");
             }
 
             JsonNode dataNode = root.has("data") ? root.path("data") : root;
@@ -175,12 +169,16 @@ public class RapidApiTikTokScraperClient implements TikTokScraperClient {
             if (!videosNode.isArray()) {
                 videosNode = dataNode.path("aweme_list");
             }
+            if (!videosNode.isArray()) {
+                throw new UpstreamServiceException("Nguồn TikTok trả về dữ liệu video không hợp lệ. Vui lòng thử lại.");
+            }
 
             if (videosNode.isArray()) {
                 for (JsonNode v : videosNode) {
                     if (result.size() >= maxVideos) break;
 
-                    String videoId = v.path("video_id").asText(v.path("id").asText("vid_" + System.currentTimeMillis()));
+                    String videoId = v.path("video_id").asText(v.path("id").asText(""));
+                    if (videoId.isBlank()) continue;
                     String caption = v.path("title").asText(v.path("desc").asText(""));
                     String coverUrl = v.path("cover").asText(v.path("origin_cover").asText(""));
                     String videoUrl = "https://www.tiktok.com/@" + username + "/video/" + videoId;
@@ -214,13 +212,15 @@ public class RapidApiTikTokScraperClient implements TikTokScraperClient {
                             shares,
                             duration,
                             soundTitle,
-                            caption, // Use caption as basic transcript text
+                            null, // This provider returns captions, not a spoken-word transcript.
                             publishedAt
                     ));
                 }
             }
         } catch (Exception e) {
             log.warn("[RapidApi] Failed to parse video posts response: {}", e.getMessage());
+            if (e instanceof UpstreamServiceException upstream) throw upstream;
+            throw new UpstreamServiceException("Không đọc được danh sách video từ nguồn TikTok. Vui lòng thử lại.");
         }
         return result;
     }

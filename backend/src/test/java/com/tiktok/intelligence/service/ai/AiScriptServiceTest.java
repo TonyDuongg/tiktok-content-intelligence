@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -153,7 +154,7 @@ class AiScriptServiceTest {
                 30,
                 "mock-model"
         );
-        when(aiClient.generateScript(anyString(), anyString(), anyString(), anyList())).thenReturn(generatedDto);
+        when(aiClient.generateScript(anyString(), anyString(), anyString(), anyList(), eq(60))).thenReturn(generatedDto);
 
         when(scriptRepository.save(any(AiScript.class))).thenAnswer(i -> {
             AiScript s = i.getArgument(0);
@@ -162,7 +163,7 @@ class AiScriptServiceTest {
         });
 
         DirectGenerateScriptRequest request = new DirectGenerateScriptRequest(
-                null, "Thời trang mùa đông", "Gen Z", "Trẻ trung", List.of()
+                null, "Thời trang mùa đông", "Gen Z", "Trẻ trung", List.of(), null
         );
 
         ScriptDetailResponse response = aiScriptService.generateDirectScript("creator@example.com", request);
@@ -171,6 +172,7 @@ class AiScriptServiceTest {
         assertThat(response.id()).isEqualTo(99L);
         assertThat(response.title()).isEqualTo("Bí quyết phối đồ mùa đông");
         assertThat(response.scriptStructure().hook3s()).isEqualTo("Mặc sao cho ngầu?");
+        assertThat(response.requestedDurationSeconds()).isEqualTo(60);
     }
 
     @Test
@@ -178,6 +180,7 @@ class AiScriptServiceTest {
     void testUpdateScriptStatus() {
         AiScript script = AiScript.builder()
                 .id(50L)
+                .user(User.builder().email("creator@example.com").build())
                 .title("Test Script")
                 .status(ScriptStatus.DRAFT)
                 .hook3s("Hook")
@@ -193,5 +196,63 @@ class AiScriptServiceTest {
 
         assertThat(response.status()).isEqualTo(ScriptStatus.FAVORITE);
         verify(scriptRepository, times(1)).save(script);
+    }
+
+    @Test
+    void directGenerationKeepsTopicAndPersistsSelectedReferences() {
+        User user = User.builder().email("creator@example.com").build();
+        Category category = Category.builder().id(4L).name("Công nghệ").build();
+        TikTokVideo video = TikTokVideo.builder().id(7L).tiktokVideoId("video7").build();
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        when(categoryRepository.findById(4L)).thenReturn(Optional.of(category));
+        when(videoRepository.findAllById(List.of(7L))).thenReturn(List.of(video));
+        when(aiClient.generateScript(anyString(), anyString(), anyString(), anyList(), anyInt())).thenReturn(
+                new GeneratedScriptDto("Mẹo điện thoại", "Sinh viên", "Hook", "Body", "CTA", "Cues", List.of(), 45, "mock-template"));
+        when(scriptRepository.save(any())).thenAnswer(i -> {
+            AiScript script = i.getArgument(0); script.setId(10L); return script;
+        });
+        when(referenceVideoRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        var response = aiScriptService.generateDirectScript(user.getEmail(), new DirectGenerateScriptRequest(
+                4L, "  Sắp xếp màn hình điện thoại  ", "Sinh viên", "Rõ ràng", List.of(7L, 7L), 120));
+
+        verify(aiClient).generateScript(eq("Sắp xếp màn hình điện thoại\nLĩnh vực: Công nghệ"), eq("Sinh viên"), eq("Rõ ràng"), eq(List.of(video)), eq(120));
+        assertThat(response.referenceVideos()).hasSize(1);
+        assertThat(response.referenceVideos().getFirst().videoId()).isEqualTo(7L);
+        assertThat(response.estimatedDurationSeconds()).isEqualTo(45);
+        assertThat(response.requestedDurationSeconds()).isEqualTo(120);
+        verify(referenceVideoRepository).save(any());
+    }
+
+    @Test
+    void missingReferenceDoesNotGenerateOrSave() {
+        when(userRepository.findByEmail("creator@example.com")).thenReturn(Optional.of(User.builder().build()));
+        when(videoRepository.findAllById(List.of(99L))).thenReturn(List.of());
+        assertThatThrownBy(() -> aiScriptService.generateDirectScript("creator@example.com",
+                new DirectGenerateScriptRequest(null, "Chủ đề", "Audience", "Tone", List.of(99L), 60)))
+                .isInstanceOf(com.tiktok.intelligence.exception.ResourceNotFoundException.class);
+        verify(aiClient, never()).generateScript(any(), any(), any(), any(), anyInt());
+        verifyNoInteractions(scriptRepository);
+    }
+
+    @Test
+    void anotherUserCannotReadOrUpdateScript() {
+        AiScript script = AiScript.builder().id(50L)
+                .user(User.builder().email("user2@example.com").build()).status(ScriptStatus.DRAFT).build();
+        when(scriptRepository.findById(50L)).thenReturn(Optional.of(script));
+        assertThatThrownBy(() -> aiScriptService.getScriptDetail(50L, "creator@example.com"))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+        assertThatThrownBy(() -> aiScriptService.updateScriptStatus(50L, ScriptStatus.FAVORITE, "creator@example.com"))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+        assertThat(script.getStatus()).isEqualTo(ScriptStatus.DRAFT);
+        verify(scriptRepository, never()).save(any());
+    }
+
+    @Test
+    void invalidProviderNeverSelectsMockFallback() {
+        ReflectionTestUtils.setField(aiScriptService, "activeProvider", "invalid-provider");
+        assertThatThrownBy(aiScriptService::getActiveClient)
+                .isInstanceOf(com.tiktok.intelligence.exception.UpstreamServiceException.class);
+        verify(aiClient, never()).supports("mock");
     }
 }

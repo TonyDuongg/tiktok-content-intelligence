@@ -5,6 +5,7 @@ import com.tiktok.intelligence.dto.scraper.TikTokChannelProfileDto;
 import com.tiktok.intelligence.dto.scraper.TikTokVideoDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Profile;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -14,9 +15,8 @@ import java.util.Random;
 
 @Slf4j
 @Component
+@Profile("test")
 public class MockTikTokScraperClient implements TikTokScraperClient {
-
-    private final Random random = new Random(42); // Seed for reproducible mock data
 
     @Override
     public boolean supports(String provider) {
@@ -25,21 +25,22 @@ public class MockTikTokScraperClient implements TikTokScraperClient {
 
     @Override
     public ScrapeResultDto scrapeChannel(String username, int maxVideos) {
-        String cleanUsername = username.replace("@", "").trim();
+        String cleanUsername = username.replace("@", "").trim().toLowerCase(java.util.Locale.ROOT);
+        Random random = new Random(cleanUsername.hashCode());
         log.info("[MockScraper] Generating mock TikTok dataset for channel: @{}", cleanUsername);
 
         TikTokChannelProfileDto profile = new TikTokChannelProfileDto(
                 cleanUsername,
-                "Kênh Review " + cleanUsername.toUpperCase(),
+                "Kênh mẫu @" + cleanUsername,
                 "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200",
-                "Chuyên review mỹ phẩm, skincare và chia sẻ bí quyết làm đẹp chuẩn khoa học",
+                "Hồ sơ minh họa để thử luồng nghiên cứu và tạo kịch bản. Không phải thông tin kênh thực tế.",
                 385000L,
                 4200000L,
                 142
         );
 
         List<TikTokVideoDto> videos = new ArrayList<>();
-        int count = Math.max(1, Math.min(maxVideos, 20));
+        int count = Math.max(1, Math.min(maxVideos, 50));
 
         String[] sampleCaptions = {
                 "3 Sai lầm chết người khi thoa kem chống nắng khiến da sạm đen #skincare #kemchongnang #lamdep",
@@ -66,7 +67,7 @@ public class MockTikTokScraperClient implements TikTokScraperClient {
 
             videos.add(new TikTokVideoDto(
                     "vid_" + cleanUsername + "_" + (1000 + i),
-                    "https://www.tiktok.com/@" + cleanUsername + "/video/" + (7350000000000000000L + i),
+                    "", // Sample videos have no real TikTok URL.
                     "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500",
                     sampleCaptions[idx],
                     List.of("#skincare", "#lamdep", "#reviewmypham", "#beauty"),

@@ -136,4 +136,26 @@ class JobServiceTest {
                 .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
                 .hasMessageContaining("Access denied: You do not have permission to view this job");
     }
+
+    @Test
+    void owningAdminDoesNotMakeItsJobPublicToOtherUsers() {
+        UUID jobId = UUID.randomUUID();
+        var owner = User.builder().email("creator@example.com").role(UserRole.ROLE_ADMIN).build();
+        var job = AnalysisJob.builder().id(jobId).user(owner).status(JobStatus.COMPLETED).build();
+        when(jobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        assertThatThrownBy(() -> jobService.getJobById(jobId, "user2@example.com"))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+    }
+
+    @Test
+    void requestingAdminCanInspectAnotherUsersJob() {
+        UUID jobId = UUID.randomUUID();
+        var owner = User.builder().email("creator@example.com").role(UserRole.ROLE_USER).build();
+        var caller = User.builder().email("user2@example.com").role(UserRole.ROLE_ADMIN).build();
+        var job = AnalysisJob.builder().id(jobId).user(owner).jobType(JobType.ANALYZE_AND_GENERATE_SCRIPT)
+                .status(JobStatus.COMPLETED).build();
+        when(jobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        when(userRepository.findByEmail("user2@example.com")).thenReturn(Optional.of(caller));
+        assertThat(jobService.getJobById(jobId, "user2@example.com").jobId()).isEqualTo(jobId);
+    }
 }

@@ -112,7 +112,7 @@ CREATE TABLE ai_scripts (
     category_id BIGINT REFERENCES categories(id) ON DELETE SET NULL,
     
     title VARCHAR(255) NOT NULL,
-    target_audience VARCHAR(255),
+    target_audience VARCHAR(300),
     
     -- 3-Part viral short-video structure
     hook_3s TEXT NOT NULL,                         -- First 3 seconds verbal retention hook
@@ -122,6 +122,7 @@ CREATE TABLE ai_scripts (
     visual_and_sound_cues TEXT,                    -- Director cues: camera angles, text overlays, b-roll
     suggested_hashtags TEXT[],
     estimated_duration_seconds INT DEFAULT 30,
+    requested_duration_seconds INT CHECK (requested_duration_seconds BETWEEN 15 AND 600),
     
     ai_model_name VARCHAR(100) DEFAULT 'gemini-3.5-flash', -- Model identifier used for generation
     status VARCHAR(30) DEFAULT 'DRAFT',            -- 'DRAFT', 'FAVORITE', 'EXPORTED'

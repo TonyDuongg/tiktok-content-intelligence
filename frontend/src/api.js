@@ -1,95 +1,86 @@
-const API_BASE = '';
-
-export function getAuthToken() {
-  return localStorage.getItem('tiktok_token') || '';
-}
-
-export function setAuthToken(token) {
-  if (token) {
-    localStorage.setItem('tiktok_token', token);
-  } else {
-    localStorage.removeItem('tiktok_token');
-  }
-}
+const API_BASE = import.meta.env?.VITE_API_BASE_URL || "";
 
 async function request(endpoint, options = {}) {
-  const token = getAuthToken();
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers || {})
-  };
-
-  const response = await fetch(API_BASE + endpoint, {
-    ...options,
-    headers
-  });
-
-  const data = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    const errorMsg = data?.message || data?.error || `Lỗi hệ thống (${response.status})`;
-    throw new Error(errorMsg);
+  const { timeout = 20000, signal, ...fetchOptions } = options;
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  if (signal?.aborted) controller.abort();
+  signal?.addEventListener("abort", abort, { once: true });
+  const timer = setTimeout(abort, timeout);
+  try {
+    const response = await fetch(API_BASE + endpoint, {
+      ...fetchOptions,
+      credentials: "omit",
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...fetchOptions.headers,
+      },
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok || data?.success === false) {
+      const validation =
+        response.status === 400 && data?.data && typeof data.data === "object"
+          ? Object.values(data.data).join(". ")
+          : "";
+      throw new Error(
+        validation ||
+          (response.status === 429
+            ? "Bạn đang gửi quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại."
+            : data?.message ||
+              `Không thể hoàn tất yêu cầu (${response.status}). Vui lòng thử lại.`),
+      );
+    }
+    if (!data)
+      throw new Error("Máy chủ trả về dữ liệu không hợp lệ. Vui lòng thử lại.");
+    return data;
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    if (controller.signal.aborted)
+      throw new Error(
+        "Yêu cầu mất quá nhiều thời gian. Hãy làm mới kho kịch bản trước khi tạo lại để tránh trùng lặp.",
+      );
+    if (error instanceof TypeError)
+      throw new Error(
+        "Không kết nối được máy chủ. Kiểm tra backend và thử lại.",
+      );
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", abort);
   }
-
-  return data;
 }
 
 export const api = {
-  // Auth
-  register: (email, password, fullName) =>
-    request('/api/v1/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ email, password, fullName })
-    }),
-
-  login: (email, password) =>
-    request('/api/v1/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password })
-    }),
-
-  getMe: () => request('/api/v1/auth/me'),
-
-  // Categories
-  getCategories: () => request('/api/v1/categories'),
-
-  // Channels
-  ingestChannel: (username, categoryId, maxVideos = 10) => {
-    const params = new URLSearchParams({ username, maxVideos });
-    if (categoryId) params.append('categoryId', categoryId);
-    return request(`/api/v1/channels/ingest?${params.toString()}`, { method: 'POST' });
-  },
-
-  getChannel: (username) => request(`/api/v1/channels/${username}`),
-
+  getCategories: (options) => request("/api/v1/categories", options),
+  getWorkspaceStatus: (options) => request("/api/v1/workspace/status", options),
+  ingestChannel: (username, categoryId, maxVideos = 10) =>
+    request(
+      `/api/v1/channels/ingest?${new URLSearchParams({ username, categoryId, maxVideos })}`,
+      { method: "POST", timeout: 90000 },
+    ),
+  getChannel: (username) =>
+    request(`/api/v1/channels/${encodeURIComponent(username)}`),
   getTopVideos: (username, limit = 10) =>
-    request(`/api/v1/channels/${username}/top-videos?limit=${limit}`),
-
-  // Jobs
+    request(
+      `/api/v1/channels/${encodeURIComponent(username)}/top-videos?limit=${limit}`,
+    ),
   dispatchJob: (jobData) =>
-    request('/api/v1/jobs', {
-      method: 'POST',
-      body: JSON.stringify(jobData)
-    }),
-
-  getJob: (jobId) => request(`/api/v1/jobs/${jobId}`),
-
-  getMyJobs: () => request('/api/v1/jobs/my-jobs'),
-
-  // AI Scripts
+    request("/api/v1/jobs", { method: "POST", body: JSON.stringify(jobData) }),
+  getJob: (jobId) => request(`/api/v1/jobs/${encodeURIComponent(jobId)}`),
+  getMyJobs: () => request("/api/v1/jobs/my-jobs"),
   generateDirectScript: (scriptData) =>
-    request('/api/v1/scripts/generate', {
-      method: 'POST',
-      body: JSON.stringify(scriptData)
+    request("/api/v1/scripts/generate", {
+      method: "POST",
+      body: JSON.stringify(scriptData),
+      // Leave time for the backend's 120-second Gemini timeout and error response.
+      timeout: 150000,
     }),
-
-  getScriptDetail: (scriptId) => request(`/api/v1/scripts/${scriptId}`),
-
-  getMyScripts: () => request('/api/v1/scripts/my-scripts'),
-
-  updateScriptStatus: (scriptId, status) =>
-    request(`/api/v1/scripts/${scriptId}/status?status=${status}`, {
-      method: 'PATCH'
-    })
+  getScriptDetail: (id) => request(`/api/v1/scripts/${encodeURIComponent(id)}`),
+  getMyScripts: (options) => request("/api/v1/scripts/my-scripts", options),
+  updateScriptStatus: (id, status) =>
+    request(
+      `/api/v1/scripts/${encodeURIComponent(id)}/status?${new URLSearchParams({ status })}`,
+      { method: "PATCH" },
+    ),
 };

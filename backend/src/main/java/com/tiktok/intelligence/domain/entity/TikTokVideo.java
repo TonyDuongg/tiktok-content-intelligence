@@ -48,7 +48,7 @@ public class TikTokVideo {
     @Column(name = "caption", columnDefinition = "TEXT")
     private String caption;
 
-    @JdbcTypeCode(SqlTypes.JSON)
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "hashtags")
     @Builder.Default
     private List<String> hashtags = new ArrayList<>();

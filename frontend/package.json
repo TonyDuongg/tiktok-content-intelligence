@@ -2,8 +2,11 @@
   "name": "frontend",
   "private": true,
   "version": "0.0.0",
+  "author": "TonyDuongg",
+  "license": "MIT",
   "type": "module",
   "scripts": {
+    "test": "node --test src/*.test.js",
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",

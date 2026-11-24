@@ -2,15 +2,19 @@ server:
   port: 8080
 
 spring:
+  config:
+    import: optional:file:../.env[.properties],optional:file:./.env[.properties]
   application:
     name: tiktok-content-intelligence
 
   jackson:
+    deserialization:
+      accept-float-as-int: false
     serialization:
       fail-on-empty-beans: false
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/tiktok_intelligence}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://127.0.0.1:15432/tiktok_intelligence}
     username: ${SPRING_DATASOURCE_USERNAME:dev_user}
     password: ${SPRING_DATASOURCE_PASSWORD:dev_password}
     driver-class-name: org.postgresql.Driver
@@ -55,11 +59,8 @@ logging:
     org.springframework.web: INFO
 
 application:
-  security:
-    jwt:
-      secret-key: ${JWT_SECRET_KEY:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
-      expiration: 86400000 # 24 hours in ms
   aws:
+    archive-enabled: ${S3_ARCHIVE_ENABLED:false}
     region: ${AWS_REGION:ap-southeast-1}
     s3-bucket: ${AWS_S3_BUCKET:tiktok-intelligence-bucket}
     endpoint: ${AWS_ENDPOINT:http://localhost:4566}
@@ -68,13 +69,13 @@ application:
     sqs:
       queue-name: ${AWS_SQS_QUEUE_NAME:tiktok-job-queue}
       dlq-name: ${AWS_SQS_DLQ_NAME:tiktok-job-dlq}
-      worker-enabled: ${SQS_WORKER_ENABLED:true}
+      worker-enabled: ${SQS_WORKER_ENABLED:false}
   scraper:
-    provider: ${SCRAPER_PROVIDER:mock}
+    provider: ${SCRAPER_PROVIDER:rapidapi}
     rapidapi-key: ${RAPIDAPI_KEY:}
     rapidapi-host: ${RAPIDAPI_HOST:tiktok-scraper7.p.rapidapi.com}
   ai:
-    provider: ${AI_PROVIDER:gemini} # 'gemini', 'bedrock' or 'mock'
+    provider: ${AI_PROVIDER:gemini} # 'gemini' or 'bedrock'; mock beans exist only in tests
     gemini-api-key: ${GEMINI_API_KEY:}
     gemini-model: ${GEMINI_MODEL:gemini-3.5-flash}
     model-id: ${AI_MODEL_ID:anthropic.claude-3-5-sonnet-20240620-v1:0}

@@ -6,6 +6,9 @@ import com.tiktok.intelligence.dto.ai.GeneratedScriptDto;
 import java.util.List;
 
 public interface AiScriptGeneratorClient {
-    GeneratedScriptDto generateScript(String nicheName, String targetAudience, String tone, List<TikTokVideo> referenceVideos);
+    default GeneratedScriptDto generateScript(String nicheName, String targetAudience, String tone, List<TikTokVideo> referenceVideos) {
+        return generateScript(nicheName, targetAudience, tone, referenceVideos, 60);
+    }
+    GeneratedScriptDto generateScript(String nicheName, String targetAudience, String tone, List<TikTokVideo> referenceVideos, int durationSeconds);
     boolean supports(String provider);
 }

@@ -1,816 +1,1221 @@
-import React, { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Sparkles,
-  TrendingUp,
+  ArrowRight,
+  Archive,
   Bookmark,
-  Copy,
   Check,
-  Search,
-  Film,
-  Camera,
-  MessageSquare,
-  Hash,
+  ChevronLeft,
   ChevronRight,
-  Flame,
-  ThumbsUp,
-  Eye,
+  ExternalLink,
+  FileText,
+  Film,
+  LoaderCircle,
+  Menu,
+  Plus,
   RefreshCw,
-  Lightbulb,
-  Clock,
-  Target
-} from 'lucide-react';
-import { api } from './api';
+  Search,
+  Settings,
+  TrendingUp,
+  X,
+} from "lucide-react";
+import { api } from "./api";
+import {
+  DRAFT_KEY,
+  filterScripts,
+  formatDate,
+  formatNumber,
+  normalizeUsername,
+  readDraft,
+  safeVideoUrl,
+  scriptText,
+  STATUS_LABELS,
+  categoryKind,
+  categoryLabel,
+  durationToSeconds,
+  formatDuration,
+} from "./studio";
+import { EmptyState, Notice, ScriptPreview } from "./components";
 
-const DEFAULT_CATEGORIES = [
-  { id: 1, name: 'Làm đẹp & Chăm sóc da (Skincare / Makeup)', slug: 'lam-dep-my-pham' },
-  { id: 2, name: 'Thời trang & Phối đồ (OOTD / Phụ kiện)', slug: 'thoi-trang-phoi-do' },
-  { id: 3, name: 'Ăn uống & Review món ngon (Food Tour)', slug: 'an-uong-review' },
-  { id: 4, name: 'Công nghệ, Điện thoại & Mẹo vặt', slug: 'cong-nghe-tien-ich' },
-  { id: 5, name: 'Đời sống, Tâm sự & Truyền cảm hứng', slug: 'doi-song-storytelling' }
+const TONES = [
+  "Chân thực, gần gũi",
+  "Hài hước, dí dỏm",
+  "Chuyên gia, rõ ràng",
+  "Tâm sự, kể chuyện",
 ];
-
-const QUICK_IDEAS = [
-  '3 Sai lầm chết người khi thoa kem chống nắng khiến da nổi mụn',
-  'Cách phối đồ hack chiều cao thêm 5cm cho người lùn',
-  'Top 3 quán cà phê view ngắm hoàng hôn đẹp nhất không thể bỏ qua',
-  'Mẹo ẩn trên điện thoại 90% người dùng chưa từng biết',
-  'Cách quản lý chi tiêu tháng đầu đi làm không lo rỗng túi'
+const IDEAS = [
+  ["beauty", "3 điều cần kiểm tra khi chọn kem chống nắng"],
+  ["fashion", "Phối một chiếc áo sơ mi thành 3 bộ đồ đi làm"],
+  ["food", "Một bữa trưa dễ nấu cho ngày bận rộn"],
+  ["tech", "3 cách sắp xếp màn hình điện thoại gọn hơn"],
+  ["lifestyle", "Những điều tôi học được trong tháng đầu đi làm"],
 ];
-
-const SAMPLE_CHANNELS = [
-  { username: 'beauty_queen', label: 'Kênh Làm Đẹp' },
-  { username: 'chubebe', label: 'Kênh Đời Sống' },
-  { username: 'reviewcongnghe', label: 'Kênh Công Nghệ' },
-  { username: 'foodlover_vn', label: 'Kênh Ẩm Thực' }
-];
-
-const TONE_OPTIONS = [
-  { label: 'Cảnh báo, giật tít', desc: 'Gây chú ý mạnh mẽ' },
-  { label: 'Hài hước, gần gũi', desc: 'Dễ tạo viral chia sẻ' },
-  { label: 'Chuyên gia, uy tín', desc: 'Xây dựng độ tin cậy cao' },
-  { label: 'Tâm sự, kể chuyện', desc: 'Chạm cảm xúc người xem' }
+const TABS = [
+  { id: "studio", label: "Xưởng kịch bản", icon: FileText },
+  { id: "channel", label: "Nghiên cứu kênh", icon: TrendingUp },
+  { id: "history", label: "Kho kịch bản", icon: Bookmark },
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('studio');
-  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
-  const [toast, setToast] = useState('');
-  const [copied, setCopied] = useState(false);
-
-  // Form viết kịch bản
-  const [selectedCategoryId, setSelectedCategoryId] = useState(1);
-  const [scriptTopic, setScriptTopic] = useState('3 Sai lầm chết người khi thoa kem chống nắng khiến da nổi mụn');
-  const [targetAudience, setTargetAudience] = useState('Gen Z da dầu mụn, học sinh sinh viên');
-  const [scriptTone, setScriptTone] = useState('Cảnh báo, giật tít');
-  const [generatedScript, setGeneratedScript] = useState(null);
-  const [studioLoading, setStudioLoading] = useState(false);
-
-  // Khám phá kênh đối thủ
-  const [searchUsername, setSearchUsername] = useState('beauty_queen');
-  const [channelData, setChannelData] = useState(null);
-  const [topVideos, setTopVideos] = useState([]);
+  const [activeTab, setActiveTab] = useState("studio");
+  const [draft, setDraft] = useState(readDraft);
+  const [storageError, setStorageError] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [workspace, setWorkspace] = useState(null);
+  const [setupLoading, setSetupLoading] = useState(true);
+  const [setupError, setSetupError] = useState("");
+  const [workspaceError, setWorkspaceError] = useState("");
+  const [scripts, setScripts] = useState([]);
+  const [scriptsLoading, setScriptsLoading] = useState(true);
+  const [scriptsError, setScriptsError] = useState("");
+  const [script, setScript] = useState(null);
+  const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState("");
+  const [pending, setPending] = useState(null);
+  const [actionError, setActionError] = useState("");
+  const [toast, setToast] = useState("");
+  const toastTimer = useRef();
+  const previewRef = useRef(null);
+  const generationLock = useRef(false);
+  const statusLock = useRef(false);
+  const setupVersion = useRef(0);
+  const scriptsVersion = useRef(0);
+  const [username, setUsername] = useState("");
+  const [channelCategory, setChannelCategory] = useState("");
+  const [maxVideos, setMaxVideos] = useState(10);
+  const [channel, setChannel] = useState(null);
+  const [videos, setVideos] = useState([]);
   const [channelLoading, setChannelLoading] = useState(false);
-
-  // Kịch bản đã lưu
-  const [myScripts, setMyScripts] = useState([]);
-  const [scriptsLoading, setScriptsLoading] = useState(false);
-
-  const showToastMsg = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(''), 3000);
-  };
+  const channelLock = useRef(false);
+  const [channelError, setChannelError] = useState("");
+  const [videoError, setVideoError] = useState("");
+  const [sort, setSort] = useState("engagementRate");
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("ALL");
+  const [page, setPage] = useState(1);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    loadCategories();
-    loadMyScripts();
+    void window.creatorDesktop?.setBusy(generating || channelLoading).catch(() => {});
+  }, [generating, channelLoading]);
+
+  const notify = useCallback((message) => {
+    clearTimeout(toastTimer.current);
+    setToast(message);
+    toastTimer.current = setTimeout(() => setToast(""), 4000);
   }, []);
 
-  const loadCategories = async () => {
-    try {
-      const res = await api.getCategories();
-      if (res?.data && res.data.length > 0) {
-        setCategories(res.data);
-      }
-    } catch (_) {
-      // Giữ DEFAULT_CATEGORIES nếu backend đang khởi động
+  const loadSetup = useCallback(async (signal) => {
+    const version = ++setupVersion.current;
+    const results = await Promise.allSettled([
+      api.getCategories({ signal }),
+      api.getWorkspaceStatus({ signal }),
+    ]);
+    if (signal?.aborted || version !== setupVersion.current) return;
+    if (results[0].status === "fulfilled" && results[0].value.data?.length) {
+      const list = results[0].value.data.map((category) => ({
+        ...category,
+        name: categoryLabel(category),
+      }));
+      setCategories(list);
+      setDraft((prev) => ({
+        ...prev,
+        categoryId: list.some((c) => String(c.id) === String(prev.categoryId))
+          ? prev.categoryId
+          : list[0].id,
+      }));
+      setChannelCategory((prev) =>
+        list.some((c) => String(c.id) === String(prev)) ? prev : list[0].id,
+      );
+      setSetupError("");
+    } else
+      setSetupError(
+        results[0].reason?.message ||
+          "Chưa có lĩnh vực nào. Vui lòng kiểm tra dữ liệu trên máy chủ.",
+      );
+    if (results[1].status === "fulfilled") {
+      setWorkspace(results[1].value.data);
+      setWorkspaceError("");
+    } else {
+      setWorkspace(null);
+      setWorkspaceError(
+        "Chưa xác định được nguồn dữ liệu. Thử kết nối lại trước khi sử dụng kết quả nghiên cứu.",
+      );
     }
-  };
+    setSetupLoading(false);
+  }, []);
 
-  const loadMyScripts = async () => {
+  const loadScripts = useCallback(async (signal) => {
+    const version = ++scriptsVersion.current;
     try {
-      setScriptsLoading(true);
-      const res = await api.getMyScripts();
-      if (res?.data) {
-        setMyScripts(res.data);
-      }
-    } catch (_) {
+      const result = await api.getMyScripts({ signal });
+      if (signal?.aborted || version !== scriptsVersion.current) return;
+      setScripts(result.data || []);
+      setScriptsError("");
+    } catch (error) {
+      if (!signal?.aborted && version === scriptsVersion.current)
+        setScriptsError(error.message);
     } finally {
-      setScriptsLoading(false);
+      if (!signal?.aborted && version === scriptsVersion.current)
+        setScriptsLoading(false);
     }
-  };
+  }, []);
 
-  const handleGenerateScript = async () => {
-    if (!scriptTopic.trim()) {
-      alert('Vui lòng nhập chủ đề video bạn muốn làm!');
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      loadSetup(controller.signal);
+      loadScripts(controller.signal);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+      clearTimeout(toastTimer.current);
+    };
+  }, [loadSetup, loadScripts]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        setStorageError(false);
+      } catch {
+        setStorageError(true);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [draft]);
+
+  function reloadSetup() {
+    setSetupLoading(true);
+    loadSetup();
+  }
+  function reloadScripts() {
+    setScriptsLoading(true);
+    loadScripts();
+  }
+
+  function navigate(tab) {
+    setActiveTab(tab);
+    setMenuOpen(false);
+    setActionError("");
+  }
+  function focusPreview() {
+    requestAnimationFrame(() => {
+      previewRef.current?.focus({ preventScroll: true });
+      previewRef.current?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+        block: "start",
+      });
+    });
+  }
+  function openScript(item) {
+    setScript(item);
+    navigate("studio");
+    focusPreview();
+  }
+  function updateDraft(field, value) {
+    setDraft((prev) => ({ ...prev, [field]: value }));
+  }
+  function upsertScript(value) {
+    // Ignore list requests that started before this mutation.
+    scriptsVersion.current += 1;
+    setScriptsLoading(false);
+    setScripts((prev) =>
+      [value, ...prev.filter((item) => item.id !== value.id)].sort(
+        (a, b) =>
+          (Date.parse(b.createdAt) || b.id) - (Date.parse(a.createdAt) || a.id),
+      ),
+    );
+    setScript((prev) => (prev?.id === value.id ? value : prev));
+  }
+
+  async function generate(event) {
+    event.preventDefault();
+    if (generationLock.current) return;
+    const requestedDurationSeconds = durationToSeconds(
+      draft.durationValue,
+      draft.durationUnit,
+    );
+    if (requestedDurationSeconds === null) {
+      setGenerateError(
+        "Chọn thời lượng từ 15 giây đến 10 phút, làm tròn đến giây.",
+      );
       return;
     }
-
-    setStudioLoading(true);
+    if (!draft.topic.trim()) {
+      setGenerateError("Nhập chủ đề video trước khi tạo kịch bản.");
+      return;
+    }
+    if (!draft.categoryId || setupError) {
+      setGenerateError("Tải danh sách lĩnh vực rồi thử lại.");
+      return;
+    }
+    generationLock.current = true;
+    setGenerating(true);
+    setGenerateError("");
+    setActionError("");
     try {
-      const payload = {
-        categoryId: Number(selectedCategoryId) || 1,
-        topic: scriptTopic.trim(),
-        targetAudience: targetAudience.trim() || 'Người dùng TikTok Việt Nam',
-        tone: scriptTone.trim() || 'Lôi cuốn, thực tế',
-        referenceVideoIds: []
-      };
-
-      const res = await api.generateDirectScript(payload);
-      if (res?.data) {
-        setGeneratedScript(res.data);
-        showToastMsg('Kịch bản video đã được khởi tạo thành công');
-        loadMyScripts();
-      }
-    } catch (err) {
-      alert(err.message || 'Lỗi khi tạo kịch bản, vui lòng thử lại.');
+      const result = await api.generateDirectScript({
+        categoryId: Number(draft.categoryId),
+        topic: draft.topic.trim(),
+        targetAudience:
+          draft.targetAudience.trim() || "Người xem TikTok Việt Nam",
+        tone: draft.tone,
+        referenceVideoIds: draft.references.map((v) => v.id),
+        requestedDurationSeconds,
+      });
+      setScript(result.data);
+      upsertScript(result.data);
+      notify("Đã tạo và lưu kịch bản vào kho.");
+      focusPreview();
+    } catch (error) {
+      setGenerateError(error.message);
     } finally {
-      setStudioLoading(false);
+      generationLock.current = false;
+      setGenerating(false);
     }
-  };
+  }
 
-  const handleCopyScript = () => {
-    if (!generatedScript) return;
-    const structure = generatedScript.scriptStructure || {};
-    const text = `TIÊU ĐỀ VIDEO: ${generatedScript.title}
-ĐỐI TƯỢNG XEM: ${generatedScript.targetAudience}
-THỜI LƯỢNG ƯỚC TÍNH: ~${structure.estimatedDurationSeconds || 35} giây
-
-==================================================
-1. CÂU MỞ ĐẦU 3 GIÂY ĐẦU TIÊN (HOOK):
-"${structure.hook3s || ''}"
-
-2. NỘI DUNG CHÍNH (LỜI THOẠI CHI TIẾT):
-${structure.bodyContent || ''}
-
-3. HƯỚNG DẪN QUAY & GÓC MÁY (VISUAL CUES):
-${generatedScript.visualAndSoundCues || ''}
-
-4. KÊU GỌI HÀNH ĐỘNG (CTA):
-"${structure.callToAction || ''}"
-
-5. HASHTAGS GỢI Ý:
-${(generatedScript.suggestedHashtags || []).join(' ')}
-==================================================
-`;
-
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    showToastMsg('Đã sao chép nội dung kịch bản vào clipboard');
-    setTimeout(() => setCopied(false), 2500);
-  };
-
-  const handleToggleFavorite = async (scriptId, currentStatus) => {
+  async function changeStatus(item, status) {
+    if (statusLock.current) return;
+    statusLock.current = true;
+    setPending(item.id);
+    setActionError("");
     try {
-      const newStatus = currentStatus === 'FAVORITE' ? 'DRAFT' : 'FAVORITE';
-      const res = await api.updateScriptStatus(scriptId, newStatus);
-      if (generatedScript && generatedScript.id === scriptId) {
-        setGeneratedScript(res.data);
-      }
-      showToastMsg(newStatus === 'FAVORITE' ? 'Đã lưu vào danh sách yêu thích' : 'Đã bỏ yêu thích');
-      loadMyScripts();
-    } catch (err) {
-      console.warn(err);
+      const result = await api.updateScriptStatus(item.id, status);
+      upsertScript(result.data);
+      notify(
+        status === "FAVORITE"
+          ? "Đã thêm vào yêu thích."
+          : status === "ARCHIVED"
+            ? "Đã lưu trữ kịch bản."
+            : "Đã chuyển về bản nháp.",
+      );
+    } catch (error) {
+      setActionError(error.message);
+    } finally {
+      statusLock.current = false;
+      setPending(null);
     }
-  };
+  }
 
-  const handleSearchChannel = async (customUsername) => {
-    const targetUser = (customUsername || searchUsername).replace('@', '').trim();
-    if (!targetUser) return;
+  async function copy(item) {
+    try {
+      await navigator.clipboard.writeText(scriptText(item));
+      notify("Đã sao chép kịch bản.");
+    } catch {
+      setActionError(
+        "Trình duyệt chưa cho phép sao chép. Bạn có thể tải file .txt để lấy nội dung.",
+      );
+    }
+  }
+  function download(item) {
+    const url = URL.createObjectURL(
+      new Blob([scriptText(item)], { type: "text/plain;charset=utf-8" }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `kich-ban-${item.id}.txt`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    notify("Đã xuất kịch bản dạng .txt.");
+  }
 
-    setSearchUsername(targetUser);
+  async function searchChannel(event) {
+    event.preventDefault();
+    if (channelLock.current) return;
+    const clean = normalizeUsername(username);
+    if (!clean) {
+      setChannelError(
+        "Nhập @username (2–24 ký tự) hoặc link hồ sơ dạng https://tiktok.com/@tenkenh.",
+      );
+      return;
+    }
+    channelLock.current = true;
     setChannelLoading(true);
+    setChannelError("");
+    setVideoError("");
+    setChannel(null);
+    setVideos([]);
     try {
-      const res = await api.ingestChannel(targetUser, selectedCategoryId, 10);
-      setChannelData(res.data);
-
+      const result = await api.ingestChannel(clean, channelCategory, maxVideos);
+      setChannel(result.data);
+      setUsername(clean);
       try {
-        const topRes = await api.getTopVideos(targetUser, 8);
-        setTopVideos(topRes.data || []);
-      } catch (videoErr) {
-        console.warn('Top videos warning:', videoErr);
+        const resultVideos = await api.getTopVideos(clean, maxVideos);
+        setVideos(resultVideos.data || []);
+      } catch (error) {
+        setVideoError(error.message);
       }
-
-      showToastMsg(`Đã phân tích xong dữ liệu kênh @${targetUser}`);
-    } catch (err) {
-      alert(err.message || 'Không thể phân tích dữ liệu kênh, vui lòng thử lại');
+    } catch (error) {
+      setChannelError(error.message);
     } finally {
+      channelLock.current = false;
       setChannelLoading(false);
     }
-  };
+  }
+  async function retryVideos() {
+    if (!channel || channelLock.current) return;
+    channelLock.current = true;
+    setChannelLoading(true);
+    try {
+      const result = await api.getTopVideos(channel.tiktokUsername, maxVideos);
+      setVideos(result.data || []);
+      setVideoError("");
+    } catch (error) {
+      setVideoError(error.message);
+    } finally {
+      channelLock.current = false;
+      setChannelLoading(false);
+    }
+  }
+  function selectReference(video) {
+    if (draft.references.some((v) => v.id === video.id)) {
+      navigate("studio");
+      return;
+    }
+    if (draft.references.length >= 5) {
+      setChannelError(
+        "Bạn đã chọn 5 video. Bỏ một video trong xưởng kịch bản để chọn video khác.",
+      );
+      return;
+    }
+    setDraft((prev) => ({
+      ...prev,
+      categoryId: channel.category?.id || channelCategory,
+      topic: prev.topic || video.caption?.slice(0, 1000) || "",
+      references: [
+        ...prev.references,
+        {
+          id: video.id,
+          caption: video.caption,
+          username: channel.tiktokUsername,
+        },
+      ],
+    }));
+    navigate("studio");
+    notify("Đã thêm video tham khảo. Bạn có thể sửa chủ đề trước khi tạo.");
+  }
 
-  const handleUseVideoInspiration = (video) => {
-    setScriptTopic(`Mô phỏng trend: ${video.caption?.slice(0, 70) || 'Video viral triệu view'}`);
-    setActiveTab('studio');
-    showToastMsg('Đã nạp video vào xưởng kịch bản');
-  };
+  const filtered = filterScripts(scripts, query, filter);
+  const pages = Math.max(1, Math.ceil(filtered.length / 9));
+  const currentPage = Math.min(page, pages);
+  const visibleScripts = filtered.slice((currentPage - 1) * 9, currentPage * 9);
+  const currentCategory = categories.find(
+    (c) => String(c.id) === String(draft.categoryId),
+  );
+  const idea =
+    IDEAS.find(([slug]) => categoryKind(currentCategory) === slug)?.[1] ||
+    IDEAS[0][1];
+  const sortedVideos = [...videos].sort(
+    (a, b) => Number(b[sort] || 0) - Number(a[sort] || 0),
+  );
 
   return (
-    <div>
-      {/* Toast thông báo */}
-      {toast && (
-        <div className="toast">
-          <Sparkles size={16} />
-          <span>{toast}</span>
-        </div>
-      )}
-
-      {/* Header điều hướng */}
+    <div className={window.creatorDesktop ? "app-shell desktop-mode" : "app-shell"}>
+      <a href="#main" className="skip-link">
+        Đến nội dung chính
+      </a>
       <header className="app-header">
-        <div className="header-container">
-          <div className="logo-area">
-            <div className="logo-icon">
-              <Flame size={20} />
-            </div>
-            <div>
-              <h1 style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '-0.02em' }}>
-                TikTok Creator Studio
-              </h1>
-              <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                Nghiên cứu đối thủ và sinh kịch bản video viral
-              </p>
-            </div>
-          </div>
-
-          {/* Navigation Tabs */}
-          <nav className="nav-tabs">
-            <button
-              className={`tab-btn ${activeTab === 'studio' ? 'active' : ''}`}
-              onClick={() => setActiveTab('studio')}
-            >
-              <Sparkles size={15} />
-              Xưởng Kịch Bản
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'channel' ? 'active' : ''}`}
-              onClick={() => setActiveTab('channel')}
-            >
-              <TrendingUp size={15} />
-              Kênh Đối Thủ
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
-              onClick={() => {
-                setActiveTab('history');
-                loadMyScripts();
-              }}
-            >
-              <Bookmark size={15} />
-              Kho Kịch Bản ({myScripts.length})
-            </button>
+        <div className="header-inner">
+          <a
+            className="brand"
+            href="#studio"
+            onClick={() => navigate("studio")}
+          >
+            <span className="brand-mark">
+              <Film size={21} />
+            </span>
+            <span>
+              <strong>Creator Studio</strong>
+              <small>TikTok Content Intelligence</small>
+            </span>
+          </a>
+          <button
+            className="icon-button mobile-menu"
+            aria-label="Mở điều hướng"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            <Menu size={22} />
+          </button>
+          <nav
+            aria-label="Điều hướng chính"
+            className={menuOpen ? "navigation open" : "navigation"}
+          >
+            {TABS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => navigate(id)}
+                className={
+                  activeTab === id ? "nav-button active" : "nav-button"
+                }
+                aria-current={activeTab === id ? "page" : undefined}
+              >
+                <Icon size={17} />
+                {label}
+              </button>
+            ))}
           </nav>
-
-          {/* Status Pill */}
-          <div className="status-pill">
-            <span className="status-dot"></span>
-            Chế độ tự do (Không cần tài khoản)
-          </div>
+          {window.creatorDesktop ? (
+            <button className="button subtle desktop-settings" disabled={generating || channelLoading}
+              onClick={() => window.creatorDesktop.openSettings().catch(() => notify("Không mở được cài đặt. Hãy thử lại."))}>
+              <Settings size={18} /> Cài đặt
+            </button>
+          ) : <div className="workspace-label">
+            <span
+              className={`connection-dot ${setupError ? "offline" : setupLoading ? "connecting" : ""}`}
+            />
+            {setupError
+              ? "Chưa kết nối"
+              : setupLoading
+                ? "Đang kết nối"
+                : "Dữ liệu trực tiếp"}
+          </div>}
         </div>
       </header>
-
-      {/* Main Content */}
-      <main className="main-container">
-        {/* ============================================================== */}
-        {/* TAB 1: XƯỞNG KỊCH BẢN */}
-        {/* ============================================================== */}
-        {activeTab === 'studio' && (
-          <div className="grid-studio">
-            {/* Cột trái: Form nhập liệu */}
-            <div className="card-panel">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                <Sparkles size={18} color="var(--brand-primary)" />
-                <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Thiết Lập Kịch Bản</h2>
+      <main id="main" className="main-container">
+        <div className="page-heading">
+          <div>
+            <h1>
+              {activeTab === "studio"
+                ? "Viết kịch bản"
+                : activeTab === "channel"
+                  ? "Nghiên cứu kênh TikTok"
+                  : "Kho kịch bản"}
+            </h1>
+            <p>
+              {activeTab === "studio"
+                ? "Từ chủ đề của bạn đến lời thoại sẵn sàng chỉnh sửa."
+                : activeTab === "channel"
+                  ? "Tìm video nổi bật và chọn chất liệu cho kịch bản."
+                  : "Tìm lại, đánh dấu và chuẩn bị cho lần quay tiếp theo."}
+            </p>
+          </div>
+          {activeTab === "history" && (
+            <button
+              className="button primary"
+              onClick={() => navigate("studio")}
+            >
+              <Plus size={18} />
+              Tạo kịch bản
+            </button>
+          )}
+        </div>
+        {setupError && <Notice onRetry={reloadSetup}>{setupError}</Notice>}
+        {workspaceError && (
+          <Notice warning onRetry={reloadSetup}>
+            {workspaceError}
+          </Notice>
+        )}
+        {window.creatorDesktop && workspace?.issues?.length ? (
+          <Notice>Mở Cài đặt để thêm khóa API cho {[
+            !workspace.aiConfigured && "Gemini",
+            !workspace.scraperConfigured && "RapidAPI",
+          ].filter(Boolean).join(" và ") || "dịch vụ chưa kết nối"}.</Notice>
+        ) : workspace?.issues?.map((issue) => (
+          <Notice key={issue}>{issue}</Notice>
+        ))}
+        {actionError && <Notice>{actionError}</Notice>}
+        {activeTab === "studio" && (
+          <div className="studio-layout">
+            <section
+              className="panel brief-panel"
+              aria-label="Thiết lập kịch bản"
+            >
+              <div className="panel-heading">
+                <h2>Thông tin video</h2>
+                <span className="muted">
+                  {storageError ? "Chưa lưu bản nhập" : "Tự lưu bản nhập"}
+                </span>
               </div>
-
-              {/* Ngành hàng */}
-              <div className="form-group">
-                <label className="form-label">Ngành hàng / Lĩnh vực:</label>
-                <select
-                  className="form-select"
-                  value={selectedCategoryId}
-                  onChange={(e) => setSelectedCategoryId(Number(e.target.value))}
-                >
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Chủ đề video */}
-              <div className="form-group">
-                <label className="form-label">Chủ đề hoặc nội dung cần làm video:</label>
-                <textarea
-                  className="form-textarea"
-                  rows={3}
-                  value={scriptTopic}
-                  onChange={(e) => setScriptTopic(e.target.value)}
-                  placeholder="Ví dụ: 3 Sai lầm chăm da khiến mụn nhiều hơn…"
-                />
-
-                {/* Gợi ý chủ đề nhanh */}
-                <div style={{ marginTop: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '8px' }}>
-                    <Lightbulb size={13} />
-                    Gợi ý chủ đề nhanh:
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {QUICK_IDEAS.map((idea, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        className="quick-topic-btn"
-                        onClick={() => setScriptTopic(idea)}
-                      >
-                        {idea}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Đối tượng mục tiêu */}
-              <div className="form-group">
-                <label className="form-label">Đối tượng khán giả mục tiêu:</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={targetAudience}
-                  onChange={(e) => setTargetAudience(e.target.value)}
-                  placeholder="Ví dụ: Học sinh sinh viên, Gen Z da dầu mụn…"
-                />
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
-                  {['Gen Z da dầu mụn', 'Dân văn phòng', 'Người mới bắt đầu', 'Mẹ bỉm sữa'].map((aud, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      className="badge"
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => setTargetAudience(aud)}
-                    >
-                      + {aud}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tone giọng truyền tải */}
-              <div className="form-group">
-                <label className="form-label">Phong cách truyền tải (Tone giọng):</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                  {TONE_OPTIONS.map((item, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      className={`choice-pill ${scriptTone === item.label ? 'selected' : ''}`}
-                      onClick={() => setScriptTone(item.label)}
-                    >
-                      <div style={{ fontSize: '13px', fontWeight: 600 }}>{item.label}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{item.desc}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Nút hành động */}
-              <button
-                className="btn btn-primary"
-                style={{ width: '100%', padding: '12px', marginTop: '8px' }}
-                onClick={handleGenerateScript}
-                disabled={studioLoading}
-              >
-                {studioLoading ? (
-                  <>
-                    <RefreshCw size={16} className="spin" />
-                    <span>Đang phân tích và viết kịch bản…</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={16} />
-                    Sinh Kịch Bản Viral 3 Hồi
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Cột phải: Hiển thị kịch bản */}
-            <div>
-              {generatedScript ? (
-                <div className="card-panel">
-                  {/* Tiêu đề & Hành động */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '16px' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <span className="badge">Google Gemini 3.5 Flash</span>
-                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <Clock size={13} />
-                          Thời lượng ước tính: ~{generatedScript.scriptStructure?.estimatedDurationSeconds || 35} giây
-                        </span>
-                      </div>
-                      <h2 style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.01em' }}>
-                        {generatedScript.title}
-                      </h2>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button className="btn btn-primary" onClick={handleCopyScript} style={{ padding: '8px 16px' }}>
-                        {copied ? <Check size={16} /> : <Copy size={16} />}
-                        {copied ? 'Đã sao chép' : 'Sao chép kịch bản'}
-                      </button>
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => handleToggleFavorite(generatedScript.id, generatedScript.status)}
-                        title="Lưu yêu thích"
-                        style={{ padding: '8px 12px' }}
-                      >
-                        <Bookmark
-                          size={16}
-                          color={generatedScript.status === 'FAVORITE' ? 'var(--brand-primary)' : 'currentColor'}
-                          fill={generatedScript.status === 'FAVORITE' ? 'var(--brand-primary)' : 'none'}
-                        />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* PHẦN 1: HOOK 3S */}
-                  <div className="script-section primary-highlight">
-                    <div className="section-label primary">
-                      <Flame size={16} />
-                      1. CÂU MỞ ĐẦU 3 GIÂY ĐẦU TIÊN (GIỮ CHÂN NGƯỜI XEM)
-                    </div>
-                    <p style={{ fontSize: '16px', fontWeight: 700, lineHeight: 1.5, color: 'var(--text-primary)' }}>
-                      "{generatedScript.scriptStructure?.hook3s}"
-                    </p>
-                    <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '8px' }}>
-                      Lưu ý khi quay: Truyền tải dứt khoát, biểu cảm tự tin ngay khi video bắt đầu.
-                    </p>
-                  </div>
-
-                  {/* PHẦN 2: THÂN BÀI */}
-                  <div className="script-section">
-                    <div className="section-label accent">
-                      <Film size={15} />
-                      2. NỘI DUNG CHÍNH (LỜI THOẠI CHI TIẾT)
-                    </div>
-                    <div style={{ whiteSpace: 'pre-line', fontSize: '14px', lineHeight: 1.7, color: 'var(--text-primary)' }}>
-                      {generatedScript.scriptStructure?.bodyContent}
-                    </div>
-                  </div>
-
-                  {/* PHẦN 3: GÓC MÁY */}
-                  {generatedScript.visualAndSoundCues && (
-                    <div className="script-section">
-                      <div className="section-label accent">
-                        <Camera size={15} />
-                        3. HƯỚNG DẪN QUAY DỰNG & GÓC MÁY (VISUAL CUES)
-                      </div>
-                      <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                        {generatedScript.visualAndSoundCues}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* PHẦN 4: CTA */}
-                  <div className="script-section">
-                    <div className="section-label">
-                      <MessageSquare size={15} />
-                      4. KÊU GỌI HÀNH ĐỘNG (CTA)
-                    </div>
-                    <p style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-primary)' }}>
-                      "{generatedScript.scriptStructure?.callToAction}"
-                    </p>
-                  </div>
-
-                  {/* HASHTAGS */}
-                  {generatedScript.suggestedHashtags?.length > 0 && (
-                    <div style={{ marginTop: '16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '8px' }}>
-                        <Hash size={13} />
-                        Hashtags đề xuất:
-                      </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                        {generatedScript.suggestedHashtags.map((tag, idx) => (
-                          <span key={idx} className="badge badge-tag">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                /* Empty state */
-                <div
-                  className="card-panel"
-                  style={{
-                    height: '100%',
-                    minHeight: '440px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textAlign: 'center',
-                    padding: '32px'
-                  }}
-                >
-                  <Sparkles size={40} color="var(--brand-primary)" style={{ marginBottom: '16px', opacity: 0.8 }} />
-                  <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
-                    Kịch Bản Sẽ Xuất Hiện Tại Đây
-                  </h3>
-                  <p style={{ maxWidth: '440px', fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '24px' }}>
-                    Điền ý tưởng video ở cột bên trái và bấm <strong>"Sinh Kịch Bản Viral 3 Hồi"</strong>. Hệ thống sẽ cấu trúc kịch bản thành từng phân đoạn cụ thể kèm hướng dẫn góc máy.
-                  </p>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', maxWidth: '30rem', width: '100%', textAlign: 'left' }}>
-                    <div style={{ padding: '12px', background: 'var(--surface-subtle)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
-                      <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Flame size={14} />
-                        Câu Hook 3 giây
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                        Mở đầu lôi cuốn để giữ chân người xem không lướt qua.
-                      </div>
-                    </div>
-                    <div style={{ padding: '12px', background: 'var(--surface-subtle)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
-                      <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--brand-accent)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Film size={14} />
-                        Góc quay & Lời thoại
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                        Hướng dẫn cụ thể góc máy và động tác tay khi quay.
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {storageError && (
+                <Notice warning>
+                  Không lưu được bản nhập trên trình duyệt này. Hãy sao chép ý
+                  tưởng trước khi đóng trang.
+                </Notice>
               )}
-            </div>
+              <form onSubmit={generate}>
+                <fieldset disabled={generating} className="brief-fields">
+                  <div className="field">
+                    <label htmlFor="category">Lĩnh vực</label>
+                    <select
+                      id="category"
+                      value={draft.categoryId}
+                      onChange={(e) =>
+                        updateDraft("categoryId", e.target.value)
+                      }
+                      disabled={setupLoading || !!setupError || generating}
+                    >
+                      {!categories.length && (
+                        <option value="">
+                          {setupLoading
+                            ? "Đang tải lĩnh vực…"
+                            : "Chưa tải được lĩnh vực"}
+                        </option>
+                      )}
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <div className="label-row">
+                      <label htmlFor="topic">
+                        Chủ đề video <span className="required">*</span>
+                      </label>
+                      <span className="muted">{draft.topic.length}/1000</span>
+                    </div>
+                    <textarea
+                      id="topic"
+                      required
+                      maxLength={1000}
+                      rows={4}
+                      placeholder="Nêu một vấn đề cụ thể và điều bạn muốn người xem nhận được…"
+                      value={draft.topic}
+                      onChange={(e) => {
+                        updateDraft("topic", e.target.value);
+                        setGenerateError("");
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="idea-button"
+                      onClick={() => updateDraft("topic", idea)}
+                    >
+                      <Plus size={14} />
+                      <span>Dùng gợi ý: {idea}</span>
+                    </button>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="audience">Người xem mục tiêu</label>
+                    <input
+                      id="audience"
+                      maxLength={300}
+                      placeholder="Ví dụ: sinh viên mới bắt đầu chăm sóc da"
+                      value={draft.targetAudience}
+                      onChange={(e) =>
+                        updateDraft("targetAudience", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="tone">Giọng điệu</label>
+                    <select
+                      id="tone"
+                      value={draft.tone}
+                      onChange={(e) => updateDraft("tone", e.target.value)}
+                    >
+                      {TONES.map((tone) => (
+                        <option key={tone}>{tone}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="duration-preset">Thời lượng video</label>
+                    <select
+                      id="duration-preset"
+                      value={
+                        draft.customDuration
+                          ? "custom"
+                          : durationToSeconds(
+                              draft.durationValue,
+                              draft.durationUnit,
+                            )
+                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setDraft((prev) =>
+                          value === "custom"
+                            ? { ...prev, customDuration: true }
+                            : {
+                                ...prev,
+                                durationValue: value,
+                                durationUnit: "seconds",
+                                customDuration: false,
+                              },
+                        );
+                        setGenerateError("");
+                      }}
+                      aria-describedby="duration-hint"
+                    >
+                      {[15, 30, 60, 120, 180].map((seconds) => (
+                        <option key={seconds} value={seconds}>
+                          {formatDuration(seconds)}
+                        </option>
+                      ))}
+                      <option value="custom">Tùy chỉnh…</option>
+                    </select>
+                    {draft.customDuration && (
+                      <div className="duration-custom">
+                        <div>
+                          <label htmlFor="duration-value">Thời lượng</label>
+                          <input
+                            id="duration-value"
+                            type="number"
+                            required
+                            min={draft.durationUnit === "minutes" ? 0.25 : 15}
+                            max={draft.durationUnit === "minutes" ? 10 : 600}
+                            step={draft.durationUnit === "minutes" ? "any" : 1}
+                            inputMode="decimal"
+                            value={draft.durationValue}
+                            aria-describedby="duration-hint"
+                            onChange={(e) =>
+                              updateDraft("durationValue", e.target.value)
+                            }
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="duration-unit">Đơn vị</label>
+                          <select
+                            id="duration-unit"
+                            value={draft.durationUnit}
+                            onChange={(e) => {
+                              const unit = e.target.value;
+                              setDraft((prev) => {
+                                const seconds = durationToSeconds(
+                                  prev.durationValue,
+                                  prev.durationUnit,
+                                );
+                                return {
+                                  ...prev,
+                                  durationUnit: unit,
+                                  durationValue:
+                                    seconds === null
+                                      ? ""
+                                      : String(
+                                          unit === "minutes"
+                                            ? seconds / 60
+                                            : seconds,
+                                        ),
+                                };
+                              });
+                            }}
+                          >
+                            <option value="seconds">Giây</option>
+                            <option value="minutes">Phút</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+                    <p id="duration-hint" className="field-hint">
+                      {draft.customDuration ? "Từ 15 giây đến 10 phút. " : ""}AI
+                      điều chỉnh lời thoại và mốc quay theo thời lượng.
+                    </p>
+                  </div>
+                  <details
+                    className="references-field"
+                    open={draft.references.length > 0 || undefined}
+                  >
+                    <summary>
+                      Video tham khảo{" "}
+                      <span className="muted">
+                        {draft.references.length}/5 · tùy chọn
+                      </span>
+                    </summary>
+                    {draft.references.length ? (
+                      <ul className="selected-references">
+                        {draft.references.map((v) => (
+                          <li key={v.id}>
+                            <div>
+                              <strong>@{v.username}</strong>
+                              <span>{v.caption || `Video ${v.id}`}</span>
+                            </div>
+                            <button
+                              type="button"
+                              className="icon-button"
+                              aria-label={`Bỏ video tham khảo ${v.id}`}
+                              onClick={() =>
+                                updateDraft(
+                                  "references",
+                                  draft.references.filter(
+                                    (item) => item.id !== v.id,
+                                  ),
+                                )
+                              }
+                            >
+                              <X size={16} />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="hint">
+                        Không bắt buộc. Thêm video để AI tham khảo cấu trúc.
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      className="text-button"
+                      onClick={() => navigate("channel")}
+                    >
+                      Chọn từ nghiên cứu kênh <ArrowRight size={14} />
+                    </button>
+                  </details>
+                </fieldset>
+                {generateError && <Notice>{generateError}</Notice>}
+                <button
+                  type="submit"
+                  className="button primary full-width"
+                  disabled={
+                    generating ||
+                    setupLoading ||
+                    !!setupError ||
+                    !workspace?.aiConfigured
+                  }
+                >
+                  {generating ? (
+                    <>
+                      <LoaderCircle size={18} className="spin" />
+                      Đang tạo kịch bản…
+                    </>
+                  ) : (
+                    <>
+                      Tạo kịch bản
+                      <ArrowRight size={18} />
+                    </>
+                  )}
+                </button>
+                <p className="form-note" role="status">
+                  {generating
+                    ? "Đang chờ AI phản hồi, có thể mất tối đa 2 phút."
+                    : "Tự lưu vào kho kịch bản dùng chung"}
+                </p>
+              </form>
+            </section>
+            <ScriptPreview
+              script={script}
+              loading={generating}
+              pending={pending}
+              onStatus={changeStatus}
+              onCopy={copy}
+              onDownload={download}
+              onResearch={() => navigate("channel")}
+              previewRef={previewRef}
+            />
           </div>
         )}
 
-        {/* ============================================================== */}
-        {/* TAB 2: KHÁM PHÁ KÊNH ĐỐI THỦ */}
-        {/* ============================================================== */}
-        {activeTab === 'channel' && (
-          <div>
-            <div className="card-panel" style={{ marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
-                Phân Tích Kênh Đối Thủ & Video Triệu View
-              </h2>
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                Nhập tên tài khoản bất kỳ trên TikTok để phân tích hiệu suất video và tỷ lệ tương tác (Engagement Rate).
-              </p>
-
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <Search
-                    size={16}
-                    color="var(--text-tertiary)"
-                    style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }}
-                  />
-                  <input
-                    type="text"
-                    className="form-input"
-                    style={{ paddingLeft: '44px' }}
-                    value={searchUsername}
-                    onChange={(e) => setSearchUsername(e.target.value)}
-                    placeholder="Nhập tên tài khoản TikTok (ví dụ: beauty_queen, chubebe…)"
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearchChannel()}
-                  />
-                </div>
-                <button className="btn btn-primary" onClick={() => handleSearchChannel()} disabled={channelLoading}>
-                  {channelLoading ? 'Đang phân tích…' : 'Xem Video Nhiều View Nhất'}
-                </button>
-              </div>
-
-              {/* Kênh mẫu thử nhanh */}
-              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Kênh mẫu thử nhanh:</span>
-                {SAMPLE_CHANNELS.map((item, idx) => (
+        {activeTab === "channel" && (
+          <div className="channel-workspace">
+            <section className="panel search-panel">
+              <h2>Phân tích một kênh TikTok</h2>
+              <form onSubmit={searchChannel}>
+                <div className="channel-fields">
+                  <div className="field username-field">
+                    <label htmlFor="username">
+                      Tên người dùng hoặc link hồ sơ
+                    </label>
+                    <div className="input-with-icon">
+                      <Search size={18} />
+                      <input
+                        id="username"
+                        placeholder="@tenkenh hoặc https://tiktok.com/@tenkenh"
+                        required
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        disabled={channelLoading}
+                      />
+                    </div>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="channel-category">Lĩnh vực của kênh</label>
+                    <select
+                      id="channel-category"
+                      value={channelCategory}
+                      onChange={(e) => setChannelCategory(e.target.value)}
+                      disabled={channelLoading || setupLoading}
+                    >
+                      {!categories.length && (
+                        <option value="">Chưa tải lĩnh vực</option>
+                      )}
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field sample-limit">
+                    <label htmlFor="max-videos">Số video</label>
+                    <select
+                      id="max-videos"
+                      value={maxVideos}
+                      onChange={(e) => setMaxVideos(Number(e.target.value))}
+                      disabled={channelLoading}
+                    >
+                      {[10, 20, 50].map((n) => (
+                        <option key={n} value={n}>
+                          {n} video
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <button
-                    key={idx}
-                    type="button"
-                    className="badge"
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => handleSearchChannel(item.username)}
+                    className="button primary"
+                    disabled={
+                      channelLoading ||
+                      setupLoading ||
+                      !!setupError ||
+                      !workspace?.scraperConfigured
+                    }
                   >
-                    @{item.username} ({item.label})
+                    {channelLoading ? (
+                      <LoaderCircle size={18} className="spin" />
+                    ) : (
+                      <Search size={18} />
+                    )}
+                    {channelLoading ? "Đang phân tích…" : "Phân tích kênh"}
+                  </button>
+                </div>
+              </form>
+              <p className="hint">
+                Hỗ trợ tên kênh và link hồ sơ đầy đủ. Kết quả phụ thuộc nguồn dữ
+                liệu đang được cấu hình.
+              </p>
+            </section>
+            {channelError && <Notice>{channelError}</Notice>}
+            {channelLoading && (
+              <p role="status" className="loading-line">
+                <LoaderCircle size={18} className="spin" /> Đang lấy hồ sơ và
+                các video của kênh…
+              </p>
+            )}
+            {channel && (
+              <>
+                <section className="channel-summary">
+                  <div>
+                    <h2>{channel.nickname || `@${channel.tiktokUsername}`}</h2>
+                    <p className="muted">
+                      @{channel.tiktokUsername} · Cập nhật{" "}
+                      {formatDate(channel.lastScrapedAt)}
+                    </p>
+                    {channel.bio && (
+                      <p className="channel-bio">{channel.bio}</p>
+                    )}
+                  </div>
+                  <dl className="channel-stats">
+                    <div>
+                      <dt>Người theo dõi</dt>
+                      <dd>{formatNumber(channel.followersCount)}</dd>
+                    </div>
+                    <div>
+                      <dt>Tổng lượt thích</dt>
+                      <dd>{formatNumber(channel.totalLikes)}</dd>
+                    </div>
+                    <div>
+                      <dt>Video trên kênh</dt>
+                      <dd>{formatNumber(channel.totalVideos)}</dd>
+                    </div>
+                  </dl>
+                </section>
+                <div className="section-toolbar">
+                  <div>
+                    <h2>
+                      Video nổi bật{" "}
+                      <span className="muted">({videos.length})</span>
+                    </h2>
+                    <p className="hint">
+                      ER = (thích + bình luận + chia sẻ) / lượt xem × 100%. Xếp
+                      hạng trong số video đã lấy.
+                    </p>
+                  </div>
+                  <label className="sort-label">
+                    Sắp xếp
+                    <select
+                      value={sort}
+                      onChange={(e) => setSort(e.target.value)}
+                    >
+                      <option value="engagementRate">Tương tác cao nhất</option>
+                      <option value="viewCount">Lượt xem cao nhất</option>
+                    </select>
+                  </label>
+                </div>
+                {videoError && (
+                  <Notice onRetry={retryVideos}>{videoError}</Notice>
+                )}
+                {!videos.length && !channelLoading && !videoError && (
+                  <EmptyState title="Chưa tìm thấy video">
+                    Thử một kênh khác hoặc phân tích lại sau.
+                  </EmptyState>
+                )}
+                <div className="video-list">
+                  {sortedVideos.map((video, i) => (
+                    <article className="video-row" key={video.id}>
+                      <span className="video-rank">{i + 1}</span>
+                      <div className="video-description">
+                        <h3>{video.caption || "Video chưa có mô tả"}</h3>
+                        <div className="meta">
+                          <span>{video.durationSeconds ?? "—"} giây</span>
+                          <span>{formatDate(video.videoPublishedAt)}</span>
+                          {safeVideoUrl(video.videoUrl) && (
+                            <a
+                              href={safeVideoUrl(video.videoUrl)}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Xem trên TikTok <ExternalLink size={13} />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      <dl className="video-metrics">
+                        <div>
+                          <dt>Lượt xem</dt>
+                          <dd>{formatNumber(video.viewCount)}</dd>
+                        </div>
+                        <div>
+                          <dt>Tương tác</dt>
+                          <dd>
+                            {Number(video.engagementRate || 0).toLocaleString(
+                              "vi-VN",
+                              { maximumFractionDigits: 2 },
+                            )}
+                            %
+                          </dd>
+                        </div>
+                      </dl>
+                      <button
+                        className="button secondary"
+                        disabled={generating}
+                        onClick={() => selectReference(video)}
+                      >
+                        {draft.references.some((v) => v.id === video.id) ? (
+                          <Check size={16} />
+                        ) : (
+                          <Plus size={16} />
+                        )}
+                        {draft.references.some((v) => v.id === video.id)
+                          ? "Đã chọn"
+                          : "Tham khảo"}
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              </>
+            )}
+            {!channel && !channelLoading && (
+              <EmptyState title="Bắt đầu từ một kênh bạn quan tâm">
+                Tìm cách mở đầu, nhịp kể chuyện và chủ đề được quan tâm. Chọn
+                video tham khảo để đưa vào brief của bạn.
+              </EmptyState>
+            )}
+          </div>
+        )}
+
+        {activeTab === "history" && (
+          <section aria-label="Kho kịch bản">
+            <div className="library-toolbar">
+              <div
+                className="filter-tabs"
+                role="group"
+                aria-label="Lọc trạng thái"
+              >
+                {[
+                  ["DRAFT", "Bản nháp"],
+                  ["FAVORITE", "Yêu thích"],
+                  ["ARCHIVED", "Lưu trữ"],
+                  ["ALL", "Tất cả"],
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    aria-pressed={filter === value}
+                    className={
+                      filter === value
+                        ? "filter-button selected"
+                        : "filter-button"
+                    }
+                    onClick={() => {
+                      setFilter(value);
+                      setPage(1);
+                    }}
+                  >
+                    {label}
                   </button>
                 ))}
               </div>
-            </div>
-
-            {/* Thông tin kênh đối thủ */}
-            {channelData && (
-              <div className="card-panel" style={{ marginBottom: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    {channelData.avatarUrl ? (
-                      <img
-                        src={channelData.avatarUrl}
-                        alt={channelData.nickname || channelData.tiktokUsername}
-                        style={{
-                          width: '56px',
-                          height: '56px',
-                          borderRadius: '50%',
-                          objectFit: 'cover',
-                          border: '1px solid var(--border-subtle)'
-                        }}
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          width: '56px',
-                          height: '56px',
-                          borderRadius: '50%',
-                          backgroundColor: 'var(--surface-raised)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '20px',
-                          fontWeight: 700
-                        }}
-                      >
-                        {channelData.tiktokUsername?.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div>
-                      <h2 style={{ fontSize: '18px', fontWeight: 700 }}>
-                        @{channelData.tiktokUsername}
-                      </h2>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
-                        {channelData.nickname || 'Creator TikTok'} • {channelData.bio || 'Chưa có tiểu sử'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="stat-box">
-                    <div>
-                      <div className="stat-value">
-                        {(channelData.followersCount ?? channelData.followerCount ?? 0).toLocaleString()}
-                      </div>
-                      <div className="stat-label">NGƯỜI THEO DÕI</div>
-                    </div>
-                    <div>
-                      <div className="stat-value">
-                        {(channelData.totalLikes ?? channelData.likeCount ?? 0).toLocaleString()}
-                      </div>
-                      <div className="stat-label">LƯỢT THÍCH</div>
-                    </div>
-                    <div>
-                      <div className="stat-value" style={{ color: 'var(--brand-accent)' }}>
-                        {channelData.averageEngagementRate || '0.00'}%
-                      </div>
-                      <div className="stat-label">TỶ LỆ TƯƠNG TÁC (ER)</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Danh sách video */}
-            {topVideos.length > 0 && (
-              <div>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Flame size={16} color="var(--brand-primary)" />
-                  Video Có Tỷ Lệ Tương Tác Cao Nhất (Xếp theo độ viral)
-                </h3>
-
-                <div className="video-grid">
-                  {topVideos.map((vid) => (
-                    <div key={vid.id} className="video-card">
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                          <span className="badge" style={{ color: 'var(--brand-accent)' }}>
-                            ER: {vid.engagementRate || '0'}%
-                          </span>
-                          <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Eye size={13} /> <span className="tabular">{(vid.viewCount || 0).toLocaleString()}</span>
-                          </span>
-                        </div>
-                        <p style={{ fontSize: '14px', fontWeight: 500, marginBottom: '16px', lineHeight: 1.5 }}>
-                          {vid.caption || 'Video không có caption'}
-                        </p>
-                      </div>
-
-                      <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <ThumbsUp size={12} /> <span className="tabular">{(vid.likeCount || 0).toLocaleString()}</span>
-                          <span style={{ margin: '0 4px' }}>•</span>
-                          <MessageSquare size={12} /> <span className="tabular">{(vid.commentCount || 0).toLocaleString()}</span>
-                        </span>
-                        <button
-                          className="btn btn-secondary"
-                          style={{ padding: '8px 12px', fontSize: '12px' }}
-                          onClick={() => handleUseVideoInspiration(vid)}
-                        >
-                          Dùng ý tưởng
-                          <ChevronRight size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ============================================================== */}
-        {/* TAB 3: KHO KỊCH BẢN */}
-        {/* ============================================================== */}
-        {activeTab === 'history' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div>
-                <h2 style={{ fontSize: '18px', fontWeight: 700 }}>Kho Kịch Bản Của Bạn</h2>
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                  Toàn bộ các kịch bản bạn đã sinh bằng AI trong các phiên làm việc
-                </p>
-              </div>
-              <button className="btn btn-secondary" onClick={loadMyScripts} disabled={scriptsLoading}>
-                {scriptsLoading ? 'Đang tải…' : 'Làm mới danh sách'}
-              </button>
-            </div>
-
-            {myScripts.length === 0 ? (
-              <div className="card-panel" style={{ padding: '48px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                <Bookmark size={40} style={{ marginBottom: '12px', opacity: 0.3 }} />
-                <h3 style={{ fontSize: '16px', color: 'var(--text-primary)' }}>Chưa có kịch bản nào được lưu</h3>
-                <p style={{ marginTop: '8px', fontSize: '13px' }}>
-                  Hãy chuyển sang tab <strong>Xưởng Kịch Bản</strong> để tạo kịch bản đầu tiên cho video của bạn.
-                </p>
+              <div className="library-search">
+                <label className="input-with-icon">
+                  <Search size={17} />
+                  <input
+                    aria-label="Tìm kịch bản"
+                    placeholder="Tìm chủ đề hoặc người xem…"
+                    value={query}
+                    onChange={(e) => {
+                      setQuery(e.target.value);
+                      setPage(1);
+                    }}
+                  />
+                </label>
                 <button
-                  className="btn btn-primary"
-                  style={{ marginTop: '16px' }}
-                  onClick={() => setActiveTab('studio')}
+                  className="icon-button"
+                  aria-label="Làm mới kho kịch bản"
+                  disabled={scriptsLoading || generating || pending !== null}
+                  onClick={reloadScripts}
                 >
-                  Tạo Kịch Bản Ngay
+                  <RefreshCw
+                    size={18}
+                    className={scriptsLoading ? "spin" : ""}
+                  />
                 </button>
               </div>
-            ) : (
-              <div style={{ display: 'grid', gap: '12px' }}>
-                {myScripts.map((script) => (
-                  <div key={script.id} className="card-panel" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                        <span className="badge">
-                          {script.status === 'FAVORITE' ? 'Yêu thích' : 'Bản nháp'}
-                        </span>
-                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <Clock size={12} />
-                          ~{script.scriptStructure?.estimatedDurationSeconds || 35} giây
-                        </span>
-                      </div>
-                      <h4 style={{ fontSize: '15px', fontWeight: 600 }}>{script.title}</h4>
-                      <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                        Hook: "{script.scriptStructure?.hook3s}"
-                      </p>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '8px' }}>
+            </div>
+            <p className="library-description">
+              {filtered.length} kịch bản{scriptsLoading ? " · Đang tải…" : ""} ·
+              Kho dùng chung của tool.
+            </p>
+            {scriptsError && (
+              <Notice onRetry={reloadScripts}>{scriptsError}</Notice>
+            )}
+            {scriptsLoading && (
+              <p role="status" className="loading-line">
+                <LoaderCircle size={18} className="spin" /> Đang tải kho kịch
+                bản…
+              </p>
+            )}
+            {!scriptsLoading && !scriptsError && !filtered.length && (
+              <EmptyState
+                title={
+                  query || scripts.length
+                    ? "Chưa có kịch bản phù hợp"
+                    : "Kịch bản đầu tiên bắt đầu từ một ý tưởng"
+                }
+              >
+                {query || scripts.length
+                  ? "Thử một từ khóa khác hoặc chọn bộ lọc Tất cả."
+                  : "Tạo kịch bản trong xưởng. Mỗi kết quả sẽ được lưu tự động tại đây."}
+              </EmptyState>
+            )}
+            <div className="script-library">
+              {visibleScripts.map((item) => (
+                <article className="library-item" key={item.id}>
+                  <div className="meta">
+                    <span>{STATUS_LABELS[item.status]}</span>
+                    <span>{formatDate(item.createdAt)}</span>
+                    <span>
+                      {item.requestedDurationSeconds
+                        ? `Mục tiêu ${formatDuration(item.requestedDurationSeconds)}`
+                        : `Ước tính ${formatDuration(item.estimatedDurationSeconds)}`}
+                    </span>
+                  </div>
+                  <button
+                    className="script-title-button"
+                    onClick={() => openScript(item)}
+                  >
+                    <h2>{item.title}</h2>
+                  </button>
+                  <p className="muted audience-summary">
+                    {item.targetAudience}
+                  </p>
+                  <div className="library-item-footer">
+                    <button
+                      className="text-button"
+                      onClick={() => openScript(item)}
+                    >
+                      Mở kịch bản <ArrowRight size={14} />
+                    </button>
+                    <div className="actions">
                       <button
-                        className="btn btn-primary"
-                        style={{ padding: '8px 16px', fontSize: '14px' }}
-                        onClick={() => {
-                          setGeneratedScript(script);
-                          setActiveTab('studio');
-                        }}
-                      >
-                        Mở Xem Kịch Bản
-                      </button>
-                      <button
-                        className="btn btn-secondary"
-                        style={{ padding: '8px 12px' }}
-                        onClick={() => handleToggleFavorite(script.id, script.status)}
-                        title="Lưu yêu thích"
+                        className="icon-button"
+                        aria-label={
+                          item.status === "FAVORITE"
+                            ? `Bỏ yêu thích ${item.title}`
+                            : `Yêu thích ${item.title}`
+                        }
+                        aria-pressed={item.status === "FAVORITE"}
+                        disabled={pending !== null}
+                        onClick={() =>
+                          changeStatus(
+                            item,
+                            item.status === "FAVORITE" ? "DRAFT" : "FAVORITE",
+                          )
+                        }
                       >
                         <Bookmark
-                          size={14}
-                          color={script.status === 'FAVORITE' ? 'var(--brand-primary)' : 'currentColor'}
-                          fill={script.status === 'FAVORITE' ? 'var(--brand-primary)' : 'none'}
+                          size={17}
+                          fill={
+                            item.status === "FAVORITE" ? "currentColor" : "none"
+                          }
                         />
+                      </button>
+                      <button
+                        className="icon-button"
+                        aria-label={
+                          item.status === "ARCHIVED"
+                            ? `Khôi phục ${item.title}`
+                            : `Lưu trữ ${item.title}`
+                        }
+                        disabled={pending !== null}
+                        onClick={() =>
+                          changeStatus(
+                            item,
+                            item.status === "ARCHIVED" ? "DRAFT" : "ARCHIVED",
+                          )
+                        }
+                      >
+                        {item.status === "ARCHIVED" ? (
+                          <RefreshCw size={17} />
+                        ) : (
+                          <Archive size={17} />
+                        )}
                       </button>
                     </div>
                   </div>
-                ))}
+                </article>
+              ))}
+            </div>
+            {pages > 1 && (
+              <div className="pagination">
+                <button
+                  className="button secondary"
+                  disabled={currentPage === 1}
+                  onClick={() => setPage(currentPage - 1)}
+                >
+                  <ChevronLeft size={16} />
+                  Trước
+                </button>
+                <span>
+                  Trang {currentPage}/{pages}
+                </span>
+                <button
+                  className="button secondary"
+                  disabled={currentPage === pages}
+                  onClick={() => setPage(currentPage + 1)}
+                >
+                  Sau
+                  <ChevronRight size={16} />
+                </button>
               </div>
             )}
+          </section>
+        )}
+        <footer className="app-footer">
+          <span>© 2026 TonyDuongg · <a href="https://github.com/TonyDuongg/tiktok-content-intelligence/blob/main/LICENSE" target="_blank" rel="noreferrer">MIT License</a></span>
+          <nav aria-label="Liên kết dự án" className="footer-links">
+            <a href="https://github.com/TonyDuongg/tiktok-content-intelligence" target="_blank" rel="noreferrer">Mã nguồn</a>
+            <a href="https://github.com/TonyDuongg/tiktok-content-intelligence/releases/latest" target="_blank" rel="noreferrer">Tải cho Windows</a>
+          </nav>
+        </footer>
+      </main>
+      <div className="toast-region" role="status" aria-live="polite">
+        {toast && (
+          <div className="toast">
+            <Check size={18} />
+            <span>{toast}</span>
+            <button
+              className="icon-button"
+              onClick={() => setToast("")}
+              aria-label="Đóng thông báo"
+            >
+              <X size={15} />
+            </button>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

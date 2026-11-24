@@ -8,9 +8,12 @@ import com.tiktok.intelligence.repository.TikTokChannelRepository;
 import com.tiktok.intelligence.repository.TikTokVideoRepository;
 import com.tiktok.intelligence.service.scraper.DataIngestionService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Pattern;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/channels")
 @RequiredArgsConstructor
-@SecurityRequirement(name = "BearerAuth")
+@Validated
 @Tag(name = "Channels & Videos", description = "TikTok competitor channels, video ingestion, and engagement metrics")
 public class ChannelController {
 
@@ -31,9 +34,9 @@ public class ChannelController {
     @PostMapping("/ingest")
     @Operation(summary = "Ingest TikTok channel data", description = "Scrapes channel profile, videos, calculates engagement rates, and uploads raw JSON to AWS S3")
     public ResponseEntity<ApiResponse<TikTokChannel>> ingestChannel(
-            @RequestParam String username,
+            @RequestParam @Pattern(regexp = "@?[A-Za-z0-9._]{2,24}", message = "Tên kênh gồm 2–24 chữ cái, số, dấu chấm hoặc gạch dưới") String username,
             @RequestParam(required = false) Long categoryId,
-            @RequestParam(defaultValue = "10") int maxVideos
+            @RequestParam(defaultValue = "10") @Min(1) @Max(50) int maxVideos
     ) {
         TikTokChannel channel = dataIngestionService.ingestChannelData(username, categoryId, maxVideos);
         return ResponseEntity.ok(ApiResponse.success(channel, "Channel ingested successfully"));
@@ -52,7 +55,7 @@ public class ChannelController {
     @Operation(summary = "Get top viral videos for channel", description = "Returns top performing videos sorted by engagement rate descending")
     public ResponseEntity<ApiResponse<List<TikTokVideo>>> getTopVideos(
             @PathVariable String username,
-            @RequestParam(defaultValue = "5") int limit
+            @RequestParam(defaultValue = "5") @Min(1) @Max(50) int limit
     ) {
         String cleanUsername = username.replace("@", "").trim().toLowerCase();
         TikTokChannel channel = channelRepository.findByTiktokUsername(cleanUsername)

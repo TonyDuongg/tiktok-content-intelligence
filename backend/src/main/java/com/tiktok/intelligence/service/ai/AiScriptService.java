@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,17 +30,15 @@ public class AiScriptService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
 
-    @Value("${application.ai.provider:mock}")
+    @Value("${application.ai.provider:gemini}")
     private String activeProvider;
 
     public AiScriptGeneratorClient getActiveClient() {
         return aiClients.stream()
                 .filter(client -> client.supports(activeProvider))
                 .findFirst()
-                .orElseGet(() -> aiClients.stream()
-                        .filter(c -> c.supports("mock"))
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalStateException("No valid AI script generator found.")));
+                .orElseThrow(() -> new com.tiktok.intelligence.exception.UpstreamServiceException(
+                        "Nhà cung cấp AI chưa hợp lệ. Cấu hình AI_PROVIDER=gemini hoặc bedrock."));
     }
 
     @Transactional
@@ -110,20 +109,25 @@ public class AiScriptService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
 
         Category category = null;
-        String nicheName = request.topic();
+        String contentBrief = request.topic().trim();
         if (request.categoryId() != null) {
-            category = categoryRepository.findById(request.categoryId()).orElse(null);
-            if (category != null) nicheName = category.getName();
+            category = categoryRepository.findById(request.categoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lĩnh vực đã chọn"));
+            contentBrief += "\nLĩnh vực: " + category.getName();
         }
 
         List<TikTokVideo> referenceVideos = new ArrayList<>();
         if (request.referenceVideoIds() != null && !request.referenceVideoIds().isEmpty()) {
-            referenceVideos = videoRepository.findAllById(request.referenceVideoIds());
+            List<Long> ids = request.referenceVideoIds().stream().distinct().toList();
+            referenceVideos = videoRepository.findAllById(ids);
+            if (referenceVideos.size() != ids.size()) {
+                throw new ResourceNotFoundException("Một số video tham khảo không còn tồn tại. Vui lòng chọn lại.");
+            }
         }
 
         AiScriptGeneratorClient aiClient = getActiveClient();
         GeneratedScriptDto generated = aiClient.generateScript(
-                nicheName, request.targetAudience(), request.tone(), referenceVideos
+                contentBrief, request.targetAudience(), request.tone(), referenceVideos, request.durationSeconds()
         );
 
         AiScript script = AiScript.builder()
@@ -137,18 +141,28 @@ public class AiScriptService {
                 .visualAndSoundCues(generated.visualAndSoundCues())
                 .suggestedHashtags(generated.suggestedHashtags())
                 .estimatedDurationSeconds(generated.estimatedDurationSeconds())
+                .requestedDurationSeconds(request.durationSeconds())
                 .aiModelName(generated.aiModelUsed())
                 .status(ScriptStatus.DRAFT)
                 .build();
 
         script = scriptRepository.save(script);
-        return ScriptDetailResponse.fromEntity(script, List.of());
+        List<ScriptReferenceVideo> references = new ArrayList<>();
+        for (TikTokVideo video : referenceVideos) {
+            references.add(referenceVideoRepository.save(ScriptReferenceVideo.builder()
+                    .script(script)
+                    .video(video)
+                    .insightNote("Video được người dùng chọn làm tham khảo về cấu trúc và cách mở đầu")
+                    .build()));
+        }
+        return ScriptDetailResponse.fromEntity(script, references);
     }
 
     @Transactional(readOnly = true)
     public ScriptDetailResponse getScriptDetail(Long scriptId, String userEmail) {
         AiScript script = scriptRepository.findById(scriptId)
                 .orElseThrow(() -> new ResourceNotFoundException("Script not found with ID: " + scriptId));
+        requireOwner(script, userEmail);
 
         List<ScriptReferenceVideo> refs = referenceVideoRepository.findByScriptId(scriptId);
         return ScriptDetailResponse.fromEntity(script, refs);
@@ -168,10 +182,17 @@ public class AiScriptService {
     public ScriptDetailResponse updateScriptStatus(Long scriptId, ScriptStatus newStatus, String userEmail) {
         AiScript script = scriptRepository.findById(scriptId)
                 .orElseThrow(() -> new ResourceNotFoundException("Script not found with ID: " + scriptId));
+        requireOwner(script, userEmail);
 
         script.setStatus(newStatus);
         script = scriptRepository.save(script);
         List<ScriptReferenceVideo> refs = referenceVideoRepository.findByScriptId(scriptId);
         return ScriptDetailResponse.fromEntity(script, refs);
+    }
+
+    private void requireOwner(AiScript script, String userEmail) {
+        if (script.getUser() == null || !script.getUser().getEmail().equals(userEmail)) {
+            throw new AccessDeniedException("Bạn không có quyền truy cập kịch bản này");
+        }
     }
 }

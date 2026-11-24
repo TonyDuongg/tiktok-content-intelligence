@@ -14,6 +14,7 @@ import com.tiktok.intelligence.service.storage.S3StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -31,21 +32,23 @@ public class DataIngestionService {
     private final CategoryRepository categoryRepository;
     private final S3StorageService s3StorageService;
 
+    @Value("${application.aws.archive-enabled:false}")
+    private boolean archiveEnabled;
+
     @Transactional
     public TikTokChannel ingestChannelData(String rawUsername, Long categoryId, int maxVideos) {
         String username = rawUsername.replace("@", "").trim().toLowerCase();
         log.info("Starting ingestion pipeline for channel: @{}, categoryId: {}", username, categoryId);
 
-        // 1. Scrape via active strategy (Mock or RapidAPI)
-        TikTokScraperClient client = scraperFactory.getScraperClient();
-        ScrapeResultDto scrapeResult = client.scrapeChannel(username, maxVideos);
-
-        // 2. Resolve Category
+        // Validate local input before spending an upstream API request.
         Category category = null;
         if (categoryId != null) {
             category = categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + categoryId));
         }
+
+        TikTokScraperClient client = scraperFactory.getScraperClient();
+        ScrapeResultDto scrapeResult = client.scrapeChannel(username, maxVideos);
 
         // 3. Save or Update TikTokChannel
         TikTokChannelProfileDto profile = scrapeResult.channel();
@@ -96,6 +99,7 @@ public class DataIngestionService {
         log.info("Successfully persisted {} videos for channel: @{}", savedVideos.size(), username);
 
         // 5. Upload Raw Scraping JSON to AWS S3 for audit and AI replay
+        if (!archiveEnabled) return channel;
         try {
             String s3Key = String.format("channels/%s/%d.json", username, System.currentTimeMillis());
             String s3Url = s3StorageService.uploadJsonPayload(s3Key, scrapeResult);

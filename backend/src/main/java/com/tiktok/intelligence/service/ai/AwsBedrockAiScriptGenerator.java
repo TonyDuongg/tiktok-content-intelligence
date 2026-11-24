@@ -1,6 +1,7 @@
 package com.tiktok.intelligence.service.ai;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tiktok.intelligence.exception.UpstreamServiceException;
 import com.tiktok.intelligence.domain.entity.TikTokVideo;
 import com.tiktok.intelligence.dto.ai.GeneratedScriptDto;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ import java.util.Map;
 public class AwsBedrockAiScriptGenerator implements AiScriptGeneratorClient {
 
     private final BedrockRuntimeClient bedrockRuntimeClient;
-    private final MockAiScriptGenerator fallbackMockGenerator;
+    private final GeneratedScriptParser parser;
     private final AiScriptPromptBuilder promptBuilder;
     private final ObjectMapper objectMapper;
 
@@ -35,15 +36,15 @@ public class AwsBedrockAiScriptGenerator implements AiScriptGeneratorClient {
     }
 
     @Override
-    public GeneratedScriptDto generateScript(String nicheName, String targetAudience, String tone, List<TikTokVideo> referenceVideos) {
+    public GeneratedScriptDto generateScript(String nicheName, String targetAudience, String tone, List<TikTokVideo> referenceVideos, int durationSeconds) {
         try {
             log.info("[AwsBedrock] Invoking Amazon Bedrock model '{}' for script generation...", modelId);
-            String prompt = promptBuilder.buildPrompt(nicheName, targetAudience, tone, referenceVideos);
+            String prompt = promptBuilder.buildPrompt(nicheName, targetAudience, tone, referenceVideos, durationSeconds);
 
             // Construct payload for Anthropic Claude via Amazon Bedrock
             Map<String, Object> requestBody = Map.of(
                     "anthropic_version", "bedrock-2023-05-31",
-                    "max_tokens", 1024,
+                    "max_tokens", Math.min(8192, Math.max(2048, durationSeconds * 16)),
                     "temperature", 0.7,
                     "messages", List.of(
                             Map.of("role", "user", "content", prompt)
@@ -71,25 +72,15 @@ public class AwsBedrockAiScriptGenerator implements AiScriptGeneratorClient {
             int endIdx = textResponse.lastIndexOf("}");
             if (startIdx >= 0 && endIdx > startIdx) {
                 String cleanJson = textResponse.substring(startIdx, endIdx + 1);
-                var scriptDto = objectMapper.readValue(cleanJson, GeneratedScriptDto.class);
-                return new GeneratedScriptDto(
-                        scriptDto.title(),
-                        scriptDto.targetAudience(),
-                        scriptDto.hook3s(),
-                        scriptDto.bodyContent(),
-                        scriptDto.callToAction(),
-                        scriptDto.visualAndSoundCues(),
-                        scriptDto.suggestedHashtags(),
-                        scriptDto.estimatedDurationSeconds(),
-                        modelId
-                );
+                return parser.parse(cleanJson, modelId);
             }
 
-            return fallbackMockGenerator.generateScript(nicheName, targetAudience, tone, referenceVideos);
+            throw new UpstreamServiceException("Bedrock trả về nội dung chưa đầy đủ. Vui lòng thử lại.");
 
         } catch (Exception e) {
-            log.warn("[AwsBedrock] Failed to invoke Bedrock model: {}. Smoothly falling back to Mock AI Generator.", e.getMessage());
-            return fallbackMockGenerator.generateScript(nicheName, targetAudience, tone, referenceVideos);
+            log.warn("[AwsBedrock] Request failed ({})", e.getClass().getSimpleName());
+            if (e instanceof UpstreamServiceException upstream) throw upstream;
+            throw new UpstreamServiceException("Không gọi được AWS Bedrock. Kiểm tra quyền truy cập, model và vùng AWS.");
         }
     }
 }
