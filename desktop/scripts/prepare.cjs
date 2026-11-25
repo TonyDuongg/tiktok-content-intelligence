@@ -54,6 +54,7 @@ async function main() {
   fs.mkdirSync(cache, { recursive: true });
   const npm = process.env.npm_execpath || path.join(path.dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js');
   const frontendEnv = { ...process.env, VITE_API_BASE_URL: '' };
+  run(process.execPath, [path.join(__dirname, 'check-language.cjs')]);
   run(process.execPath, ['--test', ...fs.readdirSync(desktop).filter((name) => name.endsWith('.test.cjs')).map((name) => path.join(desktop, name))]);
   run(process.execPath, [npm, '--prefix', 'frontend', 'run', 'lint']);
   run(process.execPath, [npm, '--prefix', 'frontend', 'test']);
@@ -68,18 +69,18 @@ async function main() {
   });
   const guide = [
     'CREATOR STUDIO — WINDOWS X64', '',
-    '1. Giải nén toàn bộ ZIP vào một thư mục.',
-    '2. Mở Creator Studio.exe. Không cần cài Java, Node.js, PostgreSQL hay Docker.',
-    '3. Nhập khóa Gemini và RapidAPI của bạn trong Cài đặt. Không cần đăng nhập ứng dụng.',
-    '4. Tạo kịch bản và nghiên cứu TikTok cần Internet. Kịch bản đã tạo lưu trên máy.', '',
-    'Dữ liệu: %APPDATA%\\Creator Studio',
-    'Mở Cài đặt / Thư mục dữ liệu để xem cơ sở dữ liệu và nhật ký.',
-    'Đóng ứng dụng trước khi sao lưu dữ liệu. Khóa API được mã hóa theo tài khoản Windows;',
-    'khi chuyển máy, chỉ sao chép thư mục data và nhập lại khóa trong Cài đặt.',
-    'Bản portable không tự chuyển thư viện PostgreSQL của bản web.', '',
-    'Java: Eclipse Temurin 21. Giấy phép và thông báo nằm trong resources\\java.',
-    'Bản Windows x64 chưa có chữ ký số. Chưa hỗ trợ macOS/Linux.',
-    'Hướng dẫn chi tiết: resources\\HUONG-DAN.md.', '',
+    '1. Extract the entire ZIP to a folder.',
+    '2. Open Creator Studio.exe. Java, Node.js, PostgreSQL and Docker are not required.',
+    '3. Enter your Gemini and RapidAPI keys in Settings. No app login is required.',
+    '4. Script generation and TikTok research need Internet access. Saved scripts remain on your computer.', '',
+    'Data: %APPDATA%\\Creator Studio',
+    'Open Settings / Data folder to find the database and logs.',
+    'Close the app before backing up data. API keys are encrypted for your Windows account;',
+    'when moving computers, copy only the data folder and re-enter keys in Settings.',
+    'The portable app does not automatically import the web PostgreSQL library.', '',
+    'Java: Eclipse Temurin 21. Licenses and notices are in resources\\java.',
+    'The Windows x64 build is unsigned. macOS/Linux packages are not available.',
+    'Full guide: resources\\DESKTOP.md.', '',
   ].join('\r\n');
   fs.writeFileSync(path.join(runtime, 'README.txt'), guide, 'utf8');
   console.log('Desktop runtime prepared. Personal .env files, databases and logs were not copied.');

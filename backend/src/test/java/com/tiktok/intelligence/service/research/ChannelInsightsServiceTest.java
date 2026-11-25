@@ -31,7 +31,7 @@ class ChannelInsightsServiceTest {
         assertThat(result.contentMatchPercent()).isEqualTo(33);
         assertThat(result.matchedKeywords()).containsExactly("kem chống nắng");
         assertThat(result.unmatchedKeywords()).containsExactly("da");
-        assertThat(result.limitations()).anyMatch(s -> s.contains("không phải tỷ lệ khách hàng thực tế"));
+        assertThat(result.limitations()).anyMatch(s -> s.contains("does not measure actual audience overlap"));
     }
 
     @Test void withholdsScoreForTinySampleAndDoesNotRecommendExcludedOrUnmatchedContent() {
@@ -77,7 +77,7 @@ class ChannelInsightsServiceTest {
                 List.of(point(increasing, -7200, 1000), point(increasing, 0, 5000)));
         assertThat(result.experiments()).hasSize(1);
         assertThat(result.experiments().getFirst().reference().videoId()).isEqualTo(2L);
-        assertThat(result.experiments().getFirst().rationale()).contains("lượt xem/giờ");
+        assertThat(result.experiments().getFirst().rationale()).contains("views/hour");
     }
 
     private VideoObservation point(TikTokVideo v, long seconds, long views) {

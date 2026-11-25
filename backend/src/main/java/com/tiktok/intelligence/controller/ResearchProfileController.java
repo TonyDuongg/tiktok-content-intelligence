@@ -35,11 +35,11 @@ public class ResearchProfileController {
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         profiles.delete(find(id));
-        return ApiResponse.success(null, "Đã xóa hồ sơ.");
+        return ApiResponse.success(null, "Profile deleted.");
     }
 
     private ResearchProfile find(Long id) {
-        return profiles.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ khách hàng."));
+        return profiles.findById(id).orElseThrow(() -> new ResourceNotFoundException("Audience profile not found."));
     }
 
     private ResearchProfile save(ResearchProfile profile, ResearchProfileRequest input) {

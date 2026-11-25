@@ -1,14 +1,10 @@
-# Phát hành Creator Studio
+# Publishing Creator Studio
 
-Bản quyền © 2026 TonyDuongg. Mã nguồn sử dụng [MIT License](../LICENSE); các bản phân phối phải giữ thông báo bản quyền và giấy phép. MIT cho phép cả mục đích thương mại. Xem [thông báo thành phần bên thứ ba](../THIRD-PARTY-NOTICES.md).
+The project is licensed under MIT, copyright © 2026 TonyDuongg. Keep the copyright and license in redistributed copies and retain third-party notices. All product UI, errors, documentation and release notes must be written in English. User content can use any supported language.
 
-## Bản Windows
+## GitHub and Windows
 
-[Trang tải bản phát hành mới nhất](https://github.com/TonyDuongg/tiktok-content-intelligence/releases/latest).
-
-Mỗi release bao gồm ZIP Windows x64, mã SHA-256, `LICENSE.txt` và hướng dẫn. Người tải không cần tài khoản ứng dụng. Khóa API và dữ liệu riêng không nằm trong tệp phát hành.
-
-Để dựng bản mới trên Windows, cài Node.js 24 và JDK 21, rồi chạy:
+The public repository is [TonyDuongg/tiktok-content-intelligence](https://github.com/TonyDuongg/tiktok-content-intelligence). Build on Windows with Node.js 24 and JDK 21:
 
 ```powershell
 npm ci
@@ -16,46 +12,32 @@ npm --prefix frontend ci
 npm run desktop:build
 ```
 
-Thay đổi `version` trong `package.json` và cập nhật lockfile trước khi phát hành phiên bản mới. Không ghi đè release cũ bằng chương trình khác phiên bản. Kiểm tra `docs/DESKTOP.md` và bản ZIP trước khi tải lên GitHub Releases. Bản hiện tại chưa ký số.
+Bump the package version and lockfile for each binary release. Write English notes in `docs/RELEASE-v<version>.md`. Generate a SHA-256 checksum for the resulting ZIP. Check the archive, launch it with isolated data, and run secret scans before publishing. Never include `.env`, API keys, databases, logs or developer caches.
 
-Workflow **Windows release** trong GitHub Actions cho phép dựng lại từ mã nguồn. Mặc định workflow chỉ tạo artifact. Chỉ bật **Publish a new GitHub release** khi muốn tạo bản phát hành công khai mới.
+The **Windows release** GitHub Actions workflow builds and verifies the package. Its optional publish input creates a new release with the version's checked-in notes, ZIP, checksum, license and third-party notices. Never replace a published archive silently; issue a new version. Historical binaries retain their original interface language even when their release descriptions are translated.
 
-## Bản web trên Railway
+Users download from [GitHub Releases](https://github.com/TonyDuongg/tiktok-content-intelligence/releases/latest), extract the full ZIP and launch `Creator Studio.exe`. The portable build is unsigned and does not auto-update. See [Windows instructions](DESKTOP.md).
 
-Đã chuẩn bị `Dockerfile`, `.dockerignore`, `railway.json` và profile Spring `production`. Repository không chứa khóa API thật. Việc triển khai cần tài khoản hosting đang hoạt động; đây là cấu hình triển khai, không đồng nghĩa website đã online.
+## Hosting the web version
 
-1. Tạo project Railway, thêm PostgreSQL.
-2. Thêm service từ repository `TonyDuongg/tiktok-content-intelligence`, nhánh `main`, thư mục gốc `/`.
-3. Giữ Dockerfile ở gốc project. Image biên dịch React và đưa giao diện vào Spring Boot, nên chỉ cần một service ứng dụng.
-4. Đặt các biến môi trường sau trên **service ứng dụng**. Thay `Postgres` bằng đúng tên service database nếu khác:
+Windows distribution and web hosting are separate. A public repository or release does not automatically create a live website. Railway requires an eligible account with billing/usage available; deployment is pending while that requirement is unmet.
 
-```text
+For Railway, connect the repository, add PostgreSQL and configure the app service's server-side variables:
+
+```dotenv
 SPRING_PROFILES_ACTIVE=production
 SPRING_DATASOURCE_URL=jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}
 SPRING_DATASOURCE_USERNAME=${{Postgres.PGUSER}}
 SPRING_DATASOURCE_PASSWORD=${{Postgres.PGPASSWORD}}
 AI_PROVIDER=gemini
-GEMINI_API_KEY=<khóa Gemini của chủ website>
-GEMINI_MODEL=<model được khóa API cấp quyền>
+GEMINI_API_KEY=<site-owner-key>
+GEMINI_MODEL=<authorized-model>
 SCRAPER_PROVIDER=rapidapi
-RAPIDAPI_KEY=<khóa RapidAPI của chủ website>
+RAPIDAPI_KEY=<site-owner-key>
 S3_ARCHIVE_ENABLED=false
 SQS_WORKER_ENABLED=false
 ```
 
-5. Triển khai, chờ `/actuator/health` trả trạng thái `UP`, sau đó dùng **Settings → Networking → Generate Domain** để tạo địa chỉ công khai. Spring tự đọc biến `PORT` của Railway.
-6. Kiểm tra danh mục, kho kịch bản, tạo kịch bản và nghiên cứu kênh trên địa chỉ mới.
+Use the repository Dockerfile and Railway configuration. Verify the deployment health endpoint returns `UP`, confirm the service uses Railway's injected `PORT`, then generate a public domain. Use the production profile online; the desktop profile is for a local app.
 
-Không dùng profile `desktop` khi chạy trên hosting: profile đó chỉ lắng nghe trên máy cục bộ và dùng H2. Maven profile `bundle-web` chỉ đóng gói giao diện, khác với runtime profile `production`.
-
-Bản web được thiết kế theo lựa chọn của chủ dự án: **không đăng nhập, dùng chung kho kịch bản và khóa API của máy chủ**. Người truy cập có thể xem và thay đổi trạng thái các kịch bản trong kho chung. Không nhập thông tin cần giữ riêng vào bản public. Chi phí gọi API sử dụng hạn mức của chủ website. Dữ liệu web và dữ liệu bản Windows không tự đồng bộ.
-
-Mọi khóa API phải đặt trong biến môi trường hosting; không đưa vào `VITE_*`, mã frontend, Docker build arguments hoặc commit Git.
-
-## Kiểm tra Docker cục bộ
-
-```powershell
-docker build -t creator-studio:latest .
-```
-
-Khi chạy container, cung cấp kết nối PostgreSQL và các biến API bằng tệp môi trường riêng hoặc cấu hình môi trường của Docker. Không commit tệp đó. Container phục vụ cả UI và API, mặc định cổng 8080; healthcheck ở `/actuator/health`.
+The web deployment has a shared workspace without login. Its owner supplies provider keys and pays for requests. Plan workspace quotas, backups and concurrency limits before broad distribution. Set secrets in the hosting provider's environment, never in frontend `VITE_*` variables or source control. Desktop users instead supply their own keys in Settings.

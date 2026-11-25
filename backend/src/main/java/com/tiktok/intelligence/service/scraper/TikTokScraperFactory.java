@@ -22,6 +22,6 @@ public class TikTokScraperFactory {
                 .filter(client -> client.supports(activeProvider))
                 .findFirst()
                 .orElseThrow(() -> new com.tiktok.intelligence.exception.UpstreamServiceException(
-                        "Nguồn TikTok chưa hợp lệ. Cấu hình SCRAPER_PROVIDER=rapidapi."));
+                        "Invalid TikTok provider. Set SCRAPER_PROVIDER=rapidapi."));
     }
 }

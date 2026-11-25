@@ -75,12 +75,12 @@ public class AwsBedrockAiScriptGenerator implements AiScriptGeneratorClient {
                 return parser.parse(cleanJson, modelId);
             }
 
-            throw new UpstreamServiceException("Bedrock trả về nội dung chưa đầy đủ. Vui lòng thử lại.");
+            throw new UpstreamServiceException("Bedrock returned incomplete content. Try again.");
 
         } catch (Exception e) {
             log.warn("[AwsBedrock] Request failed ({})", e.getClass().getSimpleName());
             if (e instanceof UpstreamServiceException upstream) throw upstream;
-            throw new UpstreamServiceException("Không gọi được AWS Bedrock. Kiểm tra quyền truy cập, model và vùng AWS.");
+            throw new UpstreamServiceException("Unable to call AWS Bedrock. Check permissions, the model and AWS region.");
         }
     }
 }

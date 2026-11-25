@@ -22,19 +22,19 @@ public class MockAiScriptGenerator implements AiScriptGeneratorClient {
     public GeneratedScriptDto generateScript(String nicheName, String targetAudience, String tone, List<TikTokVideo> referenceVideos, int durationSeconds) {
         log.info("[MockAiGenerator] Generating AI viral TikTok script for niche: '{}', audience: '{}'", nicheName, targetAudience);
 
-        String topic = (nicheName != null && !nicheName.isBlank()) ? nicheName.lines().findFirst().orElse("Ý tưởng video") : "Ý tưởng video";
+        String topic = (nicheName != null && !nicheName.isBlank()) ? nicheName.lines().findFirst().orElse("Video idea") : "Video idea";
 
         return new GeneratedScriptDto(
-                "Bản mẫu: " + topic.substring(0, Math.min(topic.length(), 160)),
-                targetAudience != null ? targetAudience : "Người xem TikTok Việt Nam",
-                "Bạn đang tìm hiểu về " + topic + "? Hãy bắt đầu từ điều này.",
-                "[3–10 giây] Nêu vấn đề thực tế liên quan đến chủ đề: " + topic + ".\n\n"
-                        + "[10–25 giây] Trình bày 2–3 ý chính, mỗi ý đi kèm một ví dụ bạn đã kiểm chứng.\n\n"
-                        + "[25–30 giây] Minh họa cách áp dụng và nhắc lại ý quan trọng nhất.\n\n"
-                        + "Đây là khung minh họa, hãy bổ sung nội dung thực tế trước khi quay.",
-                "Lưu lại để thử và chia sẻ trải nghiệm của bạn trong phần bình luận.",
-                "Cận mặt khi mở đầu. Chuyển sang cảnh minh họa theo từng ý chính; thêm phụ đề dễ đọc và nhạc nền nhỏ hơn giọng nói.",
-                List.of("#sangtaonoidung", "#chiasekienthuc"),
+                "Sample: " + topic.substring(0, Math.min(topic.length(), 160)),
+                targetAudience != null ? targetAudience : "TikTok viewers",
+                "Exploring " + topic + "? Start here.",
+                "[3–10 sec] Introduce a practical problem about: " + topic + ".\n\n"
+                        + "[10–25 sec] Share 2–3 points, each supported by a verified example.\n\n"
+                        + "[25–30 sec] Demonstrate an application and recap the main point.\n\n"
+                        + "This is a test sample. Add real content before filming.",
+                "Save this to try and share your experience in the comments.",
+                "Open with a close-up. Illustrate each point with readable captions and quiet background music.",
+                List.of("#contentcreation", "#learning"),
                 durationSeconds,
                 "mock-template"
         );

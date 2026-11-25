@@ -55,6 +55,6 @@ public class GeneratedScriptParser {
     }
 
     private UpstreamServiceException invalid() {
-        return new UpstreamServiceException("AI trả về kịch bản chưa đầy đủ. Vui lòng thử lại; kết quả lỗi chưa được lưu.");
+        return new UpstreamServiceException("AI returned an incomplete script. Try again; the invalid result was not saved.");
     }
 }

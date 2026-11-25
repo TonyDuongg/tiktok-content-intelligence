@@ -29,6 +29,7 @@ jobs:
           npm ci
           npx agent-redact .
           npm test
+          npm run check:language
 
       - name: Setup Java 21 JDK (Temurin)
         uses: actions/setup-java@v4

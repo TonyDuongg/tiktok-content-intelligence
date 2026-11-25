@@ -41,9 +41,9 @@ public class ChannelInsightsService {
     @Transactional(readOnly = true)
     public Report get(String username, Long profileId) {
         TikTokChannel channel = channels.findByTiktokUsername(username.replace("@", "").strip().toLowerCase(Locale.ROOT))
-                .orElseThrow(() -> new ResourceNotFoundException("Kênh chưa được lưu. Hãy phân tích kênh trước."));
+                .orElseThrow(() -> new ResourceNotFoundException("Channel not saved. Analyze the channel first."));
         ResearchProfile profile = profiles.findById(profileId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ khách hàng."));
+                .orElseThrow(() -> new ResourceNotFoundException("Audience profile not found."));
         List<TikTokVideo> sample = videos.findRecentForInsights(channel.getId(), PageRequest.of(0, 50));
         Instant now = Instant.now();
         List<VideoObservation> history = sample.isEmpty() ? List.of()
@@ -67,7 +67,7 @@ public class ChannelInsightsService {
         if ((required && values.isEmpty()) || values.size() > 15
                 || values.stream().anyMatch(t -> normalize(t).length() < 2 || t.length() > 80)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Nhập 1–15 từ khóa, mỗi từ khóa dài 2–80 ký tự, phân cách bằng dấu phẩy.");
+                    "Enter 1–15 comma-separated keywords, each 2–80 characters long.");
         }
     }
 
@@ -103,14 +103,14 @@ public class ChannelInsightsService {
         List<DurationGroup> durations = durations(sample);
         List<Growth> growth = growth(sample, history, now);
         List<String> limits = new ArrayList<>(List.of(
-                "Tỷ lệ khớp là số video chứa từ khóa / số video có mô tả, hashtag hoặc bản chép lời. Đây không phải tỷ lệ khách hàng thực tế; chưa nhận diện từ đồng nghĩa.",
-                "Tệp quan tâm chỉ là giả thuyết từ nội dung công khai. Không xác định được tuổi, giới tính, thu nhập, nơi ở hay tỷ lệ mua hàng của người xem kênh khác.",
-                "Mẫu gồm tối đa 50 video đã lưu gần đây theo ngày đăng; có thể thiếu video. Lượt xem tích lũy phụ thuộc tuổi video, không chứng minh chủ đề hoặc hashtag gây tăng trưởng.",
-                "Gợi ý là thử nghiệm nội dung, không phải xác suất lên xu hướng. Chưa có dữ liệu giữ chân, xem hết, chuyển đổi hoặc xu hướng toàn TikTok."));
-        if (described.size() < 10) limits.add("Mẫu còn ít hơn 10 video có nội dung đọc được; cần bổ sung trước khi kết luận về kênh.");
+                "Content match equals keyword-matching videos divided by videos with captions, hashtags or transcripts. It does not measure actual audience overlap and does not detect synonyms.",
+                "Interest groups are hypotheses based on public content. Another channel's viewer age, gender, income, location and purchase rate cannot be determined.",
+                "The sample includes up to 50 saved videos ordered by publication date and may be incomplete. Lifetime views depend on video age and do not prove that a topic or hashtag caused growth.",
+                "Suggestions are content experiments, not probabilities of trending. Retention, completion, conversion and platform-wide trend data are unavailable."));
+        if (described.size() < 10) limits.add("Fewer than 10 videos have readable content. Collect more data before drawing conclusions.");
         if (channel.getLastScrapedAt() == null || channel.getLastScrapedAt().isBefore(now.minus(Duration.ofDays(7))))
-            limits.add("Dữ liệu kênh đã cũ hoặc chưa rõ thời điểm thu thập. Cập nhật kênh để đánh giá lại.");
-        if (growth.isEmpty()) limits.add("Chưa đo được tăng trưởng: cần ít nhất hai lần cập nhật cùng video cách nhau tối thiểu 1 giờ, trong 30 ngày gần nhất. Không suy tốc độ tăng từ lượt xem tích lũy.");
+            limits.add("Channel data is stale or its collection time is unknown. Refresh the channel to reassess it.");
+        if (growth.isEmpty()) limits.add("Growth requires two measurements of the same video at least 1 hour apart within the past 30 days. Growth is not inferred from lifetime views.");
         return new Report(channel.getTiktokUsername(), profile.getId(), profile.getName(), profile.getTargetAudience(),
                 profile.getOffering(), profile.getGoal(), channel.getLastScrapedAt(), now, sample.size(), described.size(), matching, fit,
                 matched, keywords.stream().filter(t -> !matched.contains(t)).toList(),
@@ -142,7 +142,7 @@ public class ChannelInsightsService {
             groups.computeIfAbsent(duration <= 30 ? 0 : duration <= 60 ? 1 : 2, ignored -> new ArrayList<>()).add(video);
         }
         return groups.entrySet().stream().map(e -> new DurationGroup(
-                List.of("Đến 30 giây", "31–60 giây", "Trên 60 giây").get(e.getKey()), e.getValue().size(), median(e.getValue()))).toList();
+                List.of("Up to 30 sec", "31–60 sec", "Over 60 sec").get(e.getKey()), e.getValue().size(), median(e.getValue()))).toList();
     }
 
     private long median(List<TikTokVideo> sample) {
@@ -181,14 +181,14 @@ public class ChannelInsightsService {
                         .reversed().thenComparing(Comparator.comparingLong(Evidence::views).reversed()))
                 .filter(v -> usedKeywords.add(normalize(v.matchedKeywords().getFirst())))
                 .limit(3).map(v -> {
-                    String topic = "Giải đáp một câu hỏi cụ thể về " + v.matchedKeywords().getFirst()
-                            + " cho " + profile.getTargetAudience();
+                    String topic = "Answer a specific question about " + v.matchedKeywords().getFirst()
+                            + " for " + profile.getTargetAudience();
                     return new Experiment(topic,
                             (rates.containsKey(v.videoId())
-                                    ? "Ưu tiên video đang tăng trung bình " + rates.get(v.videoId()).viewsPerHour() + " lượt xem/giờ giữa hai mốc đo"
-                                    : "Tham khảo video có " + v.views() + " lượt xem tích lũy") + " và chứa từ khóa “" + v.matchedKeywords().getFirst()
-                                    + "”. Đổi ví dụ sang sản phẩm hoặc trải nghiệm của bạn; không sao chép lời thoại.",
-                            "Thử hai cách mở đầu cho cùng một chủ đề và thời lượng. Đối chiếu giữ chân, tỷ lệ xem hết và hành động theo mục tiêu trong TikTok Studio sau cùng khoảng thời gian đăng.",
+                                    ? "Prioritize a video gaining an average of " + rates.get(v.videoId()).viewsPerHour() + " views/hour between two measurements"
+                                    : "Reference a video with " + v.views() + " lifetime views") + " containing the keyword “" + v.matchedKeywords().getFirst()
+                                    + "”. Adapt the example to your product or experience; do not copy the dialogue.",
+                            "Test two hooks for the same topic and duration. Compare retention, completion and goal actions in TikTok Studio over equal periods after publication.",
                             Math.max(15, Math.min(600, v.durationSeconds() == null ? 60 : v.durationSeconds())), v);
                 }).toList();
     }

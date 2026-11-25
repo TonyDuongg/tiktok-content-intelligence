@@ -14,7 +14,7 @@ class GeneratedScriptParserTest {
     void rejectsMissingContentInsteadOfInventingDefaults() {
         for (String body : new String[]{"not json", "{}", "{\"title\":\"Only title\"}"}) {
             assertThatThrownBy(() -> parser.parse(body, "gemini"))
-                    .isInstanceOf(UpstreamServiceException.class).hasMessageContaining("chưa đầy đủ");
+                    .isInstanceOf(UpstreamServiceException.class).hasMessageContaining("incomplete");
         }
     }
 

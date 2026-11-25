@@ -30,11 +30,11 @@ public class DataSeeder implements CommandLineRunner {
         if (categoryRepository.count() == 0) {
             log.info("Seeding initial TikTok categories...");
             List<Category> categories = List.of(
-                    Category.builder().name("Làm đẹp & Mỹ phẩm").slug("lam-dep-my-pham").description("Skincare, makeup, chăm sóc tóc và làm đẹp").build(),
-                    Category.builder().name("Thời trang & Phối đồ").slug("thoi-trang-phoi-do").description("OOTD, mix & match, xu hướng thời trang").build(),
-                    Category.builder().name("Ăn uống & Review món ngon").slug("an-uong-review").description("Ẩm thực đường phố, nhà hàng, công thức nấu ăn").build(),
-                    Category.builder().name("Công nghệ & Tiện ích").slug("cong-nghe-tien-ich").description("Review điện thoại, laptop, mẹo công nghệ").build(),
-                    Category.builder().name("Đời sống & Storytelling").slug("doi-song-storytelling").description("Góc nhìn cuộc sống, tâm sự, truyền cảm hứng").build()
+                    Category.builder().name("Beauty & cosmetics").slug("lam-dep-my-pham").description("Skincare, makeup, hair care and beauty").build(),
+                    Category.builder().name("Fashion & styling").slug("thoi-trang-phoi-do").description("OOTD, styling and fashion trends").build(),
+                    Category.builder().name("Food & reviews").slug("an-uong-review").description("Street food, restaurants and recipes").build(),
+                    Category.builder().name("Technology & gadgets").slug("cong-nghe-tien-ich").description("Phone and laptop reviews, technology tips").build(),
+                    Category.builder().name("Lifestyle & storytelling").slug("doi-song-storytelling").description("Life stories, personal experiences and inspiration").build()
             );
             categoryRepository.saveAll(categories);
             log.info("Seeded {} categories successfully.", categories.size());

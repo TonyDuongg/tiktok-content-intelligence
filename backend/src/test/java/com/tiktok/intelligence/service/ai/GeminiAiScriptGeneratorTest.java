@@ -56,7 +56,7 @@ class GeminiAiScriptGeneratorTest {
         when(response.statusCode()).thenReturn(429);
         when(http.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(response);
         assertThatThrownBy(() -> generator.generateScript("Topic", "Audience", "Tone", List.of()))
-                .isInstanceOf(UpstreamServiceException.class).hasMessageContaining("hạn mức");
+                .isInstanceOf(UpstreamServiceException.class).hasMessageContaining("quota");
     }
 
     @Test
@@ -66,7 +66,7 @@ class GeminiAiScriptGeneratorTest {
                 .thenThrow(new HttpTimeoutException("request timed out"));
         assertThatThrownBy(() -> generator.generateScript("Topic", "Audience", "Tone", List.of()))
                 .isInstanceOf(UpstreamServiceException.class)
-                .hasMessageContaining("sau 2 phút").hasMessageContaining("chưa được lưu");
+                .hasMessageContaining("within 2 minutes").hasMessageContaining("not saved");
         ArgumentCaptor<HttpRequest> request = ArgumentCaptor.forClass(HttpRequest.class);
         verify(http, times(1)).send(request.capture(), any(HttpResponse.BodyHandler.class));
         assertThat(request.getValue().timeout()).contains(Duration.ofSeconds(120));
@@ -78,7 +78,7 @@ class GeminiAiScriptGeneratorTest {
         when(http.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenThrow(new HttpConnectTimeoutException("connect timed out"));
         assertThatThrownBy(() -> generator.generateScript("Topic", "Audience", "Tone", List.of()))
-                .isInstanceOf(UpstreamServiceException.class).hasMessageContaining("Kiểm tra mạng");
+                .isInstanceOf(UpstreamServiceException.class).hasMessageContaining("Check your network");
     }
 
     @Test
@@ -89,7 +89,7 @@ class GeminiAiScriptGeneratorTest {
         when(response.body()).thenReturn("<html>upstream error</html>");
         when(http.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(response);
         assertThatThrownBy(() -> generator.generateScript("Topic", "Audience", "Tone", List.of()))
-                .isInstanceOf(UpstreamServiceException.class).hasMessageContaining("dữ liệu không hợp lệ");
+                .isInstanceOf(UpstreamServiceException.class).hasMessageContaining("invalid data");
     }
 
     @Test

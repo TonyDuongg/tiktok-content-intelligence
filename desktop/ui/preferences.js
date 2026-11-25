@@ -4,12 +4,12 @@ const showError = (message) => { $('error').textContent = message; $('error').hi
 window.desktopSettings.load().then((settings) => {
   $('gemini-model').value = settings.model;
   for (const [prefix, configured] of [['gemini', settings.geminiConfigured], ['rapid', settings.rapidApiConfigured]]) {
-    $(`${prefix}-status`).textContent = configured ? '· Đã lưu' : '';
-    $(`${prefix}-key`).placeholder = configured ? 'Để trống để giữ khóa đã lưu' : `Nhập khóa API ${prefix === 'gemini' ? 'Gemini' : 'RapidAPI'}`;
+    $(`${prefix}-status`).textContent = configured ? '· Saved' : '';
+    $(`${prefix}-key`).placeholder = configured ? 'Leave blank to keep the saved key' : `Enter your API key for ${prefix === 'gemini' ? 'Gemini' : 'RapidAPI'}`;
     $(`clear-${prefix}-label`).hidden = !configured;
   }
-  $('cancel').textContent = settings.firstRun ? 'Để sau' : 'Đóng';
-}).catch(() => showError('Không tải được cài đặt. Hãy đóng và mở lại cửa sổ này.'));
+  $('cancel').textContent = settings.firstRun ? 'Maybe later' : 'Close';
+}).catch(() => showError('Unable to load settings. Close and reopen this window.'));
 $('cancel').addEventListener('click', () => { if (!saving) void window.desktopSettings.close(); });
 $('data-folder').addEventListener('click', () => void window.desktopSettings.openFolder());
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !saving) void window.desktopSettings.close(); });
@@ -19,7 +19,7 @@ $('settings-form').addEventListener('submit', async (event) => {
   saving = true; showError('');
   const controls = [...document.querySelectorAll('input, button, summary')];
   controls.forEach((control) => { control.disabled = true; });
-  $('save').textContent = 'Đang lưu và kết nối lại…';
+  $('save').textContent = 'Saving and reconnecting…';
   try {
     const result = await window.desktopSettings.save({
       model: $('gemini-model').value, geminiKey: $('gemini-key').value, rapidApiKey: $('rapid-key').value,
@@ -27,6 +27,6 @@ $('settings-form').addEventListener('submit', async (event) => {
     });
     if (result.error) { showError(result.error); return; }
     await window.desktopSettings.close();
-  } catch { showError('Không lưu được cài đặt. Hãy kiểm tra quyền ghi dữ liệu và thử lại.'); }
-  finally { saving = false; controls.forEach((control) => { control.disabled = false; }); $('save').textContent = 'Lưu cài đặt'; }
+  } catch { showError('Unable to save settings. Check write permissions and try again.'); }
+  finally { saving = false; controls.forEach((control) => { control.disabled = false; }); $('save').textContent = 'Save settings'; }
 });

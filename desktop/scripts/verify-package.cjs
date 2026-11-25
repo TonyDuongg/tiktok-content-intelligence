@@ -13,7 +13,7 @@ async function main() {
   for (const name of ['desktop/main.cjs', 'desktop/lib.cjs', 'desktop/windows-runtime.cjs', 'desktop/preload.cjs',
     'desktop/ui/preferences.html', 'desktop/ui/fonts/OFL.txt']) assert.ok(entries.includes(name), `Missing ${name}`);
   for (const name of ['Creator Studio.exe', 'resources/backend.jar', 'resources/java/bin/java.exe',
-    'resources/java/legal/java.base/LICENSE', 'HUONG-DAN.txt', 'resources/HUONG-DAN.md', 'resources/RESEARCH.md', 'LICENSE.txt', 'THIRD-PARTY-NOTICES.md']) {
+    'resources/java/legal/java.base/LICENSE', 'README.txt', 'resources/DESKTOP.md', 'resources/RESEARCH.md', 'LICENSE.txt', 'THIRD-PARTY-NOTICES.md']) {
     assert.ok(fs.existsSync(path.join(unpacked, name)), `Missing ${name}`);
   }
   assert.match(fs.readFileSync(path.join(unpacked, 'LICENSE.txt'), 'utf8'), /Copyright \(c\) 2026 TonyDuongg/);

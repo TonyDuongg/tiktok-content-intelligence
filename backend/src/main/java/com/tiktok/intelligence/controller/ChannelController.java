@@ -46,7 +46,7 @@ public class ChannelController {
     @PostMapping("/ingest")
     @Operation(summary = "Ingest TikTok channel data", description = "Scrapes channel profile, videos, calculates engagement rates, and uploads raw JSON to AWS S3")
     public ResponseEntity<ApiResponse<TikTokChannel>> ingestChannel(
-            @RequestParam @Pattern(regexp = "@?[A-Za-z0-9._]{2,24}", message = "Tên kênh gồm 2–24 chữ cái, số, dấu chấm hoặc gạch dưới") String username,
+            @RequestParam @Pattern(regexp = "@?[A-Za-z0-9._]{2,24}", message = "Username must contain 2–24 letters, digits, dots or underscores") String username,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(defaultValue = "10") @Min(1) @Max(50) int maxVideos
     ) {

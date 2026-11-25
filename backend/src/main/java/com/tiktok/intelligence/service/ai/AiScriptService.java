@@ -38,7 +38,7 @@ public class AiScriptService {
                 .filter(client -> client.supports(activeProvider))
                 .findFirst()
                 .orElseThrow(() -> new com.tiktok.intelligence.exception.UpstreamServiceException(
-                        "Nhà cung cấp AI chưa hợp lệ. Cấu hình AI_PROVIDER=gemini hoặc bedrock."));
+                        "Invalid AI provider. Set AI_PROVIDER=gemini or bedrock."));
     }
 
     @Transactional
@@ -48,7 +48,7 @@ public class AiScriptService {
 
         // 1. Resolve Category and Top Reference Videos
         Long categoryId = null;
-        String nicheName = "Làm đẹp & Mỹ phẩm";
+        String nicheName = "Beauty & cosmetics";
         if (job.getFilterParams().get("categoryId") != null) {
             categoryId = Long.valueOf(job.getFilterParams().get("categoryId").toString());
             Category cat = categoryRepository.findById(categoryId).orElse(null);
@@ -62,8 +62,8 @@ public class AiScriptService {
             topVideos = videoRepository.findAll(PageRequest.of(0, 5)).getContent();
         }
 
-        String targetAudience = (String) job.getFilterParams().getOrDefault("targetAudience", "Giới trẻ 18-30 tuổi");
-        String tone = (String) job.getFilterParams().getOrDefault("tone", "Chân thực, thuyết phục");
+        String targetAudience = (String) job.getFilterParams().getOrDefault("targetAudience", "Young adults aged 18–30");
+        String tone = (String) job.getFilterParams().getOrDefault("tone", "Authentic and persuasive");
 
         // 2. Invoke AI Model
         AiScriptGeneratorClient aiClient = getActiveClient();
@@ -94,7 +94,7 @@ public class AiScriptService {
             ScriptReferenceVideo ref = ScriptReferenceVideo.builder()
                     .script(script)
                     .video(refVideo)
-                    .insightNote(String.format("Lấy cảm hứng từ hook mở đầu và cấu trúc giải quyết vấn đề (%.2f%% tương tác)", refVideo.getEngagementRate()))
+                    .insightNote(String.format("Inspired by the hook and problem-solving structure (%.2f%% engagement)", refVideo.getEngagementRate()))
                     .build();
             references.add(referenceVideoRepository.save(ref));
         }
@@ -112,8 +112,8 @@ public class AiScriptService {
         String contentBrief = request.topic().trim();
         if (request.categoryId() != null) {
             category = categoryRepository.findById(request.categoryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lĩnh vực đã chọn"));
-            contentBrief += "\nLĩnh vực: " + category.getName();
+                    .orElseThrow(() -> new ResourceNotFoundException("Selected category not found"));
+            contentBrief += "\nCategory: " + category.getName();
         }
 
         List<TikTokVideo> referenceVideos = new ArrayList<>();
@@ -121,7 +121,7 @@ public class AiScriptService {
             List<Long> ids = request.referenceVideoIds().stream().distinct().toList();
             referenceVideos = videoRepository.findAllById(ids);
             if (referenceVideos.size() != ids.size()) {
-                throw new ResourceNotFoundException("Một số video tham khảo không còn tồn tại. Vui lòng chọn lại.");
+                throw new ResourceNotFoundException("Some reference videos no longer exist. Select them again.");
             }
         }
 
@@ -152,7 +152,7 @@ public class AiScriptService {
             references.add(referenceVideoRepository.save(ScriptReferenceVideo.builder()
                     .script(script)
                     .video(video)
-                    .insightNote("Video được người dùng chọn làm tham khảo về cấu trúc và cách mở đầu")
+                    .insightNote("User-selected reference for structure and opening hook")
                     .build()));
         }
         return ScriptDetailResponse.fromEntity(script, references);
@@ -192,7 +192,7 @@ public class AiScriptService {
 
     private void requireOwner(AiScript script, String userEmail) {
         if (script.getUser() == null || !script.getUser().getEmail().equals(userEmail)) {
-            throw new AccessDeniedException("Bạn không có quyền truy cập kịch bản này");
+            throw new AccessDeniedException("You do not have access to this script");
         }
     }
 }

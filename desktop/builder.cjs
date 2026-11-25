@@ -11,11 +11,11 @@ module.exports = {
   extraResources: [
     { from: 'desktop/.runtime/backend.jar', to: 'backend.jar' },
     { from: 'desktop/.runtime/java', to: 'java' },
-    { from: 'docs/DESKTOP.md', to: 'HUONG-DAN.md' },
+    { from: 'docs/DESKTOP.md', to: 'DESKTOP.md' },
     { from: 'docs/RESEARCH.md', to: 'RESEARCH.md' },
   ],
   extraFiles: [
-    { from: 'desktop/.runtime/README.txt', to: 'HUONG-DAN.txt' },
+    { from: 'desktop/.runtime/README.txt', to: 'README.txt' },
     { from: 'LICENSE', to: 'LICENSE.txt' },
     { from: 'THIRD-PARTY-NOTICES.md', to: 'THIRD-PARTY-NOTICES.md' },
   ],

@@ -38,24 +38,24 @@ import { EmptyState, Notice, ScriptPreview } from "./components";
 import ChannelInsights from "./ChannelInsights";
 
 const TONES = [
-  "Chân thực, gần gũi",
-  "Hài hước, dí dỏm",
-  "Chuyên gia, rõ ràng",
-  "Tâm sự, kể chuyện",
+  "Authentic and relatable",
+  "Humorous and witty",
+  "Expert and clear",
+  "Personal storytelling",
 ];
-const SHORT_TONES = ["Chân thực", "Hài hước", "Chuyên gia", "Kể chuyện"];
-const SHORT_CATEGORIES = { beauty: "Làm đẹp", fashion: "Thời trang", food: "Ẩm thực", tech: "Công nghệ", lifestyle: "Đời sống" };
+const SHORT_TONES = ["Authentic", "Humorous", "Expert", "Storytelling"];
+const SHORT_CATEGORIES = { beauty: "Beauty", fashion: "Fashion", food: "Food", tech: "Technology", lifestyle: "Lifestyle" };
 const IDEAS = [
-  ["beauty", "3 điều cần kiểm tra khi chọn kem chống nắng"],
-  ["fashion", "Phối một chiếc áo sơ mi thành 3 bộ đồ đi làm"],
-  ["food", "Một bữa trưa dễ nấu cho ngày bận rộn"],
-  ["tech", "3 cách sắp xếp màn hình điện thoại gọn hơn"],
-  ["lifestyle", "Những điều tôi học được trong tháng đầu đi làm"],
+  ["beauty", "3 things to check when choosing sunscreen"],
+  ["fashion", "Style one shirt for 3 work outfits"],
+  ["food", "An easy lunch for a busy day"],
+  ["tech", "3 ways to organize your phone screen"],
+  ["lifestyle", "What I learned in my first month at work"],
 ];
 const TABS = [
-  { id: "studio", label: "Xưởng kịch bản", icon: FileText },
-  { id: "channel", label: "Nghiên cứu kênh", icon: TrendingUp },
-  { id: "history", label: "Kho kịch bản", icon: Bookmark },
+  { id: "studio", label: "Script studio", icon: FileText },
+  { id: "channel", label: "Channel research", icon: TrendingUp },
+  { id: "history", label: "Script library", icon: Bookmark },
 ];
 
 export default function App() {
@@ -151,7 +151,7 @@ export default function App() {
     } else
       setSetupError(
         results[0].reason?.message ||
-          "Chưa có lĩnh vực nào. Vui lòng kiểm tra dữ liệu trên máy chủ.",
+          "No categories are available. Check the server's category data.",
       );
     if (results[1].status === "fulfilled") {
       setWorkspace(results[1].value.data);
@@ -159,7 +159,7 @@ export default function App() {
     } else {
       setWorkspace(null);
       setWorkspaceError(
-        "Chưa xác định được nguồn dữ liệu. Thử kết nối lại trước khi sử dụng kết quả nghiên cứu.",
+        "Unable to verify the data source. Reconnect before using the research results.",
       );
     }
     setSetupLoading(false);
@@ -266,16 +266,16 @@ export default function App() {
     );
     if (requestedDurationSeconds === null) {
       setGenerateError(
-        "Chọn thời lượng từ 15 giây đến 10 phút, làm tròn đến giây.",
+        "Choose a duration from 15 seconds to 10 minutes, in whole seconds.",
       );
       return;
     }
     if (!draft.topic.trim()) {
-      setGenerateError("Nhập chủ đề video trước khi tạo kịch bản.");
+      setGenerateError("Enter a video topic before generating a script.");
       return;
     }
     if (!draft.categoryId || setupError) {
-      setGenerateError("Tải danh sách lĩnh vực rồi thử lại.");
+      setGenerateError("Load the categories and try again.");
       return;
     }
     generationLock.current = true;
@@ -287,14 +287,14 @@ export default function App() {
         categoryId: Number(draft.categoryId),
         topic: draft.topic.trim(),
         targetAudience:
-          draft.targetAudience.trim() || "Người xem TikTok Việt Nam",
+          draft.targetAudience.trim() || "TikTok viewers",
         tone: draft.tone,
         referenceVideoIds: draft.references.map((v) => v.id),
         requestedDurationSeconds,
       });
       setScript(result.data);
       upsertScript(result.data);
-      notify("Đã tạo và lưu kịch bản vào kho.");
+      notify("Script generated and saved to the library.");
       focusPreview();
     } catch (error) {
       setGenerateError(error.message);
@@ -314,10 +314,10 @@ export default function App() {
       upsertScript(result.data);
       notify(
         status === "FAVORITE"
-          ? "Đã thêm vào yêu thích."
+          ? "Added to favorites."
           : status === "ARCHIVED"
-            ? "Đã lưu trữ kịch bản."
-            : "Đã chuyển về bản nháp.",
+            ? "Script archived."
+            : "Moved to drafts.",
       );
     } catch (error) {
       setActionError(error.message);
@@ -330,10 +330,10 @@ export default function App() {
   async function copy(item) {
     try {
       await navigator.clipboard.writeText(scriptText(item));
-      notify("Đã sao chép kịch bản.");
+      notify("Script copied.");
     } catch {
       setActionError(
-        "Trình duyệt chưa cho phép sao chép. Bạn có thể tải file .txt để lấy nội dung.",
+        "Clipboard access is unavailable. Download the .txt file to save the script.",
       );
     }
   }
@@ -343,10 +343,10 @@ export default function App() {
     );
     const link = document.createElement("a");
     link.href = url;
-    link.download = `kich-ban-${item.id}.txt`;
+    link.download = `script-${item.id}.txt`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    notify("Đã xuất kịch bản dạng .txt.");
+    notify("Script exported as .txt.");
   }
 
   async function searchChannel(event) {
@@ -355,7 +355,7 @@ export default function App() {
     const clean = normalizeUsername(username);
     if (!clean) {
       setChannelError(
-        "Nhập @username (2–24 ký tự) hoặc link hồ sơ dạng https://tiktok.com/@tenkenh.",
+        "Enter a @username (2–24 characters) or a profile URL such as https://tiktok.com/@creator.",
       );
       return;
     }
@@ -402,21 +402,21 @@ export default function App() {
 
   function useExperiment(idea, report) {
     if (!channel || channel.tiktokUsername !== report.username || generating || channelLoading) return;
-    const target = [report.targetAudience, report.offering && `Giá trị cung cấp: ${report.offering}`].filter(Boolean).join(". ").slice(0, 300);
+    const target = [report.targetAudience, report.offering && `Offering: ${report.offering}`].filter(Boolean).join(". ").slice(0, 300);
     setDraft(previous => ({ ...previous, categoryId: channel.category?.id || channelCategory || previous.categoryId,
-      topic: `${idea.topic}${report.offering ? `. Gắn với ${report.offering}` : ""}${report.goal ? `. Mục tiêu: ${report.goal}` : ""}`.slice(0, 1000),
+      topic: `${idea.topic}${report.offering ? `. Connect to ${report.offering}` : ""}${report.goal ? `. Goal: ${report.goal}` : ""}`.slice(0, 1000),
       targetAudience: target, durationValue: String(idea.durationSeconds), durationUnit: "seconds",
       customDuration: ![15, 30, 60, 120, 180].includes(idea.durationSeconds),
       references: [{ id: idea.reference.videoId, caption: idea.reference.caption, username: report.username }],
     }));
     setDesktopPane("brief"); navigate("studio");
-    notify("Đã đưa ý tưởng, hồ sơ mục tiêu và video tham khảo vào bản nhập.");
+    notify("Idea, target profile and reference video added to the brief.");
   }
   function openOwnChannel(name) {
     setResearchView("insights");
     if (savedChannels.some(c => c.tiktokUsername === name)) { void openSavedChannel(name); return; }
     setUsername(name); setChannel(null); setVideos([]); setResearchSearchOpen(true);
-    notify("Đã điền kênh của bạn. Chọn Phân tích kênh để lấy dữ liệu công khai.");
+    notify("Your channel is ready. Select Analyze channel to fetch public data.");
   }
   async function retryVideos() {
     if (!channel || channelLock.current) return;
@@ -440,7 +440,7 @@ export default function App() {
     }
     if (draft.references.length >= 5) {
       setChannelError(
-        "Bạn đã chọn 5 video. Bỏ một video trong xưởng kịch bản để chọn video khác.",
+        "You have selected 5 videos. Remove a reference in the script studio before adding another.",
       );
       return;
     }
@@ -458,7 +458,7 @@ export default function App() {
       ],
     }));
     navigate("studio");
-    notify("Đã thêm video tham khảo. Bạn có thể sửa chủ đề trước khi tạo.");
+    notify("Reference added. You can edit the topic before generating.");
   }
 
   const filtered = filterScripts(scripts, query, filter);
@@ -478,7 +478,7 @@ export default function App() {
   return (
     <div className={window.creatorDesktop ? `app-shell desktop-mode workspace-${activeTab}` : "app-shell"}>
       <a href="#main" className="skip-link">
-        Đến nội dung chính
+        Skip to main content
       </a>
       <header className="app-header">
         <div className="header-inner">
@@ -497,14 +497,14 @@ export default function App() {
           </a>
           <button
             className="icon-button mobile-menu"
-            aria-label="Mở điều hướng"
+            aria-label="Open navigation"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(!menuOpen)}
           >
             <Menu size={22} />
           </button>
           <nav
-            aria-label="Điều hướng chính"
+            aria-label="Main navigation"
             className={menuOpen ? "navigation open" : "navigation"}
           >
             {TABS.map(({ id, label, icon: Icon }) => (
@@ -522,19 +522,19 @@ export default function App() {
             ))}
           </nav>
           {window.creatorDesktop ? (
-            <button className="button subtle desktop-settings" aria-label="Cài đặt" disabled={generating || channelLoading}
-              onClick={() => window.creatorDesktop.openSettings().catch(() => notify("Không mở được cài đặt. Hãy thử lại."))}>
-              <Settings size={18} /> <span className="desktop-settings-label">Cài đặt</span>
+            <button className="button subtle desktop-settings" aria-label="Settings" disabled={generating || channelLoading}
+              onClick={() => window.creatorDesktop.openSettings().catch(() => notify("Unable to open settings. Try again."))}>
+              <Settings size={18} /> <span className="desktop-settings-label">Settings</span>
             </button>
           ) : <div className="workspace-label">
             <span
               className={`connection-dot ${setupError ? "offline" : setupLoading ? "connecting" : ""}`}
             />
             {setupError
-              ? "Chưa kết nối"
+              ? "Disconnected"
               : setupLoading
-                ? "Đang kết nối"
-                : "Dữ liệu trực tiếp"}
+                ? "Connecting"
+                : "Live data"}
           </div>}
         </div>
       </header>
@@ -543,23 +543,23 @@ export default function App() {
           <div>
             <h1>
               {activeTab === "studio"
-                ? "Viết kịch bản"
+                ? "Write a script"
                 : activeTab === "channel"
-                  ? "Nghiên cứu kênh TikTok"
-                  : "Kho kịch bản"}
+                  ? "TikTok channel research"
+                  : "Script library"}
             </h1>
             <p>
               {activeTab === "studio"
-                ? "Từ chủ đề của bạn đến lời thoại sẵn sàng chỉnh sửa."
+                ? "Turn your topic into a script ready to edit."
                 : activeTab === "channel"
-                  ? "Tìm video nổi bật và chọn chất liệu cho kịch bản."
-                  : "Tìm lại, đánh dấu và chuẩn bị cho lần quay tiếp theo."}
+                  ? "Find standout videos and references for your script."
+                  : "Find saved scripts and prepare for your next shoot."}
             </p>
           </div>
           {activeTab === "studio" && window.creatorDesktop && (
-            <div className="pane-switch" role="group" aria-label="Chọn vùng làm việc">
-              <button type="button" aria-pressed={desktopPane === "brief"} onClick={() => setDesktopPane("brief")}>Thiết lập</button>
-              <button type="button" aria-pressed={desktopPane === "preview"} onClick={() => setDesktopPane("preview")}>Kịch bản</button>
+            <div className="pane-switch" role="group" aria-label="Choose workspace pane">
+              <button type="button" aria-pressed={desktopPane === "brief"} onClick={() => setDesktopPane("brief")}>Brief</button>
+              <button type="button" aria-pressed={desktopPane === "preview"} onClick={() => setDesktopPane("preview")}>Script</button>
             </div>
           )}
           {activeTab === "history" && (
@@ -568,7 +568,7 @@ export default function App() {
               onClick={() => navigate("studio")}
             >
               <Plus size={18} />
-              Tạo kịch bản
+              Generate script
             </button>
           )}
         </div>
@@ -580,10 +580,10 @@ export default function App() {
           </Notice>
         )}
         {window.creatorDesktop && workspace?.issues?.length ? (
-          <Notice warning>Mở Cài đặt để thêm khóa API cho {[
+          <Notice warning>Open Settings to add API keys for {[
             !workspace.aiConfigured && "Gemini",
             !workspace.scraperConfigured && "RapidAPI",
-          ].filter(Boolean).join(" và ") || "dịch vụ chưa kết nối"}.</Notice>
+          ].filter(Boolean).join(" and ") || "unconfigured services"}.</Notice>
         ) : workspace?.issues?.map((issue) => (
           <Notice key={issue}>{issue}</Notice>
         ))}
@@ -593,24 +593,23 @@ export default function App() {
           <div className={`studio-layout show-${desktopPane}`}>
             <section
               className="panel brief-panel"
-              aria-label="Thiết lập kịch bản"
+              aria-label="Script brief"
             >
               <div className="panel-heading">
-                <h2>Thông tin video</h2>
+                <h2>Video brief</h2>
                 <span className="muted">
-                  {storageError ? "Chưa lưu bản nhập" : "Tự lưu bản nhập"}
+                  {storageError ? "Brief not saved" : "Autosaved brief"}
                 </span>
               </div>
               {storageError && (
                 <Notice warning>
-                  Không lưu được bản nhập trên trình duyệt này. Hãy sao chép ý
-                  tưởng trước khi đóng trang.
+                  Unable to save the brief in this browser. Copy your idea before closing the page.
                 </Notice>
               )}
               <form onSubmit={generate}>
                 <fieldset disabled={generating} className="brief-fields">
                   <div className="field field-category">
-                    <label htmlFor="category">Lĩnh vực</label>
+                    <label htmlFor="category">Category</label>
                     <select
                       id="category"
                       value={draft.categoryId}
@@ -622,8 +621,8 @@ export default function App() {
                       {!categories.length && (
                         <option value="">
                           {setupLoading
-                            ? "Đang tải lĩnh vực…"
-                            : "Chưa tải được lĩnh vực"}
+                            ? "Loading categories…"
+                            : "Categories unavailable"}
                         </option>
                       )}
                       {categories.map((c) => (
@@ -636,7 +635,7 @@ export default function App() {
                   <div className="field field-topic">
                     <div className="label-row">
                       <label htmlFor="topic">
-                        Chủ đề video <span className="required">*</span>
+                        Video topic <span className="required">*</span>
                       </label>
                       <span className="muted">{draft.topic.length}/1000</span>
                     </div>
@@ -645,7 +644,7 @@ export default function App() {
                       required
                       maxLength={1000}
                       rows={4}
-                      placeholder="Nêu một vấn đề cụ thể và điều bạn muốn người xem nhận được…"
+                      placeholder="Describe a specific problem and what viewers should take away…"
                       value={draft.topic}
                       onChange={(e) => {
                         updateDraft("topic", e.target.value);
@@ -655,21 +654,21 @@ export default function App() {
                     <button
                       type="button"
                       className="idea-button"
-                      aria-label={`Dùng gợi ý: ${idea}`}
+                      aria-label={`Use idea: ${idea}`}
                       title={idea}
                       onClick={() => updateDraft("topic", idea)}
                     >
                       <Plus size={14} />
-                      <span className="idea-copy">Dùng gợi ý: {idea}</span>
-                      <span className="idea-short" aria-hidden="true">Dùng gợi ý</span>
+                      <span className="idea-copy">Use idea: {idea}</span>
+                      <span className="idea-short" aria-hidden="true">Use idea</span>
                     </button>
                   </div>
                   <div className="field field-audience">
-                    <label htmlFor="audience">Người xem mục tiêu</label>
+                    <label htmlFor="audience">Target audience</label>
                     <input
                       id="audience"
                       maxLength={300}
-                      placeholder={window.creatorDesktop ? "Ví dụ: sinh viên" : "Ví dụ: sinh viên mới bắt đầu chăm sóc da"}
+                      placeholder={window.creatorDesktop ? "Example: students" : "Example: students starting a skincare routine"}
                       value={draft.targetAudience}
                       onChange={(e) =>
                         updateDraft("targetAudience", e.target.value)
@@ -677,7 +676,7 @@ export default function App() {
                     />
                   </div>
                   <div className="field field-tone">
-                    <label htmlFor="tone">Giọng điệu</label>
+                    <label htmlFor="tone">Tone</label>
                     <select
                       id="tone"
                       value={draft.tone}
@@ -689,7 +688,7 @@ export default function App() {
                     </select>
                   </div>
                   <div className="field field-duration">
-                    <label htmlFor="duration-preset">Thời lượng video</label>
+                    <label htmlFor="duration-preset">Video duration</label>
                     <select
                       id="duration-preset"
                       value={
@@ -721,12 +720,12 @@ export default function App() {
                           {formatDuration(seconds)}
                         </option>
                       ))}
-                      <option value="custom">Tùy chỉnh…</option>
+                      <option value="custom">Custom…</option>
                     </select>
                     {draft.customDuration && (
                       <div className="duration-custom">
                         <div>
-                          <label htmlFor="duration-value">Thời lượng</label>
+                          <label htmlFor="duration-value">Duration</label>
                           <input
                             id="duration-value"
                             type="number"
@@ -743,7 +742,7 @@ export default function App() {
                           />
                         </div>
                         <div>
-                          <label htmlFor="duration-unit">Đơn vị</label>
+                          <label htmlFor="duration-unit">Unit</label>
                           <select
                             id="duration-unit"
                             value={draft.durationUnit}
@@ -769,15 +768,15 @@ export default function App() {
                               });
                             }}
                           >
-                            <option value="seconds">Giây</option>
-                            <option value="minutes">Phút</option>
+                            <option value="seconds">Seconds</option>
+                            <option value="minutes">Minutes</option>
                           </select>
                         </div>
                       </div>
                     )}
                     <p id="duration-hint" className="field-hint">
-                      {draft.customDuration ? "Từ 15 giây đến 10 phút. " : ""}AI
-                      điều chỉnh lời thoại và mốc quay theo thời lượng.
+                      {draft.customDuration ? "15 seconds to 10 minutes. " : ""}AI
+                      adapts the dialogue and scene timing to your duration.
                     </p>
                   </div>
                   <details
@@ -785,9 +784,9 @@ export default function App() {
                     open={draft.references.length > 0 || undefined}
                   >
                     <summary>
-                      Video tham khảo{" "}
+                      Reference videos{" "}
                       <span className="muted">
-                        {draft.references.length}/5 · tùy chọn
+                        {draft.references.length}/5 · optional
                       </span>
                     </summary>
                     {draft.references.length ? (
@@ -801,7 +800,7 @@ export default function App() {
                             <button
                               type="button"
                               className="icon-button"
-                              aria-label={`Bỏ video tham khảo ${v.id}`}
+                              aria-label={`Remove reference video ${v.id}`}
                               onClick={() =>
                                 updateDraft(
                                   "references",
@@ -818,7 +817,7 @@ export default function App() {
                       </ul>
                     ) : (
                       <p className="hint">
-                        Không bắt buộc. Thêm video để AI tham khảo cấu trúc.
+                        Optional. Add videos as structural references for AI.
                       </p>
                     )}
                     <button
@@ -826,7 +825,7 @@ export default function App() {
                       className="text-button"
                       onClick={() => navigate("channel")}
                     >
-                      Chọn từ nghiên cứu kênh <ArrowRight size={14} />
+                      Choose from channel research <ArrowRight size={14} />
                     </button>
                   </details>
                 </fieldset>
@@ -845,19 +844,19 @@ export default function App() {
                   {generating ? (
                     <>
                       <LoaderCircle size={18} className="spin" />
-                      Đang tạo kịch bản…
+                      Generating script…
                     </>
                   ) : (
                     <>
-                      Tạo kịch bản
+                      Generate script
                       <ArrowRight size={18} />
                     </>
                   )}
                 </button>
                 <p className="form-note" role="status">
                   {generating
-                    ? "Đang chờ AI phản hồi, có thể mất tối đa 2 phút."
-                    : "Tự lưu vào kho kịch bản dùng chung"}
+                    ? "Waiting for AI. This may take up to 2 minutes."
+                    : "Automatically saved to the workspace library"}
                 </p>
                 </div>
               </form>
@@ -878,21 +877,21 @@ export default function App() {
         {activeTab === "channel" && (
           <div className="channel-workspace">
             {researchView !== "profiles" && <section className="panel search-panel">
-              {(researchSearchOpen || !channel) && <div className="research-search-heading"><h2>{channel ? `Kênh @${channel.tiktokUsername}` : "Phân tích một kênh TikTok"}</h2>
-                {channel && <button type="button" className="button subtle" disabled={channelLoading} onClick={() => setResearchSearchOpen(open => !open)}>{researchSearchOpen ? "Thu gọn" : "Đổi kênh / Cập nhật"}</button>}
+              {(researchSearchOpen || !channel) && <div className="research-search-heading"><h2>{channel ? `Channel @${channel.tiktokUsername}` : "Analyze a TikTok channel"}</h2>
+                {channel && <button type="button" className="button subtle" disabled={channelLoading} onClick={() => setResearchSearchOpen(open => !open)}>{researchSearchOpen ? "Collapse" : "Change / refresh"}</button>}
               </div>}
               {(researchSearchOpen || !channel) && <>
               <form onSubmit={searchChannel}>
                 <div className="channel-fields">
                   <div className="field username-field">
                     <label htmlFor="username">
-                      Tên người dùng hoặc link hồ sơ
+                      Username or profile URL
                     </label>
                     <div className="input-with-icon">
                       <Search size={18} />
                       <input
                         id="username"
-                        placeholder="@tenkenh hoặc https://tiktok.com/@tenkenh"
+                        placeholder="@creator or https://tiktok.com/@creator"
                         required
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
@@ -901,7 +900,7 @@ export default function App() {
                     </div>
                   </div>
                   <div className="field">
-                    <label htmlFor="channel-category">Lĩnh vực của kênh</label>
+                    <label htmlFor="channel-category">Channel category</label>
                     <select
                       id="channel-category"
                       value={channelCategory}
@@ -909,7 +908,7 @@ export default function App() {
                       disabled={channelLoading || setupLoading}
                     >
                       {!categories.length && (
-                        <option value="">Chưa tải lĩnh vực</option>
+                        <option value="">Categories not loaded</option>
                       )}
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>
@@ -919,7 +918,7 @@ export default function App() {
                     </select>
                   </div>
                   <div className="field sample-limit">
-                    <label htmlFor="max-videos">Số video</label>
+                    <label htmlFor="max-videos">Video count</label>
                     <select
                       id="max-videos"
                       value={maxVideos}
@@ -947,35 +946,33 @@ export default function App() {
                     ) : (
                       <Search size={18} />
                     )}
-                    {channelLoading ? "Đang phân tích…" : "Phân tích kênh"}
+                    {channelLoading ? "Analyzing…" : "Analyze channel"}
                   </button>
                 </div>
               </form>
               <p className="hint">
-                Hỗ trợ tên kênh và link hồ sơ đầy đủ. Kết quả phụ thuộc nguồn dữ
-                liệu đang được cấu hình.
+                Enter a username or a full profile URL. Results depend on the configured data provider.
               </p>
               </>}
               <div className="saved-channel-picker">
-                <label htmlFor="saved-channel">Mở kênh đã lưu</label>
+                <label htmlFor="saved-channel">Open saved channel</label>
                 <select id="saved-channel" value={channel?.tiktokUsername || ""} disabled={channelLoading || !savedChannels.length} onChange={e => openSavedChannel(e.target.value)}>
-                  <option value="">{savedChannels.length ? "Chọn kênh, không gọi lại RapidAPI" : "Chưa có kênh đã lưu"}</option>
+                  <option value="">{savedChannels.length ? "Choose a channel without a new API request" : "No saved channels"}</option>
                   {savedChannels.map(c => <option key={c.id} value={c.tiktokUsername}>@{c.tiktokUsername} · {c.nickname || c.tiktokUsername}</option>)}
                 </select>
-                <button type="button" className="button subtle" disabled={channelLoading} onClick={() => loadSavedChannels()} aria-label="Làm mới danh sách kênh đã lưu"><RefreshCw size={16} /></button>
-                {channel && !researchSearchOpen && <button type="button" className="button secondary" disabled={channelLoading} onClick={() => setResearchSearchOpen(true)}>Đổi kênh / Cập nhật</button>}
+                <button type="button" className="button subtle" disabled={channelLoading} onClick={() => loadSavedChannels()} aria-label="Refresh saved channels"><RefreshCw size={16} /></button>
+                {channel && !researchSearchOpen && <button type="button" className="button secondary" disabled={channelLoading} onClick={() => setResearchSearchOpen(true)}>Change / refresh</button>}
               </div>
             </section>}
-            <div className="research-tabs" role="group" aria-label="Nội dung nghiên cứu">
-              {[["videos", "Video tham khảo"], ["insights", "Khách hàng & xu hướng"], ["profiles", "Hồ sơ của tôi"]].map(([id, label]) => <button key={id} type="button" aria-pressed={researchView === id} onClick={() => setResearchView(id)}>{label}</button>)}
+            <div className="research-tabs" role="group" aria-label="Research sections">
+              {[["videos", "Reference videos"], ["insights", "Audience & trends"], ["profiles", "My profiles"]].map(([id, label]) => <button key={id} type="button" aria-pressed={researchView === id} onClick={() => setResearchView(id)}>{label}</button>)}
             </div>
             <div className="channel-results">
             {savedChannelsError && <Notice onRetry={() => loadSavedChannels()}>{savedChannelsError}</Notice>}
             {channelError && <Notice>{channelError}</Notice>}
             {channelLoading && (
               <p role="status" className="loading-line">
-                <LoaderCircle size={18} className="spin" /> Đang lấy hồ sơ và
-                các video của kênh…
+                <LoaderCircle size={18} className="spin" /> Fetching the channel profile and videos…
               </p>
             )}
             {researchView !== "videos" && <ChannelInsights channel={channel} view={researchView} onUseExperiment={useExperiment} onOpenOwnChannel={openOwnChannel} disabled={generating || channelLoading} />}
@@ -985,7 +982,7 @@ export default function App() {
                   <div>
                     <h2>{channel.nickname || `@${channel.tiktokUsername}`}</h2>
                     <p className="muted">
-                      @{channel.tiktokUsername} · Cập nhật{" "}
+                      @{channel.tiktokUsername} · Updated{" "}
                       {formatDate(channel.lastScrapedAt)}
                     </p>
                     {channel.bio && (
@@ -994,15 +991,15 @@ export default function App() {
                   </div>
                   <dl className="channel-stats">
                     <div>
-                      <dt>Người theo dõi</dt>
+                      <dt>Followers</dt>
                       <dd>{formatNumber(channel.followersCount)}</dd>
                     </div>
                     <div>
-                      <dt>Tổng lượt thích</dt>
+                      <dt>Total likes</dt>
                       <dd>{formatNumber(channel.totalLikes)}</dd>
                     </div>
                     <div>
-                      <dt>Video trên kênh</dt>
+                      <dt>Channel videos</dt>
                       <dd>{formatNumber(channel.totalVideos)}</dd>
                     </div>
                   </dl>
@@ -1010,22 +1007,21 @@ export default function App() {
                 <div className="section-toolbar">
                   <div>
                     <h2>
-                      Video nổi bật{" "}
+                      Top videos{" "}
                       <span className="muted">({videos.length})</span>
                     </h2>
                     <p className="hint">
-                      ER = (thích + bình luận + chia sẻ) / lượt xem × 100%. Xếp
-                      hạng trong số video đã lấy.
+                      ER = (likes + comments + shares) / views × 100%. Ranked within the fetched sample.
                     </p>
                   </div>
                   <label className="sort-label">
-                    Sắp xếp
+                    Sort by
                     <select
                       value={sort}
                       onChange={(e) => setSort(e.target.value)}
                     >
-                      <option value="engagementRate">Tương tác cao nhất</option>
-                      <option value="viewCount">Lượt xem cao nhất</option>
+                      <option value="engagementRate">Highest engagement</option>
+                      <option value="viewCount">Most views</option>
                     </select>
                   </label>
                 </div>
@@ -1033,8 +1029,8 @@ export default function App() {
                   <Notice onRetry={retryVideos}>{videoError}</Notice>
                 )}
                 {!videos.length && !channelLoading && !videoError && (
-                  <EmptyState title="Chưa tìm thấy video">
-                    Thử một kênh khác hoặc phân tích lại sau.
+                  <EmptyState title="No videos found">
+                    Try another channel or analyze again later.
                   </EmptyState>
                 )}
                 <div className="video-list">
@@ -1042,9 +1038,9 @@ export default function App() {
                     <article className="video-row" key={video.id}>
                       <span className="video-rank">{i + 1}</span>
                       <div className="video-description">
-                        <h3>{video.caption || "Video chưa có mô tả"}</h3>
+                        <h3>{video.caption || "Untitled video"}</h3>
                         <div className="meta">
-                          <span>{video.durationSeconds ?? "—"} giây</span>
+                          <span>{video.durationSeconds ?? "—"} sec</span>
                           <span>{formatDate(video.videoPublishedAt)}</span>
                           {safeVideoUrl(video.videoUrl) && (
                             <a
@@ -1052,21 +1048,21 @@ export default function App() {
                               target="_blank"
                               rel="noreferrer"
                             >
-                              Xem trên TikTok <ExternalLink size={13} />
+                              View on TikTok <ExternalLink size={13} />
                             </a>
                           )}
                         </div>
                       </div>
                       <dl className="video-metrics">
                         <div>
-                          <dt>Lượt xem</dt>
+                          <dt>Views</dt>
                           <dd>{formatNumber(video.viewCount)}</dd>
                         </div>
                         <div>
-                          <dt>Tương tác</dt>
+                          <dt>Engagement</dt>
                           <dd>
                             {Number(video.engagementRate || 0).toLocaleString(
-                              "vi-VN",
+                              "en-US",
                               { maximumFractionDigits: 2 },
                             )}
                             %
@@ -1084,8 +1080,8 @@ export default function App() {
                           <Plus size={16} />
                         )}
                         {draft.references.some((v) => v.id === video.id)
-                          ? "Đã chọn"
-                          : "Tham khảo"}
+                          ? "Selected"
+                          : "Use reference"}
                       </button>
                     </article>
                   ))}
@@ -1093,9 +1089,8 @@ export default function App() {
               </>
             )}
             {researchView === "videos" && !channel && !channelLoading && (
-              <EmptyState title="Bắt đầu từ một kênh bạn quan tâm">
-                Tìm cách mở đầu, nhịp kể chuyện và chủ đề được quan tâm. Chọn
-                video tham khảo để đưa vào brief của bạn.
+              <EmptyState title="Start with a channel you want to explore">
+                Explore hooks, pacing and topics. Select reference videos to add to your brief.
               </EmptyState>
             )}
             </div>
@@ -1103,18 +1098,18 @@ export default function App() {
         )}
 
         {activeTab === "history" && (
-          <section className="library-workspace" aria-label="Kho kịch bản">
+          <section className="library-workspace" aria-label="Script library">
             <div className="library-toolbar">
               <div
                 className="filter-tabs"
                 role="group"
-                aria-label="Lọc trạng thái"
+                aria-label="Filter by status"
               >
                 {[
-                  ["DRAFT", "Bản nháp"],
-                  ["FAVORITE", "Yêu thích"],
-                  ["ARCHIVED", "Lưu trữ"],
-                  ["ALL", "Tất cả"],
+                  ["DRAFT", "Drafts"],
+                  ["FAVORITE", "Favorites"],
+                  ["ARCHIVED", "Archive"],
+                  ["ALL", "All"],
                 ].map(([value, label]) => (
                   <button
                     key={value}
@@ -1137,8 +1132,8 @@ export default function App() {
                 <label className="input-with-icon">
                   <Search size={17} />
                   <input
-                    aria-label="Tìm kịch bản"
-                    placeholder="Tìm chủ đề hoặc người xem…"
+                    aria-label="Search scripts"
+                    placeholder="Search topics or audiences…"
                     value={query}
                     onChange={(e) => {
                       setQuery(e.target.value);
@@ -1148,7 +1143,7 @@ export default function App() {
                 </label>
                 <button
                   className="icon-button"
-                  aria-label="Làm mới kho kịch bản"
+                  aria-label="Refresh script library"
                   disabled={scriptsLoading || generating || pending !== null}
                   onClick={reloadScripts}
                 >
@@ -1160,29 +1155,28 @@ export default function App() {
               </div>
             </div>
             <p className="library-description">
-              {filtered.length} kịch bản{scriptsLoading ? " · Đang tải…" : ""} ·
-              Kho dùng chung của tool.
+              {filtered.length} scripts{scriptsLoading ? " · Loading…" : ""} ·
+              Shared workspace library.
             </p>
             {scriptsError && (
               <Notice onRetry={reloadScripts}>{scriptsError}</Notice>
             )}
             {scriptsLoading && (
               <p role="status" className="loading-line">
-                <LoaderCircle size={18} className="spin" /> Đang tải kho kịch
-                bản…
+                <LoaderCircle size={18} className="spin" /> Loading script library…
               </p>
             )}
             {!scriptsLoading && !scriptsError && !filtered.length && (
               <EmptyState
                 title={
                   query || scripts.length
-                    ? "Chưa có kịch bản phù hợp"
-                    : "Kịch bản đầu tiên bắt đầu từ một ý tưởng"
+                    ? "No matching scripts"
+                    : "Your first script starts with an idea"
                 }
               >
                 {query || scripts.length
-                  ? "Thử một từ khóa khác hoặc chọn bộ lọc Tất cả."
-                  : "Tạo kịch bản trong xưởng. Mỗi kết quả sẽ được lưu tự động tại đây."}
+                  ? "Try another keyword or select All."
+                  : "Generate a script in the studio. Each result is saved here automatically."}
               </EmptyState>
             )}
             <div className="script-library">
@@ -1193,8 +1187,8 @@ export default function App() {
                     <span>{formatDate(item.createdAt)}</span>
                     <span>
                       {item.requestedDurationSeconds
-                        ? `Mục tiêu ${formatDuration(item.requestedDurationSeconds)}`
-                        : `Ước tính ${formatDuration(item.estimatedDurationSeconds)}`}
+                        ? `Target ${formatDuration(item.requestedDurationSeconds)}`
+                        : `Estimated ${formatDuration(item.estimatedDurationSeconds)}`}
                     </span>
                   </div>
                   <button
@@ -1211,15 +1205,15 @@ export default function App() {
                       className="text-button"
                       onClick={() => openScript(item)}
                     >
-                      Mở kịch bản <ArrowRight size={14} />
+                      Open script <ArrowRight size={14} />
                     </button>
                     <div className="actions">
                       <button
                         className="icon-button"
                         aria-label={
                           item.status === "FAVORITE"
-                            ? `Bỏ yêu thích ${item.title}`
-                            : `Yêu thích ${item.title}`
+                            ? `Remove favorite ${item.title}`
+                            : `Favorites ${item.title}`
                         }
                         aria-pressed={item.status === "FAVORITE"}
                         disabled={pending !== null}
@@ -1241,8 +1235,8 @@ export default function App() {
                         className="icon-button"
                         aria-label={
                           item.status === "ARCHIVED"
-                            ? `Khôi phục ${item.title}`
-                            : `Lưu trữ ${item.title}`
+                            ? `Restore ${item.title}`
+                            : `Archive ${item.title}`
                         }
                         disabled={pending !== null}
                         onClick={() =>
@@ -1271,17 +1265,17 @@ export default function App() {
                   onClick={() => setPage(currentPage - 1)}
                 >
                   <ChevronLeft size={16} />
-                  Trước
+                  Previous
                 </button>
                 <span>
-                  Trang {currentPage}/{pages}
+                  Page {currentPage}/{pages}
                 </span>
                 <button
                   className="button secondary"
                   disabled={currentPage === pages}
                   onClick={() => setPage(currentPage + 1)}
                 >
-                  Sau
+                  Next
                   <ChevronRight size={16} />
                 </button>
               </div>
@@ -1290,9 +1284,9 @@ export default function App() {
         )}
         <footer className="app-footer">
           <span>© 2026 TonyDuongg · <a href="https://github.com/TonyDuongg/tiktok-content-intelligence/blob/main/LICENSE" target="_blank" rel="noreferrer">MIT License</a></span>
-          <nav aria-label="Liên kết dự án" className="footer-links">
-            <a href="https://github.com/TonyDuongg/tiktok-content-intelligence" target="_blank" rel="noreferrer">Mã nguồn</a>
-            <a href="https://github.com/TonyDuongg/tiktok-content-intelligence/releases/latest" target="_blank" rel="noreferrer">Tải cho Windows</a>
+          <nav aria-label="Project links" className="footer-links">
+            <a href="https://github.com/TonyDuongg/tiktok-content-intelligence" target="_blank" rel="noreferrer">Source code</a>
+            <a href="https://github.com/TonyDuongg/tiktok-content-intelligence/releases/latest" target="_blank" rel="noreferrer">Download for Windows</a>
           </nav>
         </footer>
       </main>
@@ -1304,7 +1298,7 @@ export default function App() {
             <button
               className="icon-button"
               onClick={() => setToast("")}
-              aria-label="Đóng thông báo"
+              aria-label="Dismiss notification"
             >
               <X size={15} />
             </button>

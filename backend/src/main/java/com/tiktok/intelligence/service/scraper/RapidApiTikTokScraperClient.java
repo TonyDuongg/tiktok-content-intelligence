@@ -55,7 +55,7 @@ public class RapidApiTikTokScraperClient implements TikTokScraperClient {
         if (rapidApiKey == null || rapidApiKey.isBlank()
                 || rapidApiKey.contains("your_key")
                 || rapidApiKey.contains("cua_ban")) {
-            throw new UpstreamServiceException("Chưa cấu hình khóa RapidAPI hợp lệ. Kiểm tra RAPIDAPI_KEY và gói API đã đăng ký.");
+            throw new UpstreamServiceException("No valid RapidAPI key configured. Check RAPIDAPI_KEY and your API subscription.");
         }
 
         try {
@@ -63,7 +63,7 @@ public class RapidApiTikTokScraperClient implements TikTokScraperClient {
 
             TikTokChannelProfileDto profile = fetchUserProfile(cleanUsername);
             if (profile == null) {
-                throw new UpstreamServiceException("Không lấy được hồ sơ kênh. Kiểm tra tên kênh hoặc thử lại sau.");
+                throw new UpstreamServiceException("Unable to fetch the channel profile. Check the username or try again later.");
             }
 
             List<TikTokVideoDto> videos = fetchUserVideos(cleanUsername, Math.max(1, Math.min(maxVideos, 50)));
@@ -72,7 +72,7 @@ public class RapidApiTikTokScraperClient implements TikTokScraperClient {
         } catch (Exception e) {
             log.warn("[RapidApi] Could not fetch channel @{}: {}", cleanUsername, e.getMessage());
             if (e instanceof UpstreamServiceException upstream) throw upstream;
-            throw new UpstreamServiceException("Không kết nối được nguồn dữ liệu TikTok. Vui lòng thử lại sau.");
+            throw new UpstreamServiceException("Unable to connect to the TikTok data provider. Try again later.");
         }
     }
 
@@ -154,14 +154,14 @@ public class RapidApiTikTokScraperClient implements TikTokScraperClient {
 
             if (response.statusCode() != 200) {
                 log.warn("[RapidApi] Video posts fetch returned HTTP {} for @{}: {}", response.statusCode(), username, response.body());
-                throw new UpstreamServiceException("Nguồn TikTok chưa trả về video. Vui lòng thử lại sau.");
+                throw new UpstreamServiceException("The TikTok provider returned no video data. Try again later.");
             }
 
             JsonNode root = objectMapper.readTree(response.body());
             int code = root.path("code").asInt(-1);
             if (code != 0 && code != 200) {
                 log.warn("[RapidApi] Video posts API returned error code {} for @{}: {}", code, username, root.path("msg").asText());
-                throw new UpstreamServiceException("Nguồn TikTok từ chối yêu cầu lấy video. Kiểm tra kênh hoặc thử lại sau.");
+                throw new UpstreamServiceException("The TikTok provider rejected the video request. Check the channel or try again later.");
             }
 
             JsonNode dataNode = root.has("data") ? root.path("data") : root;
@@ -170,7 +170,7 @@ public class RapidApiTikTokScraperClient implements TikTokScraperClient {
                 videosNode = dataNode.path("aweme_list");
             }
             if (!videosNode.isArray()) {
-                throw new UpstreamServiceException("Nguồn TikTok trả về dữ liệu video không hợp lệ. Vui lòng thử lại.");
+                throw new UpstreamServiceException("The TikTok provider returned invalid video data. Try again.");
             }
 
             if (videosNode.isArray()) {
@@ -189,7 +189,7 @@ public class RapidApiTikTokScraperClient implements TikTokScraperClient {
                     long shares = v.path("share_count").asLong(0L);
                     int duration = v.path("duration").asInt(0);
 
-                    String soundTitle = v.path("music_info").path("title").asText("Âm thanh gốc - " + username);
+                    String soundTitle = v.path("music_info").path("title").asText("Original sound - " + username);
 
                     List<String> hashtags = new ArrayList<>();
                     Matcher matcher = HASHTAG_PATTERN.matcher(caption);
@@ -220,7 +220,7 @@ public class RapidApiTikTokScraperClient implements TikTokScraperClient {
         } catch (Exception e) {
             log.warn("[RapidApi] Failed to parse video posts response: {}", e.getMessage());
             if (e instanceof UpstreamServiceException upstream) throw upstream;
-            throw new UpstreamServiceException("Không đọc được danh sách video từ nguồn TikTok. Vui lòng thử lại.");
+            throw new UpstreamServiceException("Unable to read videos from the TikTok provider. Try again.");
         }
         return result;
     }

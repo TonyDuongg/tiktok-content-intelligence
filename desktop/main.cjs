@@ -26,7 +26,7 @@ async function saveSettings(next) {
 
 function assertSender(event, window) {
   if (!window || window.isDestroyed() || event.sender.id !== window.webContents.id
-    || event.senderFrame !== window.webContents.mainFrame) throw new Error('Yêu cầu không hợp lệ.');
+    || event.senderFrame !== window.webContents.mainFrame) throw new Error('Invalid request.');
 }
 
 function secureWindow(window, isApp = false) {
@@ -44,20 +44,20 @@ function secureWindow(window, isApp = false) {
 
 function updateMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate([
-    { label: 'Ứng dụng', submenu: [
-      { label: 'Cài đặt…', accelerator: 'CmdOrCtrl+,', enabled: !busy && !restarting, click: () => void openPreferences() },
-      { label: 'Mở thư mục dữ liệu', click: () => void shell.openPath(dataDirectory) },
-      { type: 'separator' }, { label: 'Thoát', role: 'quit' },
+    { label: 'Application', submenu: [
+      { label: 'Settings…', accelerator: 'CmdOrCtrl+,', enabled: !busy && !restarting, click: () => void openPreferences() },
+      { label: 'Open data folder', click: () => void shell.openPath(dataDirectory) },
+      { type: 'separator' }, { label: 'Quit', role: 'quit' },
     ] },
-    { label: 'Chỉnh sửa', submenu: [
-      { label: 'Hoàn tác', role: 'undo' }, { label: 'Làm lại', role: 'redo' }, { type: 'separator' },
-      { label: 'Cắt', role: 'cut' }, { label: 'Sao chép', role: 'copy' }, { label: 'Dán', role: 'paste' },
-      { label: 'Chọn tất cả', role: 'selectAll' },
+    { label: 'Edit', submenu: [
+      { label: 'Undo', role: 'undo' }, { label: 'Redo', role: 'redo' }, { type: 'separator' },
+      { label: 'Cut', role: 'cut' }, { label: 'Copy', role: 'copy' }, { label: 'Paste', role: 'paste' },
+      { label: 'Select all', role: 'selectAll' },
     ] },
-    { label: 'Hiển thị', submenu: [
-      { label: 'Phóng to', role: 'zoomIn' }, { label: 'Thu nhỏ', role: 'zoomOut' },
-      { label: 'Cỡ chữ mặc định', role: 'resetZoom' }, { type: 'separator' },
-      { label: 'Toàn màn hình', role: 'togglefullscreen' },
+    { label: 'View', submenu: [
+      { label: 'Zoom in', role: 'zoomIn' }, { label: 'Zoom out', role: 'zoomOut' },
+      { label: 'Actual size', role: 'resetZoom' }, { type: 'separator' },
+      { label: 'Full screen', role: 'togglefullscreen' },
     ] },
   ]));
 }
@@ -107,7 +107,7 @@ async function startBackend() {
   const resolvedRuntime = resolveRuntimeDirectory(runtime, app.getPath('temp'));
   const java = path.join(resolvedRuntime, 'java', 'bin', 'java.exe');
   const jar = path.join(runtime, 'backend.jar');
-  if (!fs.existsSync(java) || !fs.existsSync(jar)) throw new Error('Thiếu thành phần ứng dụng. Hãy giải nén lại toàn bộ tệp ZIP.');
+  if (!fs.existsSync(java) || !fs.existsSync(jar)) throw new Error('Application components are missing. Extract the entire ZIP again.');
   fs.mkdirSync(path.join(dataDirectory, 'data'), { recursive: true });
   fs.mkdirSync(path.join(dataDirectory, 'logs'), { recursive: true });
   const logFile = path.join(dataDirectory, 'logs', 'backend.log');
@@ -141,12 +141,12 @@ async function startBackend() {
   child.once('close', () => {
     log.end();
     if (backend === child && !quitting && !restarting) {
-      dialog.showErrorBox('Creator Studio đã dừng', 'Không thể duy trì dịch vụ cục bộ. Hãy mở lại ứng dụng. Nhật ký nằm trong thư mục dữ liệu.');
+      dialog.showErrorBox('Creator Studio stopped', 'The local service stopped. Restart the application. Logs are in the data folder.');
       app.quit();
     }
   });
   for (let attempt = 0; attempt < 180; attempt++) {
-    if (spawnError || child.exitCode !== null) throw new Error('Không thể khởi động dịch vụ cục bộ. Kiểm tra nhật ký trong thư mục dữ liệu.');
+    if (spawnError || child.exitCode !== null) throw new Error('Unable to start the local service. Check the logs in the data folder.');
     if (quitting) return;
     try {
       const response = await fetch(`${origin}/actuator/health`, { signal: AbortSignal.timeout(1500) });
@@ -158,14 +158,14 @@ async function startBackend() {
     } catch { /* Wait for Spring Boot. */ }
     await new Promise((resolve) => setTimeout(resolve, 400));
   }
-  throw new Error('Khởi động mất quá nhiều thời gian. Hãy mở lại ứng dụng và kiểm tra nhật ký trong thư mục dữ liệu.');
+  throw new Error('Startup timed out. Restart the application and check the logs in the data folder.');
 }
 
 async function openPreferences(firstRun = false) {
   if (quitting || busy || restarting) return;
   if (preferences && !preferences.isDestroyed()) { preferences.focus(); return; }
   preferences = new BrowserWindow({
-    title: 'Cài đặt · Creator Studio', parent: mainWindow, modal: true,
+    title: 'Settings · Creator Studio', parent: mainWindow, modal: true,
     width: 680, height: 790, minWidth: 560, minHeight: 640, backgroundColor: '#ffffff', show: false,
     autoHideMenuBar: true, icon: path.join(__dirname, 'resources', 'icon.png'),
     webPreferences: { preload: path.join(__dirname, 'settings-preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true },
@@ -184,7 +184,7 @@ async function openPreferences(firstRun = false) {
 ipcMain.handle('desktop:settings', async (event) => { assertSender(event, mainWindow); await openPreferences(); });
 ipcMain.handle('desktop:busy', (event, value) => {
   assertSender(event, mainWindow);
-  if (typeof value !== 'boolean') throw new Error('Trạng thái không hợp lệ.');
+  if (typeof value !== 'boolean') throw new Error('Invalid state.');
   busy = value; updateMenu();
 });
 ipcMain.handle('settings:load', (event) => {
@@ -195,7 +195,7 @@ ipcMain.handle('settings:folder', (event) => { assertSender(event, preferences);
 ipcMain.handle('settings:close', (event) => { assertSender(event, preferences); preferences.close(); });
 ipcMain.handle('settings:save', async (event, input) => {
   assertSender(event, preferences);
-  if (busy || restarting) return { error: 'Chờ tác vụ đang chạy hoàn tất rồi lưu cài đặt.' };
+  if (busy || restarting) return { error: 'Wait for the current task to finish before saving settings.' };
   try {
     await saveSettings(mergeSettings(input, settings));
     if (backend) {
@@ -224,7 +224,7 @@ else {
       try { settings = await decodeSettings(JSON.parse(fs.readFileSync(settingsFile, 'utf8')), safeStorage); }
       catch {
         unreadableSettings = true;
-        dialog.showMessageBoxSync({ type: 'warning', title: 'Nhập lại khóa API', message: 'Không đọc được cài đặt đã mã hóa trên tài khoản Windows này. Dữ liệu kịch bản vẫn được giữ. Hãy nhập lại khóa trong Cài đặt.' });
+        dialog.showMessageBoxSync({ type: 'warning', title: 'Re-enter API keys', message: 'Unable to read encrypted settings under this Windows account. Your scripts are preserved. Re-enter your keys in Settings.' });
       }
     }
     mainWindow = new BrowserWindow({
@@ -246,7 +246,7 @@ else {
     if (!fs.existsSync(settingsFile) || unreadableSettings) await openPreferences(true);
     if (!quitting) await startBackend();
   }).catch(async (error) => {
-    dialog.showErrorBox('Không thể mở Creator Studio', error.message);
+    dialog.showErrorBox('Unable to open Creator Studio', error.message);
     app.quit();
   });
 }

@@ -45,10 +45,10 @@ public class GeminiAiScriptGenerator implements AiScriptGeneratorClient {
     @Override
     public GeneratedScriptDto generateScript(String nicheName, String audience, String tone, List<TikTokVideo> references, int durationSeconds) {
         if (apiKey == null || apiKey.isBlank()) {
-            throw new UpstreamServiceException("Chưa cấu hình GEMINI_API_KEY. Thêm khóa API vào .env rồi khởi động lại backend.");
+            throw new UpstreamServiceException("Gemini is not configured. Add your API key in desktop Settings or set GEMINI_API_KEY and restart the backend.");
         }
         if (model == null || !model.matches("[A-Za-z0-9._-]+")) {
-            throw new UpstreamServiceException("GEMINI_MODEL chưa hợp lệ. Kiểm tra tên model trong cấu hình.");
+            throw new UpstreamServiceException("Invalid GEMINI_MODEL. Check the configured model name.");
         }
         long started = System.nanoTime();
         try {
@@ -66,19 +66,19 @@ public class GeminiAiScriptGenerator implements AiScriptGeneratorClient {
             if (response.statusCode() != 200) {
                 log.warn("Gemini request failed, HTTP {}", response.statusCode());
                 throw switch (response.statusCode()) {
-                    case 401, 403 -> new UpstreamServiceException("Gemini từ chối khóa API hoặc quyền truy cập. Kiểm tra khóa và dự án Google AI.");
-                    case 404 -> new UpstreamServiceException("Gemini không tìm thấy model đã cấu hình. Kiểm tra GEMINI_MODEL.");
-                    case 429 -> new UpstreamServiceException("Gemini đã hết hạn mức hoặc đang giới hạn yêu cầu. Kiểm tra quota rồi thử lại sau.");
-                    default -> new UpstreamServiceException("Gemini đang không đáp ứng (HTTP " + response.statusCode() + "). Vui lòng thử lại sau.");
+                    case 401, 403 -> new UpstreamServiceException("Gemini denied access. Check your API key and Google AI project permissions.");
+                    case 404 -> new UpstreamServiceException("Gemini could not find the configured model. Check GEMINI_MODEL.");
+                    case 429 -> new UpstreamServiceException("Gemini quota or rate limit reached. Check your quota and try again later.");
+                    default -> new UpstreamServiceException("Gemini is unavailable (HTTP " + response.statusCode() + "). Try again later.");
                 };
             }
             var root = objectMapper.readTree(response.body());
             if (root == null || !root.isObject()) {
-                throw new UpstreamServiceException("Gemini trả về dữ liệu không hợp lệ. Kịch bản chưa được lưu; vui lòng thử lại.");
+                throw new UpstreamServiceException("Gemini returned invalid data. The script was not saved; try again.");
             }
             var candidate = root.path("candidates").path(0);
             if (!"STOP".equals(candidate.path("finishReason").asText())) {
-                throw new UpstreamServiceException("Gemini chưa hoàn tất nội dung. Hãy chỉnh chủ đề hoặc thử lại.");
+                throw new UpstreamServiceException("Gemini did not complete the script. Adjust the topic or try again.");
             }
             var text = new StringBuilder();
             for (var part : candidate.path("content").path("parts")) {
@@ -90,23 +90,23 @@ public class GeminiAiScriptGenerator implements AiScriptGeneratorClient {
         } catch (UpstreamServiceException ex) { throw ex; }
         catch (HttpConnectTimeoutException ex) {
             log.warn("Gemini connection timed out: elapsedMs={}", elapsedMillis(started));
-            throw new UpstreamServiceException("Không kết nối được Gemini trong thời gian chờ. Kiểm tra mạng rồi thử lại; kịch bản chưa được lưu.");
+            throw new UpstreamServiceException("Connection to Gemini timed out. Check your network and try again; the script was not saved.");
         } catch (HttpTimeoutException ex) {
             log.warn("Gemini generation timed out: model={}, elapsedMs={}", model, elapsedMillis(started));
-            throw new UpstreamServiceException("Gemini chưa phản hồi sau 2 phút. Kịch bản chưa được lưu. Vui lòng thử lại sau ít phút.");
+            throw new UpstreamServiceException("Gemini did not respond within 2 minutes. The script was not saved. Try again in a few minutes.");
         } catch (JsonProcessingException ex) {
             log.warn("Gemini returned invalid JSON: elapsedMs={}", elapsedMillis(started));
-            throw new UpstreamServiceException("Gemini trả về dữ liệu không hợp lệ. Kịch bản chưa được lưu; vui lòng thử lại.");
+            throw new UpstreamServiceException("Gemini returned invalid data. The script was not saved; try again.");
         } catch (IOException ex) {
             log.warn("Gemini connection failed ({}): elapsedMs={}", ex.getClass().getSimpleName(), elapsedMillis(started));
-            throw new UpstreamServiceException("Kết nối với Gemini bị gián đoạn. Kiểm tra mạng rồi thử lại; kịch bản chưa được lưu.");
+            throw new UpstreamServiceException("The Gemini connection was interrupted. Check your network and try again; the script was not saved.");
         }
         catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            throw new UpstreamServiceException("Yêu cầu tạo kịch bản đã bị gián đoạn. Vui lòng thử lại.");
+            throw new UpstreamServiceException("Script generation was interrupted. Try again.");
         } catch (Exception ex) {
             log.warn("Gemini request could not complete ({})", ex.getClass().getSimpleName());
-            throw new UpstreamServiceException("Không kết nối được Gemini hoặc phản hồi không hợp lệ. Vui lòng thử lại.");
+            throw new UpstreamServiceException("Unable to connect to Gemini or read its response. Try again.");
         }
     }
 

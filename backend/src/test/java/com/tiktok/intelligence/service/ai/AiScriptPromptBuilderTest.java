@@ -11,8 +11,8 @@ class AiScriptPromptBuilderTest {
     void durationControlsSpeechBudgetSceneAllocationAndOutput() {
         String shortVideo = builder.buildPrompt("Chăm sóc da", "Sinh viên", "Rõ ràng", List.of(), 15);
         String longVideo = builder.buildPrompt("Chăm sóc da", "Sinh viên", "Rõ ràng", List.of(), 180);
-        assertThat(shortVideo).contains("Thời lượng mục tiêu: 15 giây", "36–45", "3–12 giây", "12–15 giây", "1–2 đoạn", "\"estimatedDurationSeconds\": 15");
-        assertThat(longVideo).contains("Thời lượng mục tiêu: 180 giây", "432–540", "3–175 giây", "175–180 giây", "6–10 đoạn", "\"estimatedDurationSeconds\": 180");
+        assertThat(shortVideo).contains("Write all generated script fields in English", "Chăm sóc da", "Sinh viên", "Target duration: 15 seconds", "36–45", "3–12 seconds", "12–15 seconds", "1–2 paragraphs", "\"estimatedDurationSeconds\": 15");
+        assertThat(longVideo).contains("Target duration: 180 seconds", "432–540", "3–175 seconds", "175–180 seconds", "6–10 paragraphs", "\"estimatedDurationSeconds\": 180");
         assertThatThrownBy(() -> builder.buildPrompt("Topic", "Audience", "Tone", List.of(), 601))
                 .isInstanceOf(IllegalArgumentException.class);
     }

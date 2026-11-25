@@ -3,14 +3,14 @@ const path = require('node:path');
 const DEFAULT_SETTINGS = Object.freeze({ model: 'gemini-3.5-flash', geminiKey: '', rapidApiKey: '' });
 
 function mergeSettings(input, previous = DEFAULT_SETTINGS) {
-  if (!input || typeof input !== 'object') throw new Error('Cấu hình không hợp lệ.');
+  if (!input || typeof input !== 'object') throw new Error('Invalid settings.');
   const model = typeof input.model === 'string' ? input.model.trim() : previous.model;
-  if (!/^[A-Za-z0-9._-]{1,100}$/.test(model)) throw new Error('Tên model Gemini chưa hợp lệ.');
+  if (!/^[A-Za-z0-9._-]{1,100}$/.test(model)) throw new Error('Invalid Gemini model name.');
   const result = { model };
   for (const [field, clear] of [['geminiKey', 'clearGemini'], ['rapidApiKey', 'clearRapidApi']]) {
     const value = input[field] ?? '';
     if (typeof value !== 'string' || /[\r\n\0]/.test(value) || value.length > 4096) {
-      throw new Error('Khóa API không hợp lệ. Kiểm tra và nhập lại.');
+      throw new Error('Invalid API key. Check it and enter it again.');
     }
     result[field] = input[clear] === true ? '' : value.trim() || previous[field];
   }
@@ -19,14 +19,14 @@ function mergeSettings(input, previous = DEFAULT_SETTINGS) {
 
 async function encodeSettings(settings, crypto) {
   if ((settings.geminiKey || settings.rapidApiKey) && !await crypto.isAsyncEncryptionAvailable()) {
-    throw new Error('Windows chưa sẵn sàng lưu khóa được mã hóa. Hãy thử mở lại ứng dụng.');
+    throw new Error('Windows encrypted key storage is unavailable. Restart the application and try again.');
   }
   const encrypt = async (value) => value ? (await crypto.encryptStringAsync(value)).toString('base64') : '';
   return { version: 1, model: settings.model, gemini: await encrypt(settings.geminiKey), rapidApi: await encrypt(settings.rapidApiKey) };
 }
 
 async function decodeSettings(record, crypto) {
-  if (record.version !== 1) throw new Error('Định dạng cấu hình không được hỗ trợ.');
+  if (record.version !== 1) throw new Error('Unsupported settings format.');
   const decrypt = async (value) => value ? (await crypto.decryptStringAsync(Buffer.from(value, 'base64'))).result : '';
   return mergeSettings({ model: record.model, geminiKey: await decrypt(record.gemini), rapidApiKey: await decrypt(record.rapidApi) });
 }

@@ -3,7 +3,7 @@ export const EMPTY_DRAFT = {
   categoryId: "",
   topic: "",
   targetAudience: "",
-  tone: "Chân thực, gần gũi",
+  tone: "Authentic and relatable",
   durationValue: "60",
   durationUnit: "seconds",
   customDuration: false,
@@ -28,14 +28,14 @@ export function formatDuration(seconds) {
   if (!Number.isInteger(seconds) || seconds <= 0) return "—";
   const minutes = Math.floor(seconds / 60);
   const rest = seconds % 60;
-  return [minutes ? `${minutes} phút` : "", rest ? `${rest} giây` : ""]
+  return [minutes ? `${minutes} min` : "", rest ? `${rest} sec` : ""]
     .filter(Boolean)
     .join(" ");
 }
 export const STATUS_LABELS = {
-  DRAFT: "Bản nháp",
-  FAVORITE: "Yêu thích",
-  ARCHIVED: "Đã lưu trữ",
+  DRAFT: "Draft",
+  FAVORITE: "Favorite",
+  ARCHIVED: "Archived",
 };
 
 export function categoryKind(category) {
@@ -52,14 +52,21 @@ export function categoryKind(category) {
 export function categoryLabel(category) {
   return (
     {
-      beauty: "Làm đẹp & Chăm sóc da",
-      fashion: "Thời trang & Phối đồ",
-      food: "Ẩm thực & Nấu ăn",
-      tech: "Công nghệ & Tiện ích",
-      lifestyle: "Đời sống & Kể chuyện",
+      beauty: "Beauty & skincare",
+      fashion: "Fashion & styling",
+      food: "Food & cooking",
+      tech: "Technology & gadgets",
+      lifestyle: "Lifestyle & storytelling",
     }[categoryKind(category)] || category.name
   );
 }
+
+const LEGACY_TONES = {
+  "Chân thực, gần gũi": "Authentic and relatable",
+  "Hài hước, dí dỏm": "Humorous and witty",
+  "Chuyên gia, rõ ràng": "Expert and clear",
+  "Tâm sự, kể chuyện": "Personal storytelling",
+};
 
 export function readDraft() {
   try {
@@ -85,7 +92,7 @@ export function readDraft() {
           : "",
       tone:
         typeof data.tone === "string"
-          ? data.tone.slice(0, 100)
+          ? (LEGACY_TONES[data.tone] || data.tone).slice(0, 100)
           : EMPTY_DRAFT.tone,
       ...(durationToSeconds(data.durationValue, data.durationUnit) !== null
         ? {
@@ -116,7 +123,7 @@ export function readDraft() {
               username:
                 typeof v.username === "string"
                   ? v.username.slice(0, 24)
-                  : "kênh đã chọn",
+                  : "selected channel",
             }))
         : [],
     };
@@ -151,7 +158,7 @@ export function normalizeUsername(input) {
 
 export function scriptText(script) {
   const structure = script.scriptStructure || {};
-  return `${script.title || "Kịch bản video"}\nĐối tượng: ${script.targetAudience || "Chưa xác định"}\n${script.requestedDurationSeconds ? `Thời lượng mục tiêu: ${formatDuration(script.requestedDurationSeconds)}\n` : ""}Thời lượng: ${script.estimatedDurationSeconds ?? "—"} giây (AI ước tính)\nNguồn: ${script.aiModelUsed || "Chưa xác định"}\n\nMỞ ĐẦU · 3 GIÂY\n${structure.hook3s || ""}\n\nNỘI DUNG CHÍNH\n${structure.bodyContent || ""}\n\nHƯỚNG DẪN QUAY\n${script.visualAndSoundCues || ""}\n\nKÊU GỌI HÀNH ĐỘNG\n${structure.callToAction || ""}\n\nHASHTAG\n${(script.suggestedHashtags || []).join(" ")}\n`;
+  return `${script.title || "Video script"}\nAudience: ${script.targetAudience || "Unspecified"}\n${script.requestedDurationSeconds ? `Target duration: ${formatDuration(script.requestedDurationSeconds)}\n` : ""}Duration: ${script.estimatedDurationSeconds ?? "—"} sec (AI estimate)\nSource: ${script.aiModelUsed || "Unspecified"}\n\nHOOK · 3 SECONDS\n${structure.hook3s || ""}\n\nMAIN CONTENT\n${structure.bodyContent || ""}\n\nFILMING NOTES\n${script.visualAndSoundCues || ""}\n\nCALL TO ACTION\n${structure.callToAction || ""}\n\nHASHTAG\n${(script.suggestedHashtags || []).join(" ")}\n`;
 }
 
 export function filterScripts(scripts, query, status) {
@@ -165,19 +172,19 @@ export function filterScripts(scripts, query, status) {
   );
 }
 export const formatNumber = (value) =>
-  new Intl.NumberFormat("vi-VN", {
+  new Intl.NumberFormat("en-US", {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(Number(value) || 0);
 export const formatDate = (value) =>
   value && !Number.isNaN(Date.parse(value))
-    ? new Intl.DateTimeFormat("vi-VN", {
+    ? new Intl.DateTimeFormat("en-US", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
         timeZone: "Asia/Ho_Chi_Minh",
       }).format(new Date(value))
-    : "Chưa có ngày";
+    : "Undated";
 export const safeVideoUrl = (value) => {
   try {
     const url = new URL(value);

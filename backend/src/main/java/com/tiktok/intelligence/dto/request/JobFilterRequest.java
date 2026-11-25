@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 public record JobFilterRequest(
-        @NotNull(message = "Loại tác vụ không được để trống")
+        @NotNull(message = "Job type is required")
         JobType jobType,
 
         Long categoryId,

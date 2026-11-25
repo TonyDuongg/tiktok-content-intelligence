@@ -1,240 +1,48 @@
-# TikTok Content Intelligence & AI Script Generator 🚀
+﻿# Creator Studio
 
-[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://adoptium.net/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![AWS SDK](https://img.shields.io/badge/AWS%20SDK%20v2-2.29.19-blue.svg)](https://aws.amazon.com/sdk-for-java/)
-[![AI Engine](https://img.shields.io/badge/AI-Google%20Gemini%20%7C%20Bedrock-blueviolet.svg)](https://aistudio.google.com/)
-[![Security](https://img.shields.io/badge/Firewall-agent--redact-purple.svg)](https://github.com/TonyDuongg/agent-redact)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+A desktop and web tool for researching public TikTok channels and writing video scripts with Gemini or AWS Bedrock. No app login is required.
 
-An enterprise-grade cloud-native platform built with **Java 21, Spring Boot 3, and AWS** to analyze TikTok competitor channels, identify viral video trends by niche, and automatically produce high-retention 3-part viral video scripts (Hook 3s, Body with visual cues, CTA) using **Generative AI (Google Gemini 3.5 Flash / AWS Bedrock Claude 3.5 Sonnet)**.
+[Download for Windows](https://github.com/TonyDuongg/tiktok-content-intelligence/releases/latest) · [User guide](docs/CREATOR_STUDIO.md) · [Research methodology](docs/RESEARCH.md) · [Publishing](docs/PUBLISHING.md)
 
----
+## Windows portable
 
-## 🏗 System Architecture
+Download the Windows x64 ZIP, extract the entire archive and open `Creator Studio.exe`. Java is bundled; Node.js, PostgreSQL and Docker are not required. Enter your own Gemini and RapidAPI keys in **Settings**. Provider requests require Internet access, appropriate subscriptions and available quota.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                       TIKTOK CREATOR STUDIO (WEB UI)                        │
-└──────────────────────────────────────┬──────────────────────────────────────┘
-                                       │ HTTP / REST APIs (No login)
-                                       ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    SPRING BOOT 3 ENTERPRISE BACKEND                         │
-│                                                                             │
-│  [ Shared Workspace ] ──► [ Direct access without accounts ]              │
-│                                      │                                      │
-│  [ Scraper Strategy ]  ──► [ Data Ingestion Service ]                       │
-│    (RapidAPI live)                 │                                      │
-│                                      ├──► [ AWS S3 Storage ] (Raw Payloads) │
-│                                      └──► [ PostgreSQL DB ] (Metrics/Videos)│
-│                                                                             │
-│  [ Job Dispatcher ]    ──► [ AWS SQS Message Queue ]                        │
-│                                      │ (Async Polling)                      │
-│                                      ▼                                      │
-│                            [ SQS Consumer Worker ]                          │
-│                                      │                                      │
-│                                      ▼                                      │
-│                        [ AI Script Generator Engine ]                       │
-│                        (Google Gemini 3.5 Flash / Bedrock)                  │
-│                                      │                                      │
-│                                      ▼                                      │
-│                        [ AiScript & Reference Videos ]                      │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                       │
-        ┌──────────────────────────────┼──────────────────────────────┐
-        ▼                              ▼                              ▼
-┌──────────────┐              ┌────────────────┐              ┌──────────────┐
-│  PostgreSQL  │              │     Redis      │              │  LocalStack  │
-│  Port: 5432  │              │   Port: 6379   │              │ (S3 & SQS)   │
-│              │              │                │              │  Port: 4566  │
-└──────────────┘              └────────────────┘              └──────────────┘
+Data and encrypted settings live in `%APPDATA%\Creator Studio`, separately from the executable. To upgrade, close the old app and extract the new ZIP into a separate folder. Back up data before upgrading. The Windows package is unsigned and has no automatic updater. See [desktop instructions](docs/DESKTOP.md).
+
+## Features
+
+- Write scripts targeting 15 seconds to 10 minutes, with dialogue, filming notes, calls to action and hashtags. Requested duration and the AI estimate remain separate.
+- Save browser briefs and a persistent script library; search, favorite, archive, restore, copy and export scripts.
+- Fetch public channel profiles and video samples through RapidAPI. Select up to five reference videos for a script.
+- Save reusable channel and target-audience profiles, including offering, goals, keywords and owner-supplied analytics notes.
+- Reopen saved channels without another scraper request. Compare keyword relevance, repeated hashtags, duration groups and measured view-count growth; export JSON reports with supporting evidence.
+- Keep desktop navigation and actions within the window while long content scrolls inside its pane.
+
+The UI, built-in guidance, errors, documentation and release notes use English. New AI scripts are requested in English. Existing scripts, user-entered profiles and original TikTok content retain their language. Production uses live providers and does not substitute sample data when they fail.
+
+Content overlap is not verified audience overlap. Public metrics do not reveal another channel's private demographics. Experiments are suggestions to test, not guarantees or calibrated forecasts of virality. See [research methodology and limits](docs/RESEARCH.md).
+
+## Run the web app locally
+
+Use Node.js and JDK 21. Copy `.env.example` to `.env`, configure live provider keys, and run `start.bat` or `./start.ps1`. The launcher checks configuration, starts services hidden and writes logs to `logs/`. Use `./start.ps1 -NoBrowser` to skip opening a browser.
+
+The local profile supports persistent H2 storage. Docker PostgreSQL uses host port `15432` by default. S3 archiving, SQS processing and LocalStack are optional and disabled in the direct workflow. A web deployment uses one shared workspace without accounts; desktop installations have separate local data. Hosting is a separate step and is pending while Railway billing is unavailable.
+
+## Build and verify
+
+Use Node.js 24 and JDK 21 for Windows packaging:
+
+```powershell
+npm ci
+npm --prefix frontend ci
+npm run desktop:build
 ```
 
----
+The build runs language checks, desktop tests, frontend lint/tests/build and backend verification, then packages and verifies the Windows ZIP. CI also checks source changes. Test doubles and isolated H2 databases are used for automated tests; paid provider calls are separate manual checks.
 
-## Creator Studio workflow
+See [the API specification](docs/api/API_SPECIFICATION.md), [architecture](docs/architecture/ARCHITECTURE.md), [roadmap](docs/plan/ROADMAP.md), [verification record](docs/VERIFICATION-v1.1.1.md) and [contribution guidelines](CONTRIBUTING.md). Larger deployments still need explicit database migrations, server-side pagination, provider budgets and additional concurrency/PostgreSQL/AWS testing.
 
-The light studio supports persistent browser briefs, up to five saved video references, searchable script status filters, archive/restore, and text exports. Normal operation uses real Gemini/Bedrock and RapidAPI responses. Provider errors never fall back to sample content. Local data persists on disk. See [Creator Studio usage and operating limits](docs/CREATOR_STUDIO.md) for the workflow, provider configuration, storage behavior, and checks.
+## License
 
-## Windows desktop application
-
-Run `npm run desktop:build` to create `release/Creator-Studio-1.1.0-Windows-x64.zip`. Extract the complete ZIP and open **Creator Studio.exe** on Windows x64. Java and local storage are included; no Docker or login is required. Each user enters their own Gemini/RapidAPI keys in Settings. The desktop workspace fits the window, with pinned actions and independently scrolling script and library panes. See [Windows portable instructions, storage and backups](docs/DESKTOP.md).
-
-[Download for Windows](https://github.com/TonyDuongg/tiktok-content-intelligence/releases/latest) · [Deployment and releases](docs/PUBLISHING.md) · [MIT License](LICENSE)
-
-Copyright © 2026 TonyDuongg. You may use, modify and redistribute this project under the MIT License, including commercial use, while retaining its copyright and license notice. Dependencies retain their [own licenses](THIRD-PARTY-NOTICES.md).
-
-## Audience profiles and content experiments
-
-Save reusable TikTok channel and target-customer profiles under **Nghiên cứu kênh → Hồ sơ của tôi**. Reopen saved channels without another scraper request, compare keyword relevance against public video content, inspect repeated hashtags and duration groups, and send a supported content experiment into the script writer. Repeated channel updates record view-count observations; measured growth requires at least two observations of the same video at least one hour apart. These are descriptive signals, not verified audience demographics or a calibrated prediction of virality. See [research methodology and limits](docs/RESEARCH.md).
-
-## 🌟 Key Features
-
-* **Competitor Channel Intelligence:** Ingests TikTok channel profiles and video metrics, automatically calculating standardized **Engagement Rates (ER)** to isolate the top 5% viral benchmark videos.
-* **Generative AI Script Engine:** Transforms few-shot viral transcripts into structured 3-part short-video scripts:
-  * **3-Second Hook:** High-impact verbal hook designed to maximize initial retention and stop user scrolling.
-  * **Body Content:** Scene-by-scene script lines addressing core viewer pain points and solutions.
-  * **Visual & Sound Cues:** Practical camera angle recommendations, facial expressions, and B-roll sound guidance.
-  * **Call to Action (CTA):** Clear closing engagement drivers (likes, comments, bookmarks, follows).
-  * **Trending Hashtags:** Auto-extracted niche-relevant hashtag bundles.
-* **Dual-Engine AI Strategy:** Native integration with **Google Gemini (3.5 Flash)** for live script generation (subject to provider quota and billing), plus **AWS Bedrock Runtime SDK** (Anthropic Claude 3.5 Sonnet / Amazon Titan) for enterprise deployments.
-* **Distributed Cloud Architecture:** AWS SQS asynchronous message queue with Dead Letter Queue (DLQ), automatic user credit refunds on failure, and durable raw scraping JSON storage in Amazon S3.
-* **Security & Secret Firewall:** Enforced via [agent-redact](https://github.com/TonyDuongg/agent-redact) across Git pre-commit hooks and GitHub Actions CI pipelines, preventing PII and cloud credentials from ever leaking to remote repositories.
-* **Creator Web Tool:** React + Vite application with one shared workspace. No registration, login, browser session or access token is required.
-
----
-
-## 📂 Repository Structure
-
-```
-tiktok-content-intelligence/
-├── .agentredactrc.json          # Security firewall rules for agent-redact
-├── .github/
-│   └── workflows/
-│       └── ci.yml               # GitHub Actions CI: Scan Secrets, Java 21 Build & Test
-├── docker/
-│   └── docker-compose.yml       # Local Infra: PostgreSQL, Redis, LocalStack
-├── docs/
-│   ├── database/
-│   │   ├── schema.sql           # Complete PostgreSQL DDL Script with Indexes & Seeds
-│   │   └── ERD.md               # Mermaid Entity Relationship Diagram specification
-├── backend/
-│   ├── pom.xml                  # Maven POM (Spring Boot 3.3.5, AWS SDK v2)
-│   ├── mvnw / mvnw.cmd          # Cross-platform Maven Wrapper
-│   └── src/
-│       ├── main/java/com/tiktok/intelligence/
-│       │   ├── config/          # Security, OpenAPI, AWS, and DataSeeder configurations
-│       │   ├── controller/      # REST API Controllers (Workspace, Categories, Channels, Jobs, Scripts)
-│       │   ├── domain/          # JPA Entities and Enums
-│       │   ├── dto/             # Immutable Java 21 Records (Requests/Responses)
-│       │   ├── exception/       # GlobalExceptionHandler and custom exceptions
-│       │   ├── repository/      # Spring Data JPA Repositories
-│       │   └── service/         # Business Services (Scraper, S3, SQS Worker, AI Engines)
-│       └── test/                # Unit & Integration Test Suite
-├── frontend/                    # TikTok Creator Studio Web App (React 19, Vite 8, Lucide)
-├── start.bat                    # One-Click Windows launcher script
-├── start.ps1                    # One-Click PowerShell launcher script
-├── stop.bat                     # Shutdown script
-└── package.json                 # Security and build tooling
-```
-
----
-
-## ⚡ Quick Start
-
-### 1. Prerequisites
-* **Java 21 LTS** (`java -version`)
-* **Node.js 22.12+** (`node -v`)
-* **Docker & Docker Desktop** (Optional: without Docker, the local profile stores data in a persistent H2 database; AI and TikTok providers remain live)
-
-### 2. Configure Google Gemini API Key
-Obtain a free API key from [Google AI Studio](https://aistudio.google.com/), then add it to your local environment. Create a `.env` file in the project root:
-```ini
-GEMINI_API_KEY=AIzaSy_your_api_key_here
-SCRAPER_PROVIDER=rapidapi
-RAPIDAPI_KEY=your_subscribed_rapidapi_key
-```
-*(Note: `.env` is already configured in `.gitignore` to protect your key from being pushed).*
-
-### 3. One-Click Launch
-
-**On Windows:**
-Double-click `start.bat` (or execute via PowerShell: `.\start.ps1`).
-
-The script automatically:
-1. Detects Docker status (starts PostgreSQL/Redis if Docker is running, or uses a persistent local H2 database; LocalStack is optional).
-2. Boots the Spring Boot backend on port `8080`.
-3. Boots the React Creator Studio on port `3000`.
-4. Opens your default web browser to `http://localhost:3000`.
-
----
-
-## 📖 API Documentation & Monitoring
-
-* **Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-* **OpenAPI 3 Spec (JSON):** [http://localhost:8080/api-docs](http://localhost:8080/api-docs)
-* **Actuator Health Check:** [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
-
----
-
-## 🧪 End-to-End API Walkthrough (cURL)
-
-All calls use the same tool workspace. No account setup or Authorization header is needed. Existing scripts remain stored when upgrading.
-
-### 1. List Supported Categories / Niches
-```bash
-curl -X GET http://localhost:8080/api/v1/categories
-```
-
-### 2. Ingest Competitor Channel & Compute Viral Engagement Rates
-```bash
-curl -X POST "http://localhost:8080/api/v1/channels/ingest?username=beauty_queen&categoryId=1&maxVideos=10"
-```
-
-### 3. Fetch Channel's Top Performing Viral Videos
-```bash
-curl -X GET "http://localhost:8080/api/v1/channels/beauty_queen/top-videos?limit=5"
-```
-
-### 4. Generate an AI Video Script Directly
-```bash
-curl -X POST http://localhost:8080/api/v1/scripts/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "categoryId": 1,
-    "topic": "How to organize a small makeup desk",
-    "targetAudience": "Students with a small desk",
-    "tone": "Friendly and practical",
-    "requestedDurationSeconds": 60,
-    "referenceVideoIds": []
-  }'
-```
-
-### 5. Retrieve Full Script Detail with Visual Cues
-```bash
-curl -X GET http://localhost:8080/api/v1/scripts/{scriptId}
-```
-
-### 6. Mark Script as Favorite
-```bash
-curl -X PATCH "http://localhost:8080/api/v1/scripts/{scriptId}/status?status=FAVORITE"
-```
-
----
-
-## ⚙️ Configuration & Environment Variables
-
-| Variable Name | Default Value | Description |
-|---|---|---|
-| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://127.0.0.1:15432/tiktok_intelligence` | PostgreSQL JDBC Connection URL |
-| `SPRING_DATASOURCE_USERNAME`| `dev_user` | Database Username |
-| `SPRING_DATASOURCE_PASSWORD`| `dev_password` | Database Password |
-| `AWS_REGION` | `ap-southeast-1` | Target AWS Region |
-| `AWS_ENDPOINT` | `http://localhost:4566` | LocalStack Endpoint (Local) or AWS Cloud |
-| `AWS_S3_BUCKET` | `tiktok-intelligence-bucket` | S3 bucket storing raw scraped JSON payloads |
-| `AWS_SQS_QUEUE_NAME` | `tiktok-job-queue` | Inbound SQS queue for async analysis tasks |
-| `AWS_SQS_DLQ_NAME` | `tiktok-job-dlq` | Dead Letter Queue for failed job retries |
-| `AI_PROVIDER` | `gemini` | Active AI Engine: `gemini` or `bedrock`; mocks are limited to automated tests |
-| `GEMINI_API_KEY` | `""` | Google Gemini API Key from Google AI Studio |
-| `GEMINI_MODEL` | `gemini-3.5-flash` | Gemini model name |
-| `AI_MODEL_ID` | `anthropic.claude-3-5-sonnet-20240620-v1:0` | AWS Bedrock model identifier |
-
----
-
-## 🛡️ Security Audit & Pre-Commit Firewall
-
-This project enforces a zero-secrets leak guarantee via `agent-redact`:
-```bash
-npm run scan:secrets
-```
-* **Git Pre-commit Hook:** Automatically scans staged files before any commit is finalized.
-* **CI Integration:** GitHub Actions runs independent security audits on all PRs and pushes to `main`.
-
----
-
-## 👥 Authors & License
-
-* **Author and copyright holder:** TonyDuongg ([@TonyDuongg](https://github.com/TonyDuongg))
-* **Repository:** [TonyDuongg/tiktok-content-intelligence](https://github.com/TonyDuongg/tiktok-content-intelligence)
-* **License:** MIT
+MIT License, copyright © 2026 [TonyDuongg](https://github.com/TonyDuongg). Keep the [license](LICENSE) and copyright notice when redistributing. Bundled components retain their own licenses; see [third-party notices](THIRD-PARTY-NOTICES.md).

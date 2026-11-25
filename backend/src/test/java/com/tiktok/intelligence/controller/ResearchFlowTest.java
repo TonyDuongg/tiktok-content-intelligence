@@ -54,7 +54,7 @@ class ResearchFlowTest {
                 .andExpect(status().isBadRequest());
         mvc.perform(post("/api/v1/research-profiles").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"test\",\"targetAudience\":\"test\",\"keywords\":\"!!!\"}"))
-                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("từ khóa")));
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("keywords")));
         mvc.perform(get("/api/v1/channels/unknown/insights").param("profileId", "0")).andExpect(status().isBadRequest());
     }
 

@@ -24,14 +24,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
     public ResponseEntity<ApiResponse<Void>> handleStatus(org.springframework.web.server.ResponseStatusException ex) {
         return ResponseEntity.status(ex.getStatusCode()).body(ApiResponse.error(
-                ex.getReason() == null ? "Yêu cầu không hợp lệ." : ex.getReason()));
+                ex.getReason() == null ? "Invalid request." : ex.getReason()));
     }
 
     @ExceptionHandler({jakarta.validation.ConstraintViolationException.class,
             org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
             org.springframework.http.converter.HttpMessageNotReadableException.class})
     public ResponseEntity<ApiResponse<Void>> handleInvalidInput(Exception ex) {
-        return ResponseEntity.badRequest().body(ApiResponse.error("Dữ liệu không hợp lệ. Vui lòng kiểm tra các trường và giới hạn đã nhập."));
+        return ResponseEntity.badRequest().body(ApiResponse.error("Invalid data. Check the fields and their limits."));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -74,17 +74,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleGeneralException(Exception ex) {
         if (ex instanceof org.springframework.web.ErrorResponse error && error.getStatusCode().is4xxClientError()) {
             String message = switch (error.getStatusCode().value()) {
-                case 400 -> "Yêu cầu thiếu thông tin hoặc dữ liệu không hợp lệ.";
-                case 404 -> "Không tìm thấy đường dẫn được yêu cầu.";
-                case 405 -> "Phương thức gửi yêu cầu không được hỗ trợ.";
-                case 415 -> "Định dạng nội dung không được hỗ trợ. Vui lòng gửi JSON.";
-                default -> "Yêu cầu không được chấp nhận. Vui lòng kiểm tra và thử lại.";
+                case 400 -> "Required information is missing or invalid.";
+                case 404 -> "The requested endpoint was not found.";
+                case 405 -> "This request method is not supported.";
+                case 415 -> "Unsupported content type. Send JSON.";
+                default -> "The request was rejected. Check the input and try again.";
             };
             return ResponseEntity.status(error.getStatusCode()).headers(error.getHeaders()).body(ApiResponse.error(message));
         }
         log.error("Unhandled server exception: ", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("Máy chủ chưa hoàn tất yêu cầu. Vui lòng thử lại; nếu lỗi tiếp diễn, kiểm tra log backend."));
+                .body(ApiResponse.error("The server could not complete the request. Try again; if it persists, check the backend logs."));
     }
 }
 

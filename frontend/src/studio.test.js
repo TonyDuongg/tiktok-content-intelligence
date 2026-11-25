@@ -31,9 +31,9 @@ test("duration supports seconds, fractional minutes and whole-second boundaries"
     assert.equal(durationToSeconds(value, "seconds"), null);
   }
   assert.equal(durationToSeconds("1.001", "minutes"), null);
-  assert.equal(formatDuration(90), "1 phút 30 giây");
-  assert.equal(formatDuration(120), "2 phút");
-  assert.equal(formatDuration(15), "15 giây");
+  assert.equal(formatDuration(90), "1 min 30 sec");
+  assert.equal(formatDuration(120), "2 min");
+  assert.equal(formatDuration(15), "15 sec");
 });
 
 test("draft restores custom duration and falls back safely for older drafts", () => {
@@ -67,8 +67,8 @@ test("export keeps requested duration distinct from the AI estimate", () => {
     requestedDurationSeconds: 120,
     estimatedDurationSeconds: 115,
   });
-  assert.ok(text.includes("Thời lượng mục tiêu: 2 phút"));
-  assert.ok(text.includes("115 giây (AI ước tính)"));
+  assert.ok(text.includes("Target duration: 2 min"));
+  assert.ok(text.includes("115 sec (AI estimate)"));
 });
 
 test("normalizes TikTok handles and full profile URLs", () => {
@@ -85,7 +85,7 @@ test("uses the same category meaning for SQL seeds and local seeds", () => {
   assert.equal(categoryKind({ slug: "cong-nghe-tien-ich" }), "tech");
   assert.equal(
     categoryLabel({ slug: "food-cooking", name: "Food & Cooking" }),
-    "Ẩm thực & Nấu ăn",
+    "Food & cooking",
   );
 });
 test("rejects other hosts, video links, empty and malformed handles", () => {
@@ -115,7 +115,7 @@ test("exports duration from the API root and includes all script sections", () =
     suggestedHashtags: ["#tag"],
   });
   for (const value of [
-    "48 giây",
+    "48 sec",
     "mock-template",
     "Hook",
     "Body",
@@ -186,4 +186,18 @@ test("migrates an earlier brief without reusing sample reference IDs", () => {
   };
   assert.equal(readDraft().topic, "Chủ đề cũ");
   assert.deepEqual(readDraft().references, []);
+});
+
+
+test("English upgrade migrates built-in tones without translating user content", () => {
+  const saved = { categoryId: 3, topic: "Chăm sóc da", targetAudience: "Sinh viên",
+    tone: "Hài hước, dí dỏm", references: [{ id: 2, caption: "Mỹ phẩm", username: "creator" }] };
+  globalThis.localStorage = { getItem: key => key === "creator-studio-draft-v2-live" ? JSON.stringify(saved) : null };
+  const restored = readDraft();
+  assert.equal(restored.tone, "Humorous and witty");
+  assert.equal(restored.topic, saved.topic);
+  assert.equal(restored.targetAudience, saved.targetAudience);
+  assert.deepEqual(restored.references, saved.references);
+  saved.tone = "Giọng riêng của tôi";
+  assert.equal(readDraft().tone, saved.tone);
 });

@@ -19,7 +19,7 @@ import {
 
 function ScriptProse({ text }) {
   return (text || "")
-    .replace(/\s+(?=(?:Cách|Bước|Mẹo)\s+\d+\s*:)/gu, "\n\n")
+    .replace(/\s+(?=(?:Tip|Step|Method|Cách|Bước|Mẹo)\s+\d+\s*:)/gu, "\n\n")
     .replace(/\n(?=\s*\[\d)/gu, "\n\n")
     .split(/\n\s*\n/)
     .filter(Boolean)
@@ -46,7 +46,7 @@ export function Notice({ children, onRetry, warning = false }) {
       <div>{children}</div>
       {onRetry && (
         <button className="text-button" onClick={onRetry}>
-          Thử lại
+          Try again
         </button>
       )}
     </div>
@@ -77,30 +77,28 @@ export function ScriptPreview({
     return (
       <section
         className="preview panel"
-        aria-label="Kết quả kịch bản"
+        aria-label="Script result"
         aria-busy={loading}
       >
         <div className="panel-heading">
-          <h2>Kịch bản</h2>
+          <h2>Script</h2>
         </div>
         {loading ? (
           <div className="empty-state" role="status">
             <LoaderCircle className="spin" size={30} />
-            <h2>Đang viết kịch bản của bạn…</h2>
+            <h2>Writing your script…</h2>
             <p>
-              Bạn có thể chuyển sang kho kịch bản trong lúc chờ. Kết quả sẽ được
-              lưu tự động khi hoàn tất.
+              You can browse the library while you wait. The result is saved automatically when complete.
             </p>
           </div>
         ) : (
           <>
-            <EmptyState title="Kịch bản sẽ xuất hiện ở đây">
-              Điền thông tin video và chọn Tạo kịch bản. Kết quả gồm lời thoại,
-              gợi ý quay và hashtag.
+            <EmptyState title="Your script will appear here">
+              Complete the brief and select Generate script for dialogue, filming notes and hashtags.
             </EmptyState>
             <button className="research-link" onClick={onResearch}>
               <TrendingUp size={18} />
-              <span>Tìm video tham khảo</span>
+              <span>Find reference videos</span>
               <ArrowRight size={18} />
             </button>
           </>
@@ -112,15 +110,14 @@ export function ScriptPreview({
   return (
     <article
       className="preview panel"
-      aria-label="Kết quả kịch bản"
+      aria-label="Script result"
       aria-busy={loading}
       ref={previewRef}
       tabIndex={-1}
     >
       {loading && (
         <p className="loading-line" role="status">
-          <LoaderCircle size={16} className="spin" /> Đang tạo bản mới. Bản
-          trước vẫn ở bên dưới.
+          <LoaderCircle size={16} className="spin" /> Generating a new version. Your previous script is below.
         </p>
       )}
       <div className="script-heading">
@@ -128,29 +125,29 @@ export function ScriptPreview({
           <span>
             <Clock size={14} />{" "}
             {script.requestedDurationSeconds
-              ? `Mục tiêu ${formatDuration(script.requestedDurationSeconds)}`
-              : `Ước tính ${formatDuration(script.estimatedDurationSeconds)}`}
+              ? `Target ${formatDuration(script.requestedDurationSeconds)}`
+              : `Estimated ${formatDuration(script.estimatedDurationSeconds)}`}
           </span>
           <span>{STATUS_LABELS[script.status]}</span>
           <span title={script.aiModelUsed}>
             {script.aiModelUsed?.startsWith("google-")
               ? "Gemini"
-              : script.aiModelUsed || "Chưa xác định nguồn"}
+              : script.aiModelUsed || "Unknown source"}
           </span>
         </div>
         <h2>{script.title}</h2>
         <p className="muted">
-          Dành cho {script.targetAudience || "người xem TikTok"}
+          For {script.targetAudience || "TikTok viewers"}
         </p>
         <div className="actions">
           <button className="button secondary" onClick={() => onCopy(script)}>
-            <Copy size={16} /> Sao chép
+            <Copy size={16} /> Copy
           </button>
           <button
             className="button secondary"
             onClick={() => onDownload(script)}
           >
-            <Download size={16} /> Tải .txt
+            <Download size={16} /> Download .txt
           </button>
           <button
             className={`button secondary ${script.status === "FAVORITE" ? "is-favorite" : ""}`}
@@ -164,42 +161,40 @@ export function ScriptPreview({
             }
           >
             <Bookmark size={16} />
-            {script.status === "FAVORITE" ? "Đã yêu thích" : "Yêu thích"}
+            {script.status === "FAVORITE" ? "Favorited" : "Favorite"}
           </button>
         </div>
       </div>
-      <div className="preview-content" tabIndex={0} role="region" aria-label="Nội dung kịch bản">
+      <div className="preview-content" tabIndex={0} role="region" aria-label="Script content">
       {script.requestedDurationSeconds && (
         <p className="duration-note">
-          AI ước tính {formatDuration(script.estimatedDurationSeconds)}. Đọc thử
-          để điều chỉnh nhịp nói và thời gian chuyển cảnh.
+          AI estimates {formatDuration(script.estimatedDurationSeconds)}. Read it aloud to adjust pacing and transitions.
         </p>
       )}
       {isSample && (
         <Notice warning>
-          Đây là khung minh họa từ chế độ mẫu. Hãy bổ sung nội dung thực tế; kết
-          quả này chưa được tạo bởi mô hình AI trực tuyến.
+          This older sample was not generated by a live AI model. Replace it with a new script before use.
         </Notice>
       )}
       <section className="script-part hook">
         <div className="part-title">
-          <h3>Mở đầu</h3>
-          <span>0–3 giây</span>
+          <h3>Hook</h3>
+          <span>0–3 sec</span>
         </div>
         <p>{structure.hook3s}</p>
       </section>
       <section className="script-part">
-        <h3>Nội dung chính</h3>
+        <h3>Main content</h3>
         <ScriptProse text={structure.bodyContent} />
       </section>
       <details className="script-part shooting-notes">
-        <summary>Hướng dẫn quay & âm thanh</summary>
+        <summary>Filming & sound notes</summary>
         <ScriptProse
-          text={script.visualAndSoundCues || "Chưa có hướng dẫn quay."}
+          text={script.visualAndSoundCues || "No filming notes available."}
         />
       </details>
       <section className="script-part">
-        <h3>Kêu gọi hành động</h3>
+        <h3>Call to action</h3>
         <p>{structure.callToAction}</p>
       </section>
       {script.suggestedHashtags?.length > 0 && (
@@ -211,7 +206,7 @@ export function ScriptPreview({
       )}
       {script.referenceVideos?.length > 0 && (
         <section className="script-part">
-          <h3>Video tham khảo</h3>
+          <h3>Reference videos</h3>
           <ul className="reference-links">
             {script.referenceVideos.map((video, i) => (
               <li key={video.videoId}>
@@ -234,8 +229,7 @@ export function ScriptPreview({
         </section>
       )}
       <p className="footnote">
-        Kịch bản đã tự động lưu vào kho · {formatDate(script.createdAt)}. Kiểm
-        tra thông tin và điều chỉnh lời thoại trước khi quay.
+        Automatically saved to the library · {formatDate(script.createdAt)}. Check the facts and edit the dialogue before filming.
       </p>
       </div>
     </article>

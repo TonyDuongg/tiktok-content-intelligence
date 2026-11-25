@@ -25,7 +25,7 @@ test('Unicode installations cache only Java and backend, without settings or per
     assert.ok(fs.existsSync(path.join(destination, 'java/bin/java.exe')));
     assert.equal(fs.existsSync(path.join(destination, 'settings.json')), false);
     assert.equal(resolveRuntimeDirectory(source, path.join(fixture, 'cache')), destination);
-    assert.throws(() => resolveRuntimeDirectory(source, path.join(fixture, 'bộ đệm')), /không dấu/);
+    assert.throws(() => resolveRuntimeDirectory(source, path.join(fixture, 'bộ đệm')), /ASCII path/);
   } finally {
     const resolved = path.resolve(fixture);
     assert.ok(resolved.startsWith(`${path.resolve(os.tmpdir())}${path.sep}creator-runtime-test-`));

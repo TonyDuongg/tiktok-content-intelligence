@@ -26,23 +26,23 @@ async function request(endpoint, options = {}) {
       throw new Error(
         validation ||
           (response.status === 429
-            ? "Bạn đang gửi quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại."
+            ? "Too many requests. Wait a moment and try again."
             : data?.message ||
-              `Không thể hoàn tất yêu cầu (${response.status}). Vui lòng thử lại.`),
+              `Unable to complete the request (${response.status}). Try again.`),
       );
     }
     if (!data)
-      throw new Error("Máy chủ trả về dữ liệu không hợp lệ. Vui lòng thử lại.");
+      throw new Error("The server returned invalid data. Try again.");
     return data;
   } catch (error) {
     if (signal?.aborted) throw error;
     if (controller.signal.aborted)
       throw new Error(
-        "Yêu cầu mất quá nhiều thời gian. Hãy làm mới kho kịch bản trước khi tạo lại để tránh trùng lặp.",
+        "The request timed out. Refresh the library before generating again to avoid duplicates.",
       );
     if (error instanceof TypeError)
       throw new Error(
-        "Không kết nối được máy chủ. Kiểm tra backend và thử lại.",
+        "Unable to connect to the server. Check the backend and try again.",
       );
     throw error;
   } finally {

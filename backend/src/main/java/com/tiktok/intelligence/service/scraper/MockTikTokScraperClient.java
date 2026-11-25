@@ -76,7 +76,7 @@ public class MockTikTokScraperClient implements TikTokScraperClient {
                     comments,
                     shares,
                     35 + random.nextInt(40),
-                    "Âm thanh gốc - " + cleanUsername,
+                    "Original sound - " + cleanUsername,
                     sampleTranscripts[idx],
                     Instant.now().minus(i * 2L + 1, ChronoUnit.DAYS)
             ));

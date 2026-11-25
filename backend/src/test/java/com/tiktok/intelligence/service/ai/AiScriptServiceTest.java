@@ -216,7 +216,7 @@ class AiScriptServiceTest {
         var response = aiScriptService.generateDirectScript(user.getEmail(), new DirectGenerateScriptRequest(
                 4L, "  Sắp xếp màn hình điện thoại  ", "Sinh viên", "Rõ ràng", List.of(7L, 7L), 120));
 
-        verify(aiClient).generateScript(eq("Sắp xếp màn hình điện thoại\nLĩnh vực: Công nghệ"), eq("Sinh viên"), eq("Rõ ràng"), eq(List.of(video)), eq(120));
+        verify(aiClient).generateScript(eq("Sắp xếp màn hình điện thoại\nCategory: Công nghệ"), eq("Sinh viên"), eq("Rõ ràng"), eq(List.of(video)), eq(120));
         assertThat(response.referenceVideos()).hasSize(1);
         assertThat(response.referenceVideos().getFirst().videoId()).isEqualTo(7L);
         assertThat(response.estimatedDurationSeconds()).isEqualTo(45);

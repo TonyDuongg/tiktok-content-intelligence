@@ -1,11 +1,13 @@
-Giao diện Windows vừa khung cửa sổ, không phải kéo cả trang để tìm nút tạo kịch bản.
+The Windows interface fits the application window with primary actions kept visible.
 
-- Thu gọn bảng thiết lập thành hai cột, giữ chữ và ô nhập dễ đọc.
-- Ghim nút **Tạo kịch bản**; kịch bản dài, danh sách và tùy chọn mở rộng cuộn trong vùng riêng.
-- Cửa sổ hẹp có nút **Thiết lập / Kịch bản**, tự chuyển sang kết quả khi mở hoặc tạo kịch bản.
-- Giữ thanh điều hướng, thao tác sao chép và tải kịch bản trong khung làm việc.
-- Thông báo chưa cấu hình khóa API dùng trạng thái nhắc nhở rõ ràng.
+- Compact two-column brief with readable labels and fields.
+- Pinned Generate script action; long scripts, lists and expanded options scroll within their panes.
+- Narrow windows switch between Brief and Script and show results when a script is opened or generated.
+- Navigation, copy and download actions remain within the workspace.
+- Clear reminders for missing API keys.
 
-**Cập nhật:** đóng bản cũ, tải ZIP Windows x64 bên dưới, giải nén toàn bộ vào thư mục mới và mở `Creator Studio.exe`. Dữ liệu và cài đặt trong `%APPDATA%\Creator Studio` được giữ nguyên. Ứng dụng chưa tự cập nhật.
+This historical binary retains its Vietnamese interface. Use v1.1.1 or later for English.
 
-Không cần đăng nhập hoặc cài Java. Mỗi người dùng nhập khóa Gemini và RapidAPI của mình trong **Cài đặt**. Bản Windows chưa ký số. MIT License, © 2026 TonyDuongg.
+To upgrade, close the old app, extract the entire new ZIP into a separate folder and open `Creator Studio.exe`. Data and settings in `%APPDATA%\Creator Studio` are preserved. There is no automatic updater.
+
+No login or separate Java installation is needed. Each user supplies Gemini and RapidAPI keys in Settings. Windows builds are unsigned. MIT License, © 2026 TonyDuongg.

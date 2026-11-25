@@ -32,7 +32,7 @@ class WorkspaceFlowTest {
         long videoId = mapper.readTree(videos).path("data").get(0).path("id").asLong();
         String response = mvc.perform(post("/api/v1/scripts/generate").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"categoryId\":4,\"topic\":\"Sắp xếp điện thoại\",\"targetAudience\":\"Sinh viên\",\"tone\":\"Rõ ràng\",\"requestedDurationSeconds\":120,\"referenceVideoIds\":[" + videoId + "]}"))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.data.title").value("Bản mẫu: Sắp xếp điện thoại"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.data.title").value("Sample: Sắp xếp điện thoại"))
                 .andExpect(jsonPath("$.data.referenceVideos[0].videoId").value(videoId))
                 .andExpect(jsonPath("$.data.requestedDurationSeconds").value(120))
                 .andReturn().getResponse().getContentAsString();

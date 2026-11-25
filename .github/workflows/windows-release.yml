@@ -54,5 +54,5 @@ jobs:
         run: |
           $version = (Get-Content package.json | ConvertFrom-Json).version
           $archive = "release/Creator-Studio-$version-Windows-x64.zip"
-          gh release create "v$version" $archive "$archive.sha256.txt" LICENSE THIRD-PARTY-NOTICES.md --target $env:GITHUB_SHA --title "Creator Studio $version" --generate-notes
+          gh release create "v$version" $archive "$archive.sha256.txt" LICENSE THIRD-PARTY-NOTICES.md --target $env:GITHUB_SHA --title "Creator Studio $version" --notes-file "docs/RELEASE-v$version.md"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

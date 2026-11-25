@@ -11,18 +11,18 @@ import java.util.List;
 public record DirectGenerateScriptRequest(
         @Positive Long categoryId,
 
-        @NotBlank(message = "Chủ đề video không được để trống")
-        @Size(max = 1000, message = "Chủ đề tối đa 1000 ký tự")
+        @NotBlank(message = "Video topic is required")
+        @Size(max = 1000, message = "Topic must not exceed 1000 characters")
         String topic,
 
-        @Size(max = 300, message = "Đối tượng tối đa 300 ký tự")
+        @Size(max = 300, message = "Target audience must not exceed 300 characters")
         String targetAudience,
-        @Size(max = 100, message = "Giọng điệu tối đa 100 ký tự")
+        @Size(max = 100, message = "Tone must not exceed 100 characters")
         String tone,
-        @Size(max = 5, message = "Chọn tối đa 5 video tham khảo")
+        @Size(max = 5, message = "Select up to 5 reference videos")
         List<@Positive Long> referenceVideoIds,
-        @Min(value = 15, message = "Thời lượng tối thiểu 15 giây")
-        @Max(value = 600, message = "Thời lượng tối đa 10 phút")
+        @Min(value = 15, message = "Duration must be at least 15 seconds")
+        @Max(value = 600, message = "Duration must not exceed 10 minutes")
         Integer requestedDurationSeconds
 ) {
     public int durationSeconds() {

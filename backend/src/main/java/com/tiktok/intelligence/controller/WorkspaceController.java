@@ -27,8 +27,8 @@ public class WorkspaceController {
                 || (("gemini".equalsIgnoreCase(aiProvider) || "google".equalsIgnoreCase(aiProvider)) && !geminiKey.isBlank());
         boolean scraperConfigured = "rapidapi".equalsIgnoreCase(scraperProvider) && !scraperKey.isBlank();
         List<String> issues = new ArrayList<>();
-        if (!aiConfigured) issues.add("Chưa cấu hình AI thật. Kiểm tra AI_PROVIDER và GEMINI_API_KEY trong .env.");
-        if (!scraperConfigured) issues.add("Chưa cấu hình nguồn TikTok. Kiểm tra SCRAPER_PROVIDER=rapidapi và RAPIDAPI_KEY trong .env.");
+        if (!aiConfigured) issues.add("AI is not configured. Check AI_PROVIDER and GEMINI_API_KEY in the server environment, or add your key in desktop Settings.");
+        if (!scraperConfigured) issues.add("TikTok data is not configured. Check SCRAPER_PROVIDER=rapidapi and RAPIDAPI_KEY in the server environment, or add your key in desktop Settings.");
         return ApiResponse.success(new WorkspaceStatus(true, aiConfigured, scraperConfigured,
                 aiProvider, "bedrock".equalsIgnoreCase(aiProvider) ? "AWS Bedrock" : model, scraperProvider, issues));
     }

@@ -1,15 +1,13 @@
-Creator Studio là tool mã nguồn mở để nghiên cứu kênh TikTok và tạo kịch bản bằng Gemini. Bản quyền © 2026 TonyDuongg, MIT License.
+Creator Studio is an open-source tool for TikTok channel research and Gemini script writing. MIT License, © 2026 TonyDuongg.
 
-- Giao diện tiếng Việt nền sáng, không cần đăng nhập.
-- Tạo kịch bản từ 15 giây đến 10 phút, lưu bản nhập và kho kịch bản.
-- Nghiên cứu kênh qua RapidAPI và chọn video tham khảo.
-- Bản Windows x64 đi kèm Java và cơ sở dữ liệu cục bộ. Nhập khóa API riêng trong Cài đặt; khóa được mã hóa theo tài khoản Windows.
-- Có cấu hình Docker/Railway để tự triển khai bản web dùng chung.
+- Light Vietnamese interface without login. This historical binary retains its original language; download v1.1.1 or later for English.
+- Scripts from 15 seconds to 10 minutes, saved drafts and a persistent library.
+- RapidAPI channel research and selected video references.
+- Windows x64 package with bundled Java, local database and API keys encrypted for the Windows account.
+- Docker/Railway configuration for self-hosting the shared web version.
 
-**Tải và chạy:** tải ZIP Windows x64 trong mục Assets, giải nén toàn bộ và mở `Creator Studio.exe`. Không cần cài Java, Node.js, PostgreSQL hay Docker. AI và TikTok cần Internet, khóa API hợp lệ và hạn mức từ nhà cung cấp.
+Download the Windows x64 ZIP from Assets, extract the entire archive and open `Creator Studio.exe`. Java, Node.js, PostgreSQL and Docker are not required. AI and TikTok requests require Internet access, valid provider keys and quota.
 
-**License:** MIT cho phép dùng, sửa và phân phối, kể cả thương mại, với điều kiện giữ thông báo bản quyền và license. Các thành phần bên thứ ba có giấy phép riêng, được giữ trong gói phân phối.
+MIT permits use, modification and redistribution, including commercially, while retaining the copyright and license notice. Bundled dependencies retain their own licenses.
 
-**Lưu ý phiên bản:** chưa ký số, chưa tự cập nhật; dữ liệu Windows và bản web không tự đồng bộ. Bản web chỉ online khi đã được chủ website triển khai; cấu hình trong repository không tự tạo website công khai.
-
-Hướng dẫn: `docs/DESKTOP.md` và `docs/PUBLISHING.md` trong repository.
+The build is unsigned, has no automatic updates and does not synchronize desktop/web data. A public website exists only after a separate hosting deployment. See `docs/DESKTOP.md` and `docs/PUBLISHING.md` in the repository.
