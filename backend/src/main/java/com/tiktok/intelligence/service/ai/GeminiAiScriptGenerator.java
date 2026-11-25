@@ -44,6 +44,10 @@ public class GeminiAiScriptGenerator implements AiScriptGeneratorClient {
 
     @Override
     public GeneratedScriptDto generateScript(String nicheName, String audience, String tone, List<TikTokVideo> references, int durationSeconds) {
+        return generateWithCredentials(nicheName, audience, tone, references, durationSeconds, apiKey, model);
+    }
+
+    public GeneratedScriptDto generateWithCredentials(String nicheName, String audience, String tone, List<TikTokVideo> references, int durationSeconds, String apiKey, String model) {
         if (apiKey == null || apiKey.isBlank()) {
             throw new UpstreamServiceException("Gemini is not configured. Add your API key in desktop Settings or set GEMINI_API_KEY and restart the backend.");
         }

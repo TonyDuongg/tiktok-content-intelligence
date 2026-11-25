@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const net = require('node:net');
 const { spawn } = require('node:child_process');
-const { DEFAULT_SETTINGS, mergeSettings, encodeSettings, decodeSettings, backendEnvironment, canOpenExternal } = require('./lib.cjs');
+const { PROVIDERS, DEFAULT_SETTINGS, mergeSettings, encodeSettings, decodeSettings, backendEnvironment, canOpenExternal } = require('./lib.cjs');
 const { resolveRuntimeDirectory } = require('./windows-runtime.cjs');
 
 app.setName('Creator Studio');
@@ -189,7 +189,21 @@ ipcMain.handle('desktop:busy', (event, value) => {
 });
 ipcMain.handle('settings:load', (event) => {
   assertSender(event, preferences);
-  return { model: settings.model, geminiConfigured: Boolean(settings.geminiKey), rapidApiConfigured: Boolean(settings.rapidApiKey), firstRun: preferences.firstRun };
+  return { provider: settings.provider, models: settings.models,
+    configured: Object.fromEntries(PROVIDERS.map(id => [id, Boolean(settings[`${id}Key`])])),
+    rapidApiConfigured: Boolean(settings.rapidApiKey), firstRun: preferences.firstRun };
+});
+ipcMain.handle('settings:models', async (event, input) => {
+  assertSender(event, preferences);
+  try {
+    const next = mergeSettings({ provider: input?.provider, [`${input?.provider}Key`]: input?.apiKey }, settings);
+    const key = input?.clear === true ? '' : next[`${next.provider}Key`];
+    if (!key) return { error: 'Enter an API key before loading models.' };
+    const response = await fetch(`${origin}/api/v1/ai/models`, { method: 'POST', signal: AbortSignal.timeout(90000),
+      headers: { 'Content-Type': 'application/json', 'X-AI-Provider': next.provider, 'X-AI-Key': key } });
+    const result = await response.json();
+    return response.ok && result.success ? { models: result.data } : { error: result.message || 'Unable to load models. Try again.' };
+  } catch { return { error: 'Unable to load models. Check your connection and API key, then try again.' }; }
 });
 ipcMain.handle('settings:folder', (event) => { assertSender(event, preferences); return shell.openPath(dataDirectory); });
 ipcMain.handle('settings:close', (event) => { assertSender(event, preferences); preferences.close(); });
@@ -243,8 +257,9 @@ else {
     updateMenu();
     mainWindow.once('ready-to-show', () => mainWindow.show());
     await mainWindow.loadFile(path.join(__dirname, 'ui', 'loading.html'));
-    if (!fs.existsSync(settingsFile) || unreadableSettings) await openPreferences(true);
+    const firstRun = !fs.existsSync(settingsFile) || unreadableSettings;
     if (!quitting) await startBackend();
+    if (firstRun && !quitting) await openPreferences(true);
   }).catch(async (error) => {
     dialog.showErrorBox('Unable to open Creator Studio', error.message);
     app.quit();

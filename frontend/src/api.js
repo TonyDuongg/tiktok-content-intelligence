@@ -52,6 +52,11 @@ async function request(endpoint, options = {}) {
 }
 
 export const api = {
+  getAiProviders: (options) => request("/api/v1/ai/providers", options),
+  getAiModels: (provider, apiKey, options = {}) => request("/api/v1/ai/models", {
+    ...options, method: "POST", timeout: 90000,
+    headers: { "X-AI-Provider": provider, ...(apiKey ? { "X-AI-Key": apiKey } : {}) },
+  }),
   getResearchProfiles: (options) => request("/api/v1/research-profiles", options),
   saveResearchProfile: (profile) => request(`/api/v1/research-profiles${profile.id ? `/${profile.id}` : ""}`, {
     method: profile.id ? "PUT" : "POST", body: JSON.stringify(profile),
@@ -77,10 +82,15 @@ export const api = {
     request("/api/v1/jobs", { method: "POST", body: JSON.stringify(jobData) }),
   getJob: (jobId) => request(`/api/v1/jobs/${encodeURIComponent(jobId)}`),
   getMyJobs: () => request("/api/v1/jobs/my-jobs"),
-  generateDirectScript: (scriptData) =>
+  generateDirectScript: (scriptData, connection) =>
     request("/api/v1/scripts/generate", {
       method: "POST",
       body: JSON.stringify(scriptData),
+      headers: connection?.provider ? {
+        "X-AI-Provider": connection.provider,
+        "X-AI-Model": connection.models[connection.provider],
+        ...(connection.keys[connection.provider] ? { "X-AI-Key": connection.keys[connection.provider] } : {}),
+      } : {},
       // Leave time for the backend's 120-second Gemini timeout and error response.
       timeout: 150000,
     }),

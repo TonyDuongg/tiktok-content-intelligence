@@ -1,0 +1,17 @@
+.ai-dialog { width: min(600px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: 1px solid var(--line, #dce0e6); border-radius: 12px; color: var(--ink, #20242c); background: #fff; }
+.ai-dialog::backdrop { background: rgb(20 24 32 / 40%); }
+.ai-dialog form { display: flex; flex-direction: column; max-height: calc(100dvh - 34px); }
+.ai-dialog header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 24px; border-bottom: 1px solid #dce0e6; }
+.ai-dialog h2 { font-size: 22px; margin: 0; }
+.ai-dialog header p { margin: 8px 0 0; color: #505b6b; }
+.ai-dialog-content { padding: 24px; overflow: auto; }
+.ai-dialog .field + .field { margin-top: 24px; }
+.ai-dialog .label-row { align-items: center; gap: 12px; }
+.ai-dialog a { color: #8f203c; text-underline-offset: 3px; }
+.ai-dialog footer { display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid #dce0e6; }
+.ai-manual { margin-top: 24px; }
+.ai-manual summary { cursor: pointer; font-weight: 600; }
+.ai-manual .field { margin-top: 16px; }
+.ai-privacy { color: #505b6b; font-size: 14px; line-height: 1.65; margin: 24px 0 0; }
+.ai-dialog .notice { margin-top: 16px; }
+@media(max-width:480px) { .ai-dialog header, .ai-dialog-content { padding: 20px; } }

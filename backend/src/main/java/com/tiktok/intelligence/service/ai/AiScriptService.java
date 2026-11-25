@@ -29,6 +29,7 @@ public class AiScriptService {
     private final TikTokVideoRepository videoRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final MultiProviderAiService multiProviderAi;
 
     @Value("${application.ai.provider:gemini}")
     private String activeProvider;
@@ -38,7 +39,7 @@ public class AiScriptService {
                 .filter(client -> client.supports(activeProvider))
                 .findFirst()
                 .orElseThrow(() -> new com.tiktok.intelligence.exception.UpstreamServiceException(
-                        "Invalid AI provider. Set AI_PROVIDER=gemini or bedrock."));
+                        "Invalid AI provider. Choose gemini, openai, anthropic, xai or bedrock."));
     }
 
     @Transactional
@@ -105,6 +106,11 @@ public class AiScriptService {
 
     @Transactional
     public ScriptDetailResponse generateDirectScript(String userEmail, DirectGenerateScriptRequest request) {
+        return generateDirectScript(userEmail, request, null);
+    }
+
+    @Transactional
+    public ScriptDetailResponse generateDirectScript(String userEmail, DirectGenerateScriptRequest request, AiSelection selection) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
 
@@ -125,10 +131,9 @@ public class AiScriptService {
             }
         }
 
-        AiScriptGeneratorClient aiClient = getActiveClient();
-        GeneratedScriptDto generated = aiClient.generateScript(
-                contentBrief, request.targetAudience(), request.tone(), referenceVideos, request.durationSeconds()
-        );
+        GeneratedScriptDto generated = selection == null ? getActiveClient().generateScript(
+                contentBrief, request.targetAudience(), request.tone(), referenceVideos, request.durationSeconds())
+                : multiProviderAi.generate(selection, contentBrief, request.targetAudience(), request.tone(), referenceVideos, request.durationSeconds());
 
         AiScript script = AiScript.builder()
                 .user(user)

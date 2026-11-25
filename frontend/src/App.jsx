@@ -36,6 +36,8 @@ import {
 } from "./studio";
 import { EmptyState, Notice, ScriptPreview } from "./components";
 import ChannelInsights from "./ChannelInsights";
+import AiSettings from "./AiSettings";
+import { readAiChoice, saveAiChoice, aiReady } from "./ai-connection";
 
 const TONES = [
   "Authentic and relatable",
@@ -60,6 +62,8 @@ const TABS = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("studio");
+  const [aiSettingsOpen, setAiSettingsOpen] = useState(false);
+  const [aiConnection, setAiConnection] = useState(() => window.creatorDesktop ? { provider: "", models: {}, keys: {}, serverConfigured: {} } : readAiChoice());
   const [draft, setDraft] = useState(readDraft);
   const [storageError, setStorageError] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -130,8 +134,12 @@ export default function App() {
     const results = await Promise.allSettled([
       api.getCategories({ signal }),
       api.getWorkspaceStatus({ signal }),
+      api.getAiProviders({ signal }),
     ]);
     if (signal?.aborted || version !== setupVersion.current) return;
+    if (results[2].status === "fulfilled") setAiConnection(previous => ({ ...previous,
+      serverConfigured: Object.fromEntries((results[2].value.data || []).map(p => [p.id, p.configured])),
+    }));
     if (results[0].status === "fulfilled" && results[0].value.data?.length) {
       const list = results[0].value.data.map((category) => ({
         ...category,
@@ -291,7 +299,7 @@ export default function App() {
         tone: draft.tone,
         referenceVideoIds: draft.references.map((v) => v.id),
         requestedDurationSeconds,
-      });
+      }, aiConnection);
       setScript(result.data);
       upsertScript(result.data);
       notify("Script generated and saved to the library.");
@@ -521,21 +529,12 @@ export default function App() {
               </button>
             ))}
           </nav>
-          {window.creatorDesktop ? (
+          {(
             <button className="button subtle desktop-settings" aria-label="Settings" disabled={generating || channelLoading}
-              onClick={() => window.creatorDesktop.openSettings().catch(() => notify("Unable to open settings. Try again."))}>
+              onClick={() => window.creatorDesktop ? window.creatorDesktop.openSettings().catch(() => notify("Unable to open settings. Try again.")) : setAiSettingsOpen(true)}>
               <Settings size={18} /> <span className="desktop-settings-label">Settings</span>
             </button>
-          ) : <div className="workspace-label">
-            <span
-              className={`connection-dot ${setupError ? "offline" : setupLoading ? "connecting" : ""}`}
-            />
-            {setupError
-              ? "Disconnected"
-              : setupLoading
-                ? "Connecting"
-                : "Live data"}
-          </div>}
+          )}
         </div>
       </header>
       <main id="main" className="main-container">
@@ -580,11 +579,11 @@ export default function App() {
           </Notice>
         )}
         {window.creatorDesktop && workspace?.issues?.length ? (
-          <Notice warning>Open Settings to add API keys for {[
-            !workspace.aiConfigured && "Gemini",
+          <Notice warning>Open Settings to configure {[
+            !workspace.aiConfigured && "your AI provider",
             !workspace.scraperConfigured && "RapidAPI",
           ].filter(Boolean).join(" and ") || "unconfigured services"}.</Notice>
-        ) : workspace?.issues?.map((issue) => (
+        ) : workspace?.issues?.filter(issue => !aiReady(aiConnection, workspace) || !issue.startsWith("AI is not configured.")).map((issue) => (
           <Notice key={issue}>{issue}</Notice>
         ))}
         {actionError && <Notice>{actionError}</Notice>}
@@ -838,7 +837,7 @@ export default function App() {
                     generating ||
                     setupLoading ||
                     !!setupError ||
-                    !workspace?.aiConfigured
+                    !aiReady(aiConnection, workspace)
                   }
                 >
                   {generating ? (
@@ -1290,6 +1289,11 @@ export default function App() {
           </nav>
         </footer>
       </main>
+      {aiSettingsOpen && <AiSettings connection={aiConnection} workspace={workspace} onClose={() => setAiSettingsOpen(false)} onSave={connection => {
+        setAiConnection(connection); setAiSettingsOpen(false);
+        try { saveAiChoice(connection); notify("AI settings applied. Keys stay in this tab until you reload."); }
+        catch { notify("AI settings applied for this tab. Model choices could not be saved."); }
+      }} />}
       <div className="toast-region" role="status" aria-live="polite">
         {toast && (
           <div className="toast">

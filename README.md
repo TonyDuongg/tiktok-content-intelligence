@@ -1,12 +1,12 @@
 ﻿# Creator Studio
 
-A desktop and web tool for researching public TikTok channels and writing video scripts with Gemini or AWS Bedrock. No app login is required.
+A desktop and web tool for researching public TikTok channels and writing video scripts with Gemini, OpenAI (GPT), Anthropic (Claude) or xAI (Grok). AWS Bedrock remains an optional server integration. No app login is required.
 
 [Download for Windows](https://github.com/TonyDuongg/tiktok-content-intelligence/releases/latest) · [User guide](docs/CREATOR_STUDIO.md) · [Research methodology](docs/RESEARCH.md) · [Publishing](docs/PUBLISHING.md)
 
 ## Windows portable
 
-Download the Windows x64 ZIP, extract the entire archive and open `Creator Studio.exe`. Java is bundled; Node.js, PostgreSQL and Docker are not required. Enter your own Gemini and RapidAPI keys in **Settings**. Provider requests require Internet access, appropriate subscriptions and available quota.
+Download the Windows x64 ZIP, extract the entire archive and open `Creator Studio.exe`. Java is bundled; Node.js, PostgreSQL and Docker are not required. Choose an AI provider in **Settings**, add your API key and select a model from its live catalog. Add RapidAPI for TikTok research. See [AI provider setup](docs/AI_PROVIDERS.md). Provider requests require Internet access, appropriate subscriptions and available quota.
 
 Data and encrypted settings live in `%APPDATA%\Creator Studio`, separately from the executable. To upgrade, close the old app and extract the new ZIP into a separate folder. Back up data before upgrading. The Windows package is unsigned and has no automatic updater. See [desktop instructions](docs/DESKTOP.md).
 
@@ -41,7 +41,7 @@ npm run desktop:build
 
 The build runs language checks, desktop tests, frontend lint/tests/build and backend verification, then packages and verifies the Windows ZIP. CI also checks source changes. Test doubles and isolated H2 databases are used for automated tests; paid provider calls are separate manual checks.
 
-See [the API specification](docs/api/API_SPECIFICATION.md), [architecture](docs/architecture/ARCHITECTURE.md), [roadmap](docs/plan/ROADMAP.md), [verification record](docs/VERIFICATION-v1.1.1.md) and [contribution guidelines](CONTRIBUTING.md). Larger deployments still need explicit database migrations, server-side pagination, provider budgets and additional concurrency/PostgreSQL/AWS testing.
+See [the API specification](docs/api/API_SPECIFICATION.md), [architecture](docs/architecture/ARCHITECTURE.md), [roadmap](docs/plan/ROADMAP.md), [verification record](docs/VERIFICATION-v1.2.0.md) and [contribution guidelines](CONTRIBUTING.md). Larger deployments still need explicit database migrations, server-side pagination, provider budgets and additional concurrency/PostgreSQL/AWS testing.
 
 ## License
 

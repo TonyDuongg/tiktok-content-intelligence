@@ -76,7 +76,7 @@ public class AiScript {
     @Column(name = "requested_duration_seconds")
     private Integer requestedDurationSeconds;
 
-    @Column(name = "ai_model_name", length = 100)
+    @Column(name = "ai_model_name", length = 255)
     @Builder.Default
     private String aiModelName = "claude-3-5-sonnet";
 

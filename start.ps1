@@ -13,8 +13,8 @@ if (Test-Path -LiteralPath (Join-Path $projectRoot '.env')) {
 }
 if (!$env:AI_PROVIDER) { $env:AI_PROVIDER = 'gemini' }
 if (!$env:SCRAPER_PROVIDER) { $env:SCRAPER_PROVIDER = 'rapidapi' }
-if ($env:AI_PROVIDER -notin @('gemini', 'google', 'bedrock') -or $env:SCRAPER_PROVIDER -ne 'rapidapi') {
-    throw 'Only real providers are supported. Set AI_PROVIDER=gemini (or bedrock) and SCRAPER_PROVIDER=rapidapi in .env.'
+if ($env:AI_PROVIDER -notin @('gemini', 'google', 'openai', 'anthropic', 'xai', 'bedrock') -or $env:SCRAPER_PROVIDER -ne 'rapidapi') {
+    throw 'Choose AI_PROVIDER=gemini, openai, anthropic, xai or bedrock, and SCRAPER_PROVIDER=rapidapi in .env.'
 }
 if (($env:AI_PROVIDER -in @('gemini', 'google')) -and !$env:GEMINI_API_KEY) {
     Write-Warning 'GEMINI_API_KEY is missing. Add it to .env to generate scripts.'

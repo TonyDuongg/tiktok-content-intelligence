@@ -10,6 +10,8 @@ Responses use `{ "success": true, "message": "Success", "data": ..., "timestamp"
 | --- | --- | --- |
 | GET | `/categories` | List categories |
 | GET | `/workspace/status` | Provider configuration flags, without secrets |
+| GET | `/ai/providers` | AI provider IDs, key-configuration flags and default model IDs; no keys |
+| POST | `/ai/models` | Discover text models using `X-AI-Provider` and optional `X-AI-Key` |
 | POST | `/channels/ingest?username=creator&categoryId=1&maxVideos=10` | Fetch and save a public channel and videos |
 | GET | `/channels` | List saved channels |
 | GET | `/channels/{username}` | Read a saved channel |
@@ -38,7 +40,7 @@ Responses use `{ "success": true, "message": "Success", "data": ..., "timestamp"
 }
 ```
 
-`topic` is required (maximum 1000 characters); audience allows 300 characters, tone 100, and references up to five IDs. Requested duration is an integer from 15 to 600 seconds, defaulting to 60 when omitted. A missing category is supported; a supplied ID must exist. The response includes title, target audience, `scriptStructure` (hook3s/bodyContent/callToAction), filming/sound cues, hashtags, requested duration, AI-estimated duration, model, status, dates and references. Newly generated text is requested in English; source content is preserved.
+`topic` is required (maximum 1000 characters); audience allows 300 characters, tone 100, and references up to five IDs. Requested duration is an integer from 15 to 600 seconds, defaulting to 60 when omitted. A missing category is supported; a supplied ID must exist. Optional `X-AI-Provider`, `X-AI-Model` and `X-AI-Key` headers select request-scoped credentials without changing server defaults. Omitting all three preserves the original server-default workflow. See [provider contracts](../AI_PROVIDERS.md). The response includes title, target audience, `scriptStructure` (hook3s/bodyContent/callToAction), filming/sound cues, hashtags, requested duration, AI-estimated duration, model, status, dates and references. Newly generated text is requested in English; source content is preserved.
 
 ## Audience profile
 

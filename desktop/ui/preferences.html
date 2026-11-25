@@ -1,12 +1,19 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'"><title>Settings · Creator Studio</title><link rel="stylesheet" href="desktop.css"><script src="preferences.js" defer></script></head>
 <body><main class="preferences">
-<header><h1>Connection settings</h1><p>Add API keys for script writing and channel research. No app login is required.</p></header>
+<header><h1>Connection settings</h1><p>Choose your AI provider and model. No app login is required.</p></header>
 <form id="settings-form">
-<section aria-labelledby="gemini-title"><h2 id="gemini-title">Write scripts with Gemini</h2><label for="gemini-key">Gemini API key <span id="gemini-status"></span></label><input id="gemini-key" name="geminiKey" type="password" autocomplete="off" spellcheck="false" placeholder="Enter your Gemini API key" maxlength="4096"><p class="field-help"><a href="https://aistudio.google.com/api-keys" target="_blank" rel="noreferrer">Get a key from Google AI Studio ↗</a></p><label class="clear-key" id="clear-gemini-label" hidden><input id="clear-gemini" type="checkbox"> Remove the saved Gemini key</label></section>
-<section aria-labelledby="rapid-title"><h2 id="rapid-title">TikTok channel research</h2><label for="rapid-key">RapidAPI key <span id="rapid-status"></span></label><input id="rapid-key" name="rapidApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="Enter your RapidAPI key" maxlength="4096"><p class="field-help">Requires a subscription to <a href="https://rapidapi.com/" target="_blank" rel="noreferrer">TikTok Scraper7 on RapidAPI ↗</a>.</p><label class="clear-key" id="clear-rapid-label" hidden><input id="clear-rapid" type="checkbox"> Remove the saved RapidAPI key</label></section>
-<details><summary>Advanced settings</summary><label for="gemini-model">Gemini model</label><input id="gemini-model" name="model" type="text" required maxlength="100" pattern="[A-Za-z0-9._\-]+" spellcheck="false"><p class="field-help">Use a model available to your API key.</p></details>
-<p class="privacy">Keys are encrypted for your Windows account. Scripts are saved locally; Gemini and TikTok requests need an Internet connection.</p>
+<section aria-labelledby="ai-title"><h2 id="ai-title">Script generation</h2>
+<label for="ai-provider">AI provider</label><select id="ai-provider"><option value="gemini">Google Gemini</option><option value="openai">OpenAI (GPT)</option><option value="anthropic">Anthropic (Claude)</option><option value="xai">xAI (Grok)</option></select>
+<label for="ai-key" class="spaced">API key <span id="ai-status"></span></label><input id="ai-key" type="password" autocomplete="off" spellcheck="false" maxlength="4096"><p class="field-help"><a id="key-link" href="https://aistudio.google.com/api-keys" target="_blank" rel="noreferrer">Get an API key ↗</a></p>
+<label class="clear-key" id="clear-ai-label" hidden><input id="clear-ai" type="checkbox"> Remove this provider's saved key</label>
+<div class="model-heading"><label for="ai-model">Model</label><button id="refresh-models" type="button" class="text-button">Refresh models</button></div>
+<select id="ai-model"><option value="">Choose a model</option></select>
+<p id="model-status" class="field-help" role="status" aria-live="polite"></p>
+<details class="manual-model"><summary>Enter a model ID manually</summary><label for="custom-model">Model ID</label><input id="custom-model" type="text" maxlength="200" spellcheck="false"><p class="field-help">Use this if your provider's catalog is unavailable. Model permissions, compatibility and quota still apply.</p></details>
+</section>
+<section aria-labelledby="rapid-title"><h2 id="rapid-title">TikTok channel research</h2><label for="rapid-key">RapidAPI key <span id="rapid-status"></span></label><input id="rapid-key" type="password" autocomplete="off" spellcheck="false" placeholder="Enter your RapidAPI key" maxlength="4096"><p class="field-help">Requires a subscription to <a href="https://rapidapi.com/" target="_blank" rel="noreferrer">TikTok Scraper7 on RapidAPI ↗</a>.</p><label class="clear-key" id="clear-rapid-label" hidden><input id="clear-rapid" type="checkbox"> Remove the saved RapidAPI key</label></section>
+<p class="privacy">Each provider's key is encrypted for your Windows account. Only the selected provider receives your script request. AI and TikTok requests need Internet access.</p>
 <p id="error" role="alert" hidden></p>
 <footer><button id="data-folder" type="button" class="text-button">Data folder</button><div class="actions"><button id="cancel" type="button">Close</button><button id="save" type="submit" class="primary">Save settings</button></div></footer>
 </form></main></body></html>

@@ -7,7 +7,7 @@ flowchart LR
     UI[React interface] --> API[Spring Boot REST API]
     API --> DB[(H2 or PostgreSQL)]
     API --> Scraper[RapidAPI TikTok Scraper7]
-    API --> AI[Gemini or AWS Bedrock]
+    API --> AI[Gemini / OpenAI / Anthropic / xAI / optional Bedrock]
     Desktop[Electron desktop shell] --> UI
     Desktop --> Runtime[Bundled Java runtime]
     Runtime --> API
@@ -17,7 +17,7 @@ flowchart LR
 
 Controllers validate requests and delegate to services. JPA repositories persist categories, channels, videos, scripts, reference links, research profiles and view observations. DTOs define API contracts; exception handling returns structured English errors. An internal owner identity preserves legacy foreign keys without exposing authentication.
 
-Provider interfaces separate RapidAPI scraping and Gemini/Bedrock generation. The prompt builder requests complete English dialogue, timing and structured JSON. The parser validates required fields and integer duration before persistence. Production has no mock fallback; mocks are restricted to the test profile. Provider configuration flags do not establish provider health.
+Provider interfaces separate RapidAPI scraping from AI generation. The AI connection service discovers models and handles request-scoped credentials for Gemini, OpenAI, Anthropic and xAI; Bedrock remains a server integration. Web keys stay in tab memory, while Windows stores separate encrypted keys and models per provider. The prompt builder requests complete English dialogue, timing and structured JSON. The parser validates required fields and integer duration before persistence. Production has no mock fallback; mocks are restricted to the test profile. Provider configuration flags do not establish provider health.
 
 Research reports use deterministic keyword matching and saved view observations. They include evidence and limitations, and do not estimate private demographics or a calibrated probability of trending. See [research methodology](../RESEARCH.md).
 

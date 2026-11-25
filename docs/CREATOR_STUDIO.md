@@ -13,7 +13,7 @@ New AI scripts and built-in text use English. User-entered content and existing 
 ## Live providers
 
 - `SCRAPER_PROVIDER=rapidapi` requires `RAPIDAPI_KEY` and an active compatible subscription.
-- `AI_PROVIDER=gemini` requires `GEMINI_API_KEY`; `GEMINI_MODEL` selects the model. AWS Bedrock is an optional alternative with separate AWS configuration.
+- Choose Gemini, OpenAI (GPT), Anthropic (Claude) or xAI (Grok) in Settings and load the model catalog for your key. Windows stores encrypted per-provider keys; the web holds personal keys in tab memory. Server defaults use `AI_PROVIDER` and matching key/model variables. See [AI providers](AI_PROVIDERS.md). AWS Bedrock remains an optional server alternative.
 - Provider failures, exhausted quotas and incomplete AI results return errors. The app does not silently substitute sample content. Mock clients load only under the automated `test` profile.
 - Gemini has a 120-second response timeout. The browser waits 150 seconds for the backend result. Requests are not automatically retried. Refresh the library after a timeout before generating again: the backend may have finished after the browser disconnected.
 - `/api/v1/workspace/status` reports configuration, not provider health, and never returns API keys.

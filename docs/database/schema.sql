@@ -124,7 +124,7 @@ CREATE TABLE ai_scripts (
     estimated_duration_seconds INT DEFAULT 30,
     requested_duration_seconds INT CHECK (requested_duration_seconds BETWEEN 15 AND 600),
     
-    ai_model_name VARCHAR(100) DEFAULT 'gemini-3.5-flash', -- Model identifier used for generation
+    ai_model_name VARCHAR(255) DEFAULT 'gemini-3.5-flash', -- Provider and model identifier used for generation
     status VARCHAR(30) DEFAULT 'DRAFT',            -- 'DRAFT', 'FAVORITE', 'EXPORTED'
     
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

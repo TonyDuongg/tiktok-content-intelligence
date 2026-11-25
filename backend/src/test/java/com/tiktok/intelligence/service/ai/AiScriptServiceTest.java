@@ -50,6 +50,9 @@ class AiScriptServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private MultiProviderAiService multiProviderAi;
+
     private AiScriptService aiScriptService;
 
     @BeforeEach
@@ -62,7 +65,8 @@ class AiScriptServiceTest {
                 referenceVideoRepository,
                 videoRepository,
                 categoryRepository,
-                userRepository
+                userRepository,
+                multiProviderAi
         );
         ReflectionTestUtils.setField(aiScriptService, "activeProvider", "mock");
     }
@@ -173,6 +177,18 @@ class AiScriptServiceTest {
         assertThat(response.title()).isEqualTo("Bí quyết phối đồ mùa đông");
         assertThat(response.scriptStructure().hook3s()).isEqualTo("Mặc sao cho ngầu?");
         assertThat(response.requestedDurationSeconds()).isEqualTo(60);
+    }
+
+    @Test
+    void explicitProviderSelectionPersistsTheReturnedModelAndDoesNotUseTheDefaultClient() {
+        when(userRepository.findByEmail("creator@example.com")).thenReturn(Optional.of(User.builder().email("creator@example.com").build()));
+        var choice = new AiSelection("openai", "gpt-selected", "request-only-key");
+        when(multiProviderAi.generate(eq(choice), anyString(), any(), any(), anyList(), eq(30)))
+                .thenReturn(new GeneratedScriptDto("Desk tips", "Students", "Hook", "Body", "Save", "Desk shot", List.of(), 30, "openai-gpt-returned"));
+        when(scriptRepository.save(any())).thenAnswer(i -> { AiScript s = i.getArgument(0); s.setId(100L); return s; });
+        var result = aiScriptService.generateDirectScript("creator@example.com", new DirectGenerateScriptRequest(null, "Desk tips", "Students", "Clear", List.of(), 30), choice);
+        assertThat(result.aiModelUsed()).isEqualTo("openai-gpt-returned");
+        verify(aiClient, never()).generateScript(anyString(), any(), any(), anyList(), anyInt());
     }
 
     @Test

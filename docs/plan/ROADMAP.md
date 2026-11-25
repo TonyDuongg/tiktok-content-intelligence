@@ -2,7 +2,7 @@
 
 ## Available now
 
-- Direct script generation with Gemini or configured Bedrock, structured previews and `.txt` export.
+- Direct script generation with Gemini, OpenAI, Anthropic or xAI, live model discovery, per-provider key/model choices, structured previews and `.txt` export. Bedrock remains an optional server integration.
 - Duration targets from 15 seconds to 10 minutes, browser draft recovery and a persistent script library.
 - Public channel research through RapidAPI, saved channels and up to five script references.
 - Reusable channel/audience profiles, keyword relevance reports, evidence links, repeated hashtags, duration groups and measured view-count growth.

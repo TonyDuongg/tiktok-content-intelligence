@@ -4,7 +4,7 @@ Download the Windows x64 ZIP from [GitHub Releases](https://github.com/TonyDuong
 
 ## First launch
 
-Open **Settings** and enter your own Gemini and RapidAPI keys. Select a Gemini model available to your key. TikTok research requires a TikTok Scraper7 subscription on RapidAPI. Provider quotas and charges apply. No app account or login is required.
+Open **Settings**, choose Gemini, OpenAI, Anthropic or xAI and enter its API key. Choose a model from the live provider catalog, or refresh the list. Keys/model choices are preserved separately per provider. Add RapidAPI for TikTok research, which requires a TikTok Scraper7 subscription. Provider quotas and charges apply. No app account or login is required. See [AI provider setup](AI_PROVIDERS.md).
 
 Scripts, research profiles and saved channels remain on your computer. Generating scripts and collecting TikTok data require Internet access. The desktop window keeps navigation and primary actions visible; long results scroll inside their panes.
 

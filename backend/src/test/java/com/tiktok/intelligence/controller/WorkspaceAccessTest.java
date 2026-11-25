@@ -25,6 +25,24 @@ class WorkspaceAccessTest {
     @MockBean S3StorageService storage;
 
     @Test
+    void providerCatalogAndRequestCredentialsNeedNoAccountAndDoNotFallBackSilently() throws Exception {
+        mvc.perform(get("/api/v1/ai/providers")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(4))
+                .andExpect(jsonPath("$.data[0].id").value("gemini"))
+                .andExpect(jsonPath("$.data[0].apiKey").doesNotExist());
+        mvc.perform(post("/api/v1/ai/models").header("X-AI-Provider", "gemini"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("API key")));
+        mvc.perform(post("/api/v1/ai/models").header("X-AI-Provider", "https://example.com").header("X-AI-Key", "invalid-fixture"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/v1/scripts/generate").header("X-AI-Key", "invalid-fixture")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"topic\":\"Desk tips\"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("provider")));
+        mvc.perform(options("/api/v1/ai/models").header("Origin", "https://example.com")
+                        .header("Access-Control-Request-Method", "POST").header("Access-Control-Request-Headers", "X-AI-Key,X-AI-Provider"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void workspaceIsAvailableWithoutAnAccount() throws Exception {
         for (String path : new String[]{"/api/v1/workspace/status", "/api/v1/categories", "/api/v1/scripts/my-scripts", "/api/v1/jobs/my-jobs"}) {
             mvc.perform(get(path)).andExpect(status().isOk()).andExpect(jsonPath("$.success").value(true));

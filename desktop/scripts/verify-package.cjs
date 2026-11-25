@@ -13,12 +13,12 @@ async function main() {
   for (const name of ['desktop/main.cjs', 'desktop/lib.cjs', 'desktop/windows-runtime.cjs', 'desktop/preload.cjs',
     'desktop/ui/preferences.html', 'desktop/ui/fonts/OFL.txt']) assert.ok(entries.includes(name), `Missing ${name}`);
   for (const name of ['Creator Studio.exe', 'resources/backend.jar', 'resources/java/bin/java.exe',
-    'resources/java/legal/java.base/LICENSE', 'README.txt', 'resources/DESKTOP.md', 'resources/RESEARCH.md', 'LICENSE.txt', 'THIRD-PARTY-NOTICES.md']) {
+    'resources/java/legal/java.base/LICENSE', 'README.txt', 'resources/DESKTOP.md', 'resources/RESEARCH.md', 'resources/AI_PROVIDERS.md', 'LICENSE.txt', 'THIRD-PARTY-NOTICES.md']) {
     assert.ok(fs.existsSync(path.join(unpacked, name)), `Missing ${name}`);
   }
   assert.match(fs.readFileSync(path.join(unpacked, 'LICENSE.txt'), 'utf8'), /Copyright \(c\) 2026 TonyDuongg/);
   const secrets = fs.existsSync(path.join(root, '.env'))
-    ? [...fs.readFileSync(path.join(root, '.env'), 'utf8').matchAll(/^(?:GEMINI_API_KEY|RAPIDAPI_KEY)\s*=\s*(.+)$/gm)]
+    ? [...fs.readFileSync(path.join(root, '.env'), 'utf8').matchAll(/^(?:GEMINI_API_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|XAI_API_KEY|RAPIDAPI_KEY)\s*=\s*(.+)$/gm)]
       .map((match) => match[1].trim().replace(/^["']|["']$/g, '')).filter((value) => value.length > 8)
     : [];
   for (const name of entries) {

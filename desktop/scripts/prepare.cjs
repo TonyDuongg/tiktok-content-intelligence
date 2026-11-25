@@ -71,7 +71,8 @@ async function main() {
     'CREATOR STUDIO — WINDOWS X64', '',
     '1. Extract the entire ZIP to a folder.',
     '2. Open Creator Studio.exe. Java, Node.js, PostgreSQL and Docker are not required.',
-    '3. Enter your Gemini and RapidAPI keys in Settings. No app login is required.',
+    '3. Choose Gemini, OpenAI, Anthropic or xAI in Settings, add your key and select a model.',
+    '   Add a RapidAPI key for TikTok research. No app login is required.',
     '4. Script generation and TikTok research need Internet access. Saved scripts remain on your computer.', '',
     'Data: %APPDATA%\\Creator Studio',
     'Open Settings / Data folder to find the database and logs.',
@@ -81,6 +82,7 @@ async function main() {
     'Java: Eclipse Temurin 21. Licenses and notices are in resources\\java.',
     'The Windows x64 build is unsigned. macOS/Linux packages are not available.',
     'Full guide: resources\\DESKTOP.md.', '',
+    'AI providers and model discovery: resources\\AI_PROVIDERS.md.', '',
   ].join('\r\n');
   fs.writeFileSync(path.join(runtime, 'README.txt'), guide, 'utf8');
   console.log('Desktop runtime prepared. Personal .env files, databases and logs were not copied.');

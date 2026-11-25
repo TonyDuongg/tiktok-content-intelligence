@@ -6,6 +6,7 @@ import com.tiktok.intelligence.dto.request.DirectGenerateScriptRequest;
 import com.tiktok.intelligence.dto.response.ApiResponse;
 import com.tiktok.intelligence.dto.response.ScriptDetailResponse;
 import com.tiktok.intelligence.service.ai.AiScriptService;
+import com.tiktok.intelligence.service.ai.AiSelection;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -27,9 +28,16 @@ public class ScriptController {
     @PostMapping("/generate")
     @Operation(summary = "Direct AI script generation", description = "Generates a high-converting 3-part TikTok video script (Hook 3s, Body with visual cues, CTA) by topic or viral reference videos")
     public ResponseEntity<ApiResponse<ScriptDetailResponse>> generateDirectScript(
-            @Valid @RequestBody DirectGenerateScriptRequest request
+            @Valid @RequestBody DirectGenerateScriptRequest request,
+            @RequestHeader(value = "X-AI-Provider", required = false) String provider,
+            @RequestHeader(value = "X-AI-Model", required = false) String model,
+            @RequestHeader(value = "X-AI-Key", required = false) String key
     ) {
-        ScriptDetailResponse response = aiScriptService.generateDirectScript(WorkspaceIdentity.OWNER_EMAIL, request);
+        if (provider == null && (model != null || key != null)) throw new org.springframework.web.server.ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "Choose an AI provider when supplying a model or API key.");
+        ScriptDetailResponse response = provider == null
+                ? aiScriptService.generateDirectScript(WorkspaceIdentity.OWNER_EMAIL, request)
+                : aiScriptService.generateDirectScript(WorkspaceIdentity.OWNER_EMAIL, request, new AiSelection(provider, model, key));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "Generated AI script successfully"));
     }

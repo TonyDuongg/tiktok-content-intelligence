@@ -13,6 +13,7 @@ module.exports = {
     { from: 'desktop/.runtime/java', to: 'java' },
     { from: 'docs/DESKTOP.md', to: 'DESKTOP.md' },
     { from: 'docs/RESEARCH.md', to: 'RESEARCH.md' },
+    { from: 'docs/AI_PROVIDERS.md', to: 'AI_PROVIDERS.md' },
   ],
   extraFiles: [
     { from: 'desktop/.runtime/README.txt', to: 'README.txt' },
