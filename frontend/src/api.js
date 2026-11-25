@@ -52,6 +52,14 @@ async function request(endpoint, options = {}) {
 }
 
 export const api = {
+  getResearchProfiles: (options) => request("/api/v1/research-profiles", options),
+  saveResearchProfile: (profile) => request(`/api/v1/research-profiles${profile.id ? `/${profile.id}` : ""}`, {
+    method: profile.id ? "PUT" : "POST", body: JSON.stringify(profile),
+  }),
+  deleteResearchProfile: (id) => request(`/api/v1/research-profiles/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  getSavedChannels: (options) => request("/api/v1/channels", options),
+  getChannelInsights: (username, profileId, options) => request(
+    `/api/v1/channels/${encodeURIComponent(username)}/insights?${new URLSearchParams({ profileId })}`, options),
   getCategories: (options) => request("/api/v1/categories", options),
   getWorkspaceStatus: (options) => request("/api/v1/workspace/status", options),
   ingestChannel: (username, categoryId, maxVideos = 10) =>

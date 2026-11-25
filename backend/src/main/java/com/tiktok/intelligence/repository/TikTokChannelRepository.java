@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface TikTokChannelRepository extends JpaRepository<TikTokChannel, Long> {
+    List<TikTokChannel> findAllByOrderByLastScrapedAtDesc();
     Optional<TikTokChannel> findByTiktokUsername(String tiktokUsername);
     boolean existsByTiktokUsername(String tiktokUsername);
     List<TikTokChannel> findByCategoryId(Long categoryId);

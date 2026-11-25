@@ -9,6 +9,7 @@ import com.tiktok.intelligence.dto.scraper.TikTokVideoDto;
 import com.tiktok.intelligence.repository.CategoryRepository;
 import com.tiktok.intelligence.repository.TikTokChannelRepository;
 import com.tiktok.intelligence.repository.TikTokVideoRepository;
+import com.tiktok.intelligence.repository.VideoObservationRepository;
 import com.tiktok.intelligence.service.storage.S3StorageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,6 +48,8 @@ class DataIngestionServiceTest {
     @Mock
     private S3StorageService s3StorageService;
 
+    @Mock private VideoObservationRepository observationRepository;
+
     private DataIngestionService dataIngestionService;
 
     @BeforeEach
@@ -56,7 +59,8 @@ class DataIngestionServiceTest {
                 channelRepository,
                 videoRepository,
                 categoryRepository,
-                s3StorageService
+                s3StorageService,
+                observationRepository
         );
         org.springframework.test.util.ReflectionTestUtils.setField(dataIngestionService, "archiveEnabled", true);
     }
@@ -99,6 +103,8 @@ class DataIngestionServiceTest {
 
         verify(channelRepository, times(1)).save(any(TikTokChannel.class));
         verify(videoRepository, times(1)).save(any(TikTokVideo.class));
+        verify(observationRepository).save(argThat(observation -> observation.getViewCount() == 50000L
+                && observation.getObservedAt() != null));
         verify(s3StorageService, times(1)).uploadJsonPayload(anyString(), any(ScrapeResultDto.class));
     }
 

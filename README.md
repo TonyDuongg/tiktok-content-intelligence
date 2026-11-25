@@ -59,11 +59,15 @@ The light studio supports persistent browser briefs, up to five saved video refe
 
 ## Windows desktop application
 
-Run `npm run desktop:build` to create `release/Creator-Studio-1.0.1-Windows-x64.zip`. Extract the complete ZIP and open **Creator Studio.exe** on Windows x64. Java and local storage are included; no Docker or login is required. Each user enters their own Gemini/RapidAPI keys in Settings. The desktop workspace fits the window, with pinned actions and independently scrolling script and library panes. See [Windows portable instructions, storage and backups](docs/DESKTOP.md).
+Run `npm run desktop:build` to create `release/Creator-Studio-1.1.0-Windows-x64.zip`. Extract the complete ZIP and open **Creator Studio.exe** on Windows x64. Java and local storage are included; no Docker or login is required. Each user enters their own Gemini/RapidAPI keys in Settings. The desktop workspace fits the window, with pinned actions and independently scrolling script and library panes. See [Windows portable instructions, storage and backups](docs/DESKTOP.md).
 
 [Download for Windows](https://github.com/TonyDuongg/tiktok-content-intelligence/releases/latest) · [Deployment and releases](docs/PUBLISHING.md) · [MIT License](LICENSE)
 
 Copyright © 2026 TonyDuongg. You may use, modify and redistribute this project under the MIT License, including commercial use, while retaining its copyright and license notice. Dependencies retain their [own licenses](THIRD-PARTY-NOTICES.md).
+
+## Audience profiles and content experiments
+
+Save reusable TikTok channel and target-customer profiles under **Nghiên cứu kênh → Hồ sơ của tôi**. Reopen saved channels without another scraper request, compare keyword relevance against public video content, inspect repeated hashtags and duration groups, and send a supported content experiment into the script writer. Repeated channel updates record view-count observations; measured growth requires at least two observations of the same video at least one hour apart. These are descriptive signals, not verified audience demographics or a calibrated prediction of virality. See [research methodology and limits](docs/RESEARCH.md).
 
 ## 🌟 Key Features
 

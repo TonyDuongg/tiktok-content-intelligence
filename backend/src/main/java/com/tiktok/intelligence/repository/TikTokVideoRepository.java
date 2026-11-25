@@ -17,6 +17,9 @@ public interface TikTokVideoRepository extends JpaRepository<TikTokVideo, Long> 
 
     List<TikTokVideo> findByChannelIdOrderByEngagementRateDesc(Long channelId, Pageable pageable);
 
+    @Query("SELECT v FROM TikTokVideo v WHERE v.channel.id = :channelId ORDER BY CASE WHEN v.videoPublishedAt IS NULL THEN 1 ELSE 0 END, v.videoPublishedAt DESC, v.id DESC")
+    List<TikTokVideo> findRecentForInsights(@Param("channelId") Long channelId, Pageable pageable);
+
     @Query("SELECT v FROM TikTokVideo v WHERE v.channel.category.id = :categoryId ORDER BY v.engagementRate DESC")
     List<TikTokVideo> findTopViralVideosByNiche(@Param("categoryId") Long categoryId, Pageable pageable);
 }

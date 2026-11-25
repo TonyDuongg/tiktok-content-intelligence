@@ -4,7 +4,7 @@ Bản portable dành cho **Windows 10/11 x64**. Giải nén toàn bộ ZIP, mở
 
 ## Lần đầu sử dụng
 
-1. Giải nén `Creator-Studio-1.0.1-Windows-x64.zip` vào một thư mục có quyền đọc và ghi. Không chạy trực tiếp bên trong ZIP.
+1. Giải nén `Creator-Studio-1.1.0-Windows-x64.zip` vào một thư mục có quyền đọc và ghi. Không chạy trực tiếp bên trong ZIP.
 2. Mở `Creator Studio.exe`. Cửa sổ Cài đặt cho phép nhập khóa Gemini và RapidAPI của bạn. Có thể chọn **Để sau** rồi bổ sung bằng nút **Cài đặt** hoặc `Ctrl+,`.
 3. Khóa Gemini cần được cấp quyền sử dụng model đã chọn. RapidAPI cần đăng ký dịch vụ `tiktok-scraper7.p.rapidapi.com`. Phí, hạn mức và quyền truy cập do nhà cung cấp quy định.
 4. Khi lưu thay đổi, ứng dụng tự kết nối lại dịch vụ trên máy. Không đổi cài đặt khi đang tạo kịch bản hoặc phân tích kênh.
@@ -12,6 +12,8 @@ Bản portable dành cho **Windows 10/11 x64**. Giải nén toàn bộ ZIP, mở
 Tạo kịch bản và nghiên cứu TikTok cần Internet. Xem lại kho kịch bản đã lưu không cần gọi dịch vụ AI. Bản phát hành không chứa khóa API hay dữ liệu cá nhân của người phát triển.
 
 Giao diện máy tính vừa khung cửa sổ, nút tạo kịch bản luôn ở đáy bảng thiết lập. Kịch bản dài, danh sách và các tùy chọn mở rộng cuộn trong vùng riêng. Khi cửa sổ hẹp, dùng **Thiết lập / Kịch bản** để chuyển vùng làm việc. Bản web vẫn dùng bố cục thích ứng theo màn hình.
+
+Trong **Nghiên cứu kênh**, lưu hồ sơ mục tiêu tại **Hồ sơ của tôi**, rồi dùng **Khách hàng & xu hướng** để đối chiếu một kênh. Hồ sơ và các mốc đo lượt xem nằm trong cùng cơ sở dữ liệu cục bộ, được giữ khi cập nhật ứng dụng. Xem [cách đánh giá và giới hạn](RESEARCH.md).
 
 ## Dữ liệu và sao lưu
 
@@ -47,6 +49,6 @@ npm test
 npm run desktop:build
 ```
 
-Kết quả: `release/Creator-Studio-1.0.1-Windows-x64.zip`. Lệnh kiểm tra frontend, biên dịch và kiểm tra backend, tải JRE Eclipse Temurin đã ghim SHA-256, tạo biểu tượng và đóng gói Electron. Cấu hình build chỉ cho phép đưa các tệp chạy cần thiết vào ứng dụng, không sao chép `.env`, cơ sở dữ liệu hay nhật ký. Lệnh build luôn đặt `--publish never`.
+Kết quả: `release/Creator-Studio-1.1.0-Windows-x64.zip`. Lệnh kiểm tra frontend, biên dịch và kiểm tra backend, tải JRE Eclipse Temurin đã ghim SHA-256, tạo biểu tượng và đóng gói Electron. Cấu hình build chỉ cho phép đưa các tệp chạy cần thiết vào ứng dụng, không sao chép `.env`, cơ sở dữ liệu hay nhật ký. Lệnh build luôn đặt `--publish never`.
 
 `npm run desktop:dev` chạy thử sau `npm run desktop:prepare`. Có thể đặt `CREATOR_STUDIO_DATA_DIR` trỏ tới thư mục thử nghiệm riêng để không ảnh hưởng dữ liệu sử dụng. Java kèm giấy phép và các thông báo pháp lý trong `resources/java`; font Be Vietnam Pro kèm OFL.

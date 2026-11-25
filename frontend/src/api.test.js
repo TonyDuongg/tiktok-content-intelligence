@@ -50,3 +50,25 @@ test("provider errors remain visible without an authentication flow", async () =
     globalThis.fetch = previousFetch;
   }
 });
+
+test("research configuration uses persisted CRUD endpoints and encodes comparison inputs", async () => {
+  const previousFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, options });
+    return new Response(JSON.stringify({ success: true, data: [] }), { status: 200 });
+  };
+  try {
+    await api.saveResearchProfile({ name: "Da dầu", keywords: "skincare" });
+    await api.saveResearchProfile({ id: 12, name: "Đã sửa", keywords: "skincare" });
+    await api.getChannelInsights("creator.name", 12);
+    await api.deleteResearchProfile(12);
+    assert.equal(calls[0].url, "/api/v1/research-profiles");
+    assert.equal(calls[0].options.method, "POST");
+    assert.equal(JSON.parse(calls[0].options.body).name, "Da dầu");
+    assert.equal(calls[1].url, "/api/v1/research-profiles/12");
+    assert.equal(calls[1].options.method, "PUT");
+    assert.equal(calls[2].url, "/api/v1/channels/creator.name/insights?profileId=12");
+    assert.equal(calls[3].options.method, "DELETE");
+  } finally { globalThis.fetch = previousFetch; }
+});

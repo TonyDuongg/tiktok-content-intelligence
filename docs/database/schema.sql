@@ -147,6 +147,28 @@ CREATE TABLE script_reference_videos (
 -- ==============================================================================
 -- INITIAL SEED DATA
 -- ==============================================================================
+CREATE TABLE research_profiles (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    own_username VARCHAR(24),
+    target_audience VARCHAR(300) NOT NULL,
+    offering VARCHAR(500),
+    goal VARCHAR(500),
+    keywords VARCHAR(1000) NOT NULL,
+    excluded_keywords VARCHAR(1000),
+    analytics_notes VARCHAR(2000),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE video_observations (
+    id BIGSERIAL PRIMARY KEY,
+    video_id BIGINT NOT NULL REFERENCES tiktok_videos(id),
+    observed_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    view_count BIGINT NOT NULL
+);
+CREATE INDEX idx_observation_video_time ON video_observations(video_id, observed_at);
+
 INSERT INTO categories (name, slug, description) VALUES
 ('Beauty & Skincare', 'beauty-skincare', 'Skincare routines, makeup reviews, haircare and cosmetic advice'),
 ('Fashion & Styling', 'fashion-styling', 'Daily OOTD, capsule wardrobe, mix & match style tips'),

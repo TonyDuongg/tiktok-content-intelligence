@@ -7,6 +7,7 @@ import com.tiktok.intelligence.exception.ResourceNotFoundException;
 import com.tiktok.intelligence.repository.TikTokChannelRepository;
 import com.tiktok.intelligence.repository.TikTokVideoRepository;
 import com.tiktok.intelligence.service.scraper.DataIngestionService;
+import com.tiktok.intelligence.service.research.ChannelInsightsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,17 @@ public class ChannelController {
     private final DataIngestionService dataIngestionService;
     private final TikTokChannelRepository channelRepository;
     private final TikTokVideoRepository videoRepository;
+    private final ChannelInsightsService insightsService;
+
+    @GetMapping
+    public ApiResponse<List<TikTokChannel>> savedChannels() {
+        return ApiResponse.success(channelRepository.findAllByOrderByLastScrapedAtDesc());
+    }
+
+    @GetMapping("/{username}/insights")
+    public ApiResponse<ChannelInsightsService.Report> insights(@PathVariable String username, @RequestParam @Min(1) Long profileId) {
+        return ApiResponse.success(insightsService.get(username, profileId));
+    }
 
     @PostMapping("/ingest")
     @Operation(summary = "Ingest TikTok channel data", description = "Scrapes channel profile, videos, calculates engagement rates, and uploads raw JSON to AWS S3")

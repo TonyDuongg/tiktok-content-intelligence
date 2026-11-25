@@ -3,6 +3,8 @@ package com.tiktok.intelligence.service.scraper;
 import com.tiktok.intelligence.domain.entity.Category;
 import com.tiktok.intelligence.domain.entity.TikTokChannel;
 import com.tiktok.intelligence.domain.entity.TikTokVideo;
+import com.tiktok.intelligence.domain.entity.VideoObservation;
+import com.tiktok.intelligence.repository.VideoObservationRepository;
 import com.tiktok.intelligence.dto.scraper.ScrapeResultDto;
 import com.tiktok.intelligence.dto.scraper.TikTokChannelProfileDto;
 import com.tiktok.intelligence.dto.scraper.TikTokVideoDto;
@@ -31,6 +33,7 @@ public class DataIngestionService {
     private final TikTokVideoRepository videoRepository;
     private final CategoryRepository categoryRepository;
     private final S3StorageService s3StorageService;
+    private final VideoObservationRepository observationRepository;
 
     @Value("${application.aws.archive-enabled:false}")
     private boolean archiveEnabled;
@@ -63,7 +66,8 @@ public class DataIngestionService {
         channel.setFollowersCount(profile.followersCount());
         channel.setTotalLikes(profile.totalLikes());
         channel.setTotalVideos(profile.totalVideos());
-        channel.setLastScrapedAt(Instant.now());
+        Instant collectedAt = Instant.now();
+        channel.setLastScrapedAt(collectedAt);
         if (category != null) {
             channel.setCategory(category);
         }
@@ -93,7 +97,12 @@ public class DataIngestionService {
             video.setVideoPublishedAt(videoDto.publishedAt());
             video.calculateEngagementRate();
 
-            savedVideos.add(videoRepository.save(video));
+            TikTokVideo saved = videoRepository.save(video);
+            savedVideos.add(saved);
+            if (videoDto.viewCount() != null && videoDto.viewCount() >= 0) {
+                observationRepository.save(VideoObservation.builder().video(saved)
+                        .observedAt(collectedAt).viewCount(videoDto.viewCount()).build());
+            }
         }
 
         log.info("Successfully persisted {} videos for channel: @{}", savedVideos.size(), username);

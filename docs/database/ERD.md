@@ -9,6 +9,7 @@ erDiagram
     CATEGORIES ||--o{ TIKTOK_CHANNELS : "classifies"
     CATEGORIES ||--o{ AI_SCRIPTS : "categorizes"
     TIKTOK_CHANNELS ||--o{ TIKTOK_VIDEOS : "publishes"
+    TIKTOK_VIDEOS ||--o{ VIDEO_OBSERVATIONS : "measured_at"
     ANALYSIS_JOBS ||--o{ AI_SCRIPTS : "generates"
     AI_SCRIPTS ||--o{ SCRIPT_REFERENCE_VIDEOS : "references"
     TIKTOK_VIDEOS ||--o{ SCRIPT_REFERENCE_VIDEOS : "analyzed_in"
@@ -22,6 +23,27 @@ erDiagram
         int credits_balance
         boolean is_active
         timestamp created_at
+    }
+
+    RESEARCH_PROFILES {
+        bigserial id PK
+        varchar name
+        varchar own_username
+        varchar target_audience
+        varchar offering
+        varchar goal
+        varchar keywords
+        varchar excluded_keywords
+        varchar analytics_notes
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    VIDEO_OBSERVATIONS {
+        bigserial id PK
+        bigint video_id FK
+        timestamp observed_at
+        bigint view_count
     }
 
     CATEGORIES {

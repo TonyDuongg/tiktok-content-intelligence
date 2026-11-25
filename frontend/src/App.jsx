@@ -35,6 +35,7 @@ import {
   formatDuration,
 } from "./studio";
 import { EmptyState, Notice, ScriptPreview } from "./components";
+import ChannelInsights from "./ChannelInsights";
 
 const TONES = [
   "Chân thực, gần gũi",
@@ -90,6 +91,10 @@ export default function App() {
   const channelLock = useRef(false);
   const [channelError, setChannelError] = useState("");
   const [videoError, setVideoError] = useState("");
+  const [savedChannels, setSavedChannels] = useState([]);
+  const [savedChannelsError, setSavedChannelsError] = useState("");
+  const [researchView, setResearchView] = useState("videos");
+  const [researchSearchOpen, setResearchSearchOpen] = useState(true);
   const [sort, setSort] = useState("engagementRate");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("ALL");
@@ -106,6 +111,19 @@ export default function App() {
     setToast(message);
     toastTimer.current = setTimeout(() => setToast(""), 4000);
   }, []);
+
+  const loadSavedChannels = useCallback(async (signal) => {
+    try {
+      const result = await api.getSavedChannels({ signal });
+      if (!signal?.aborted) { setSavedChannels(result.data || []); setSavedChannelsError(""); }
+    } catch (error) { if (!signal?.aborted) setSavedChannelsError(error.message); }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => { void loadSavedChannels(controller.signal); }, 0);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [loadSavedChannels]);
 
   const loadSetup = useCallback(async (signal) => {
     const version = ++setupVersion.current;
@@ -350,6 +368,8 @@ export default function App() {
     try {
       const result = await api.ingestChannel(clean, channelCategory, maxVideos);
       setChannel(result.data);
+      setResearchSearchOpen(false);
+      setSavedChannels(previous => [result.data, ...previous.filter(c => c.id !== result.data.id)]);
       setUsername(clean);
       try {
         const resultVideos = await api.getTopVideos(clean, maxVideos);
@@ -363,6 +383,40 @@ export default function App() {
       channelLock.current = false;
       setChannelLoading(false);
     }
+  }
+  async function openSavedChannel(name) {
+    if (!name || channelLock.current) return;
+    channelLock.current = true; setChannelLoading(true); setChannelError(""); setVideoError("");
+    setChannel(null); setVideos([]);
+    try {
+      const [profileResult, videoResult] = await Promise.allSettled([api.getChannel(name), api.getTopVideos(name, maxVideos)]);
+      if (profileResult.status === "rejected") throw profileResult.reason;
+      setChannel(profileResult.value.data); setUsername(name);
+      setResearchSearchOpen(false);
+      if (profileResult.value.data.category?.id) setChannelCategory(profileResult.value.data.category.id);
+      if (videoResult.status === "fulfilled") setVideos(videoResult.value.data || []);
+      else setVideoError(videoResult.reason.message);
+    } catch (error) { setChannelError(error.message); }
+    finally { channelLock.current = false; setChannelLoading(false); }
+  }
+
+  function useExperiment(idea, report) {
+    if (!channel || channel.tiktokUsername !== report.username || generating || channelLoading) return;
+    const target = [report.targetAudience, report.offering && `Giá trị cung cấp: ${report.offering}`].filter(Boolean).join(". ").slice(0, 300);
+    setDraft(previous => ({ ...previous, categoryId: channel.category?.id || channelCategory || previous.categoryId,
+      topic: `${idea.topic}${report.offering ? `. Gắn với ${report.offering}` : ""}${report.goal ? `. Mục tiêu: ${report.goal}` : ""}`.slice(0, 1000),
+      targetAudience: target, durationValue: String(idea.durationSeconds), durationUnit: "seconds",
+      customDuration: ![15, 30, 60, 120, 180].includes(idea.durationSeconds),
+      references: [{ id: idea.reference.videoId, caption: idea.reference.caption, username: report.username }],
+    }));
+    setDesktopPane("brief"); navigate("studio");
+    notify("Đã đưa ý tưởng, hồ sơ mục tiêu và video tham khảo vào bản nhập.");
+  }
+  function openOwnChannel(name) {
+    setResearchView("insights");
+    if (savedChannels.some(c => c.tiktokUsername === name)) { void openSavedChannel(name); return; }
+    setUsername(name); setChannel(null); setVideos([]); setResearchSearchOpen(true);
+    notify("Đã điền kênh của bạn. Chọn Phân tích kênh để lấy dữ liệu công khai.");
   }
   async function retryVideos() {
     if (!channel || channelLock.current) return;
@@ -823,8 +877,11 @@ export default function App() {
 
         {activeTab === "channel" && (
           <div className="channel-workspace">
-            <section className="panel search-panel">
-              <h2>Phân tích một kênh TikTok</h2>
+            {researchView !== "profiles" && <section className="panel search-panel">
+              {(researchSearchOpen || !channel) && <div className="research-search-heading"><h2>{channel ? `Kênh @${channel.tiktokUsername}` : "Phân tích một kênh TikTok"}</h2>
+                {channel && <button type="button" className="button subtle" disabled={channelLoading} onClick={() => setResearchSearchOpen(open => !open)}>{researchSearchOpen ? "Thu gọn" : "Đổi kênh / Cập nhật"}</button>}
+              </div>}
+              {(researchSearchOpen || !channel) && <>
               <form onSubmit={searchChannel}>
                 <div className="channel-fields">
                   <div className="field username-field">
@@ -898,8 +955,22 @@ export default function App() {
                 Hỗ trợ tên kênh và link hồ sơ đầy đủ. Kết quả phụ thuộc nguồn dữ
                 liệu đang được cấu hình.
               </p>
-            </section>
+              </>}
+              <div className="saved-channel-picker">
+                <label htmlFor="saved-channel">Mở kênh đã lưu</label>
+                <select id="saved-channel" value={channel?.tiktokUsername || ""} disabled={channelLoading || !savedChannels.length} onChange={e => openSavedChannel(e.target.value)}>
+                  <option value="">{savedChannels.length ? "Chọn kênh, không gọi lại RapidAPI" : "Chưa có kênh đã lưu"}</option>
+                  {savedChannels.map(c => <option key={c.id} value={c.tiktokUsername}>@{c.tiktokUsername} · {c.nickname || c.tiktokUsername}</option>)}
+                </select>
+                <button type="button" className="button subtle" disabled={channelLoading} onClick={() => loadSavedChannels()} aria-label="Làm mới danh sách kênh đã lưu"><RefreshCw size={16} /></button>
+                {channel && !researchSearchOpen && <button type="button" className="button secondary" disabled={channelLoading} onClick={() => setResearchSearchOpen(true)}>Đổi kênh / Cập nhật</button>}
+              </div>
+            </section>}
+            <div className="research-tabs" role="group" aria-label="Nội dung nghiên cứu">
+              {[["videos", "Video tham khảo"], ["insights", "Khách hàng & xu hướng"], ["profiles", "Hồ sơ của tôi"]].map(([id, label]) => <button key={id} type="button" aria-pressed={researchView === id} onClick={() => setResearchView(id)}>{label}</button>)}
+            </div>
             <div className="channel-results">
+            {savedChannelsError && <Notice onRetry={() => loadSavedChannels()}>{savedChannelsError}</Notice>}
             {channelError && <Notice>{channelError}</Notice>}
             {channelLoading && (
               <p role="status" className="loading-line">
@@ -907,7 +978,8 @@ export default function App() {
                 các video của kênh…
               </p>
             )}
-            {channel && (
+            {researchView !== "videos" && <ChannelInsights channel={channel} view={researchView} onUseExperiment={useExperiment} onOpenOwnChannel={openOwnChannel} disabled={generating || channelLoading} />}
+            {researchView === "videos" && channel && (
               <>
                 <section className="channel-summary">
                   <div>
@@ -1020,7 +1092,7 @@ export default function App() {
                 </div>
               </>
             )}
-            {!channel && !channelLoading && (
+            {researchView === "videos" && !channel && !channelLoading && (
               <EmptyState title="Bắt đầu từ một kênh bạn quan tâm">
                 Tìm cách mở đầu, nhịp kể chuyện và chủ đề được quan tâm. Chọn
                 video tham khảo để đưa vào brief của bạn.

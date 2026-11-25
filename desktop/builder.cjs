@@ -12,6 +12,7 @@ module.exports = {
     { from: 'desktop/.runtime/backend.jar', to: 'backend.jar' },
     { from: 'desktop/.runtime/java', to: 'java' },
     { from: 'docs/DESKTOP.md', to: 'HUONG-DAN.md' },
+    { from: 'docs/RESEARCH.md', to: 'RESEARCH.md' },
   ],
   extraFiles: [
     { from: 'desktop/.runtime/README.txt', to: 'HUONG-DAN.txt' },
